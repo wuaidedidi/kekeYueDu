@@ -6,8 +6,9 @@ const isDevelopment: boolean = process.env.NODE_ENV !== "production";
 // 创建主窗口
 async function createWindow() {
   let window = new Window();
+
   window.listen();
-  window.createWindows({ isMainWin: true });
+  window.createWindows({ isMainWin: true ,height:880,width:2000});
   window.createTray();
 }
 app.on("window-all-closed", () => {

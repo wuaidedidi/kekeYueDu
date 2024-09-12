@@ -1,0 +1,13 @@
+// global.scss
+// $primary-color: #42b983;
+
+body {
+  font-family: Arial, sans-serif;
+  //   background-color: $primary-color;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  cursor:
+    url('/star.png') 16 16,
+    auto;
+}
