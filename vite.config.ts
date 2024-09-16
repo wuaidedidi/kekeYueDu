@@ -36,8 +36,17 @@ export default defineConfig({
         },
       },
       preload: {
-        // Shortcut of `build.rollupOptions.input`
         input: path.join(__dirname, './electron-preload/index.ts'),
+        vite: {
+          build: {
+            rollupOptions: {
+              output: {
+                dir: 'dist/electron-preload', // 将 preload 输出到单独的文件夹
+                format: 'cjs', // Electron 的 preload 进程也需要 CommonJS 格式
+              },
+            },
+          },
+        },
       },
     }),
 
