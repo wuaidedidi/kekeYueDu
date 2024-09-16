@@ -290,5 +290,10 @@ export class Window {
     ipcMain.on('window-new', (event: IpcMainEvent, args) =>
       this.createWindows(args)
     )
+
+    // //获取路径
+    // ipcMain.handle('get-app-path', async () => {
+    //   return app.getAppPath()
+    // })
   }
 }

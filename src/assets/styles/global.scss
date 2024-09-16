@@ -11,3 +11,8 @@ body {
     url('/star.png') 16 16,
     auto;
 }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

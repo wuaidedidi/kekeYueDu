@@ -34,6 +34,10 @@ const routes: Array<RouteRecordRaw> = [
             path: 'store',
             component: Store,
           },
+          {
+            path: 'writing-stats',
+            component: WritingStats,
+          },
         ],
       },
       {
@@ -44,10 +48,7 @@ const routes: Array<RouteRecordRaw> = [
         path: 'writer-consultation',
         component: WriterConsultation,
       },
-      {
-        path: 'writing-stats',
-        component: WritingStats,
-      },
+
       {
         path: 'help-center',
         component: HelpCenter,

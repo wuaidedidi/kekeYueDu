@@ -7,14 +7,19 @@
           :key="tag.name"
           :type="tag.type"
           round
-          closable
-          :class="[index === checked ? 'flash-tag' : 'gradient-tag']"
+          :closable="tag.TagId > 2"
+          :class="[tag.TagId === selectedMenu ? 'flash-tag' : 'gradient-tag']"
           @click="
             () => {
-              checked = index
+              if (tag.TagId <= 2 && selectedMenu <= 2) {
+                return
+              }
+              console.log(tag.path)
+              menuStore.setSelectedMenu(tag.TagId)
               changeChildrenRouterPath(tag.path)
             }
           "
+          @close="closeTag(tag)"
           size="large"
         >
           {{ tag.name }}
@@ -34,8 +39,9 @@ import { useMenuStore } from '@/store/menuStore'
 import { useIpcRenderer } from '@vueuse/electron'
 import { ElButton } from 'element-plus'
 
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
 const ipcRenderer = useIpcRenderer()
@@ -51,89 +57,60 @@ interface Tag {
   type: string
   path: string
 }
-const checked = ref(0)
 
 const changeChildrenRouterPath = (path: string) => {
   router.push(path)
 }
 const allTags = ref([
-  { name: '工作台', type: '', path: 'workspace/all-books' },
-  { name: '工作台', type: '', path: 'writing-stats' },
-  { name: '工作台', type: '', path: 'subscription-stats' },
-  { name: '订阅统计', type: 'success', path: 'subscription-stats' },
-  { name: '评论管理', type: 'warning', path: 'commitManage' },
-  { name: '通知', type: 'info', path: 'writer-consultation' },
-  { name: '帮助中心', type: 'warning', path: 'help-center' },
+  { name: '工作台', type: 'success', path: '/workspace/all-books' },
+  { name: '工作台', type: 'success', path: '/workspace/writing-stats' },
+  { name: '工作台', type: 'success', path: '/workspace/store' },
+  { name: '订阅统计', type: 'success', path: '/subscription-stats' },
+  { name: '评论管理', type: 'warning', path: '/commitManage' },
+  { name: '通知', type: 'info', path: '/writer-consultation' },
+  { name: '帮助中心', type: 'warning', path: '/help-center' },
   { name: '反馈', type: 'warning', path: '' },
 ])
-const tags = ref<(Tag & { TagId: number })[]>([])
+const tags = ref<(Tag & { TagId: number })[]>([
+  { ...allTags.value[0], TagId: 0 },
+])
 const menuStore = useMenuStore()
-const selectedMenu = useMenuStore().selectedMenu!
-const checkTags = computed(() => {
-  const temp = allTags.value[selectedMenu]
-  //增加tag
-  if (tags) tags.value.push()
-  //切换tag
-  return selectedMenu
+const { selectedMenu } = storeToRefs(menuStore)
+
+// 监听 selectedMenu 变化
+watch(selectedMenu, (newTagId) => {
+  // 检查新菜单项是否已经存在于 tags 中
+  const existingTag = tags.value.find((tag) => {
+    //如果前面有过工作台Tag，现在也有，并且是不相等的两个，那么让后面的tag覆盖前面
+    if (tag.TagId <= 2 && newTagId <= 2 && tag.TagId !== newTagId) {
+      //后一个tag覆盖前面的tag
+      tag.TagId = newTagId
+      tag.path = allTags.value[newTagId].path
+    }
+    return tag.TagId === newTagId
+  })
+
+  if (!existingTag) {
+    // 不存在则添加新的 tag
+    const newTag = { ...allTags.value[newTagId], TagId: newTagId }
+    tags.value.push(newTag)
+  }
 })
-// let menus = [
-//   {
-//     name: '全部作品',
-//     preIcon: Star as DefineComponent<any, any, any>,
-//     fixIcon: null,
-//     isEject: false,
-//     routePath: 'workspace/all-books',
-//   },
-//   {
-//     name: '码字统计',
-//     preIcon: Notebook as DefineComponent<any, any, any>,
-//     fixIcon: null,
-//     isEject: false,
-//     routePath: 'writing-stats',
-//   },
-//   {
-//     name: '墨水商店',
-//     preIcon: Shop,
-//     fixIcon: null,
-//     isEject: false,
-//     routePath: 'workspace/store',
-//   },
-//   {
-//     name: '订阅统计',
-//     preIcon: Platform,
-//     fixIcon: CaretRight,
-//     isEject: true,
-//     routePath: 'subscription-stats',
-//   },
-//   {
-//     name: '评论管理',
-//     preIcon: Comment,
-//     fixIcon: CaretRight,
-//     isEject: true,
-//     routePath: 'commitManage',
-//   },
-//   {
-//     name: '通知',
-//     preIcon: Promotion,
-//     fixIcon: CaretRight,
-//     isEject: true,
-//     routePath: 'writer-consultation',
-//   },
-//   {
-//     name: '帮助中心',
-//     preIcon: HelpFilled,
-//     fixIcon: null,
-//     isEject: true,
-//     routePath: 'help-center',
-//   },
-//   {
-//     name: '反馈',
-//     preIcon: Collection,
-//     isEject: false,
-//     fixIcon: null,
-//     routePath: '',
-//   },
-// ]
+
+const closeTag = (tag: Tag & { TagId: number }) => {
+  //关闭，将当前tag从Tags中删除，并且设置前一个tag为选中状态,
+  let closeIndex = tags.value.findIndex((temp) => temp.TagId === tag.TagId)
+
+  tags.value.splice(closeIndex, 1)
+
+  closeIndex > 0 ? --closeIndex : closeIndex
+
+  menuStore.setSelectedMenu(tags.value[closeIndex].TagId)
+}
+
+onMounted(() => {
+  //初始化
+})
 </script>
 <style scoped lang="scss">
 html,

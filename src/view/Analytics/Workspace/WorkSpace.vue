@@ -22,7 +22,7 @@
         </el-icon>
       </div>
     </div>
-    <div class="main-panel"></div>
+    <div class="main-panel"><router-view></router-view></div>
   </div>
 </template>
 
@@ -41,6 +41,9 @@ import {
 } from '@element-plus/icons-vue'
 import { DefineComponent } from 'vue'
 import { useMenuStore } from '@/store/menuStore'
+import { storeToRefs } from 'pinia'
+import router from '@/router'
+
 interface Menu {
   name: string
   preIcon: DefineComponent<any, any, any> | null
@@ -55,49 +58,49 @@ let menus = [
     preIcon: Star as DefineComponent<any, any, any>,
     fixIcon: null,
     isEject: false,
-    routePath: 'workspace/all-books',
+    routePath: '/workspace/all-books',
   },
   {
     name: '码字统计',
     preIcon: Notebook as DefineComponent<any, any, any>,
     fixIcon: null,
     isEject: false,
-    routePath: 'writing-stats',
+    routePath: '/workspace/writing-stats',
   },
   {
     name: '墨水商店',
     preIcon: Shop,
     fixIcon: null,
     isEject: false,
-    routePath: 'workspace/store',
+    routePath: '/workspace/store',
   },
   {
     name: '订阅统计',
     preIcon: Platform,
     fixIcon: CaretRight,
     isEject: true,
-    routePath: 'subscription-stats',
+    routePath: '/subscription-stats',
   },
   {
     name: '评论管理',
     preIcon: Comment,
     fixIcon: CaretRight,
     isEject: true,
-    routePath: 'commitManage',
+    routePath: '/commitManage',
   },
   {
     name: '通知',
     preIcon: Promotion,
     fixIcon: CaretRight,
     isEject: true,
-    routePath: 'writer-consultation',
+    routePath: '/writer-consultation',
   },
   {
     name: '帮助中心',
     preIcon: HelpFilled,
     fixIcon: null,
     isEject: true,
-    routePath: 'help-center',
+    routePath: '/help-center',
   },
   {
     name: '反馈',
@@ -109,10 +112,11 @@ let menus = [
 ]
 
 const menuStore = useMenuStore()
-const selectedMenu = menuStore.selectedMenu
+const { selectedMenu } = storeToRefs(menuStore)
 const selectMenu = (index: number) => {
   // 通过 Store 更新 selectedMenu
   menuStore.setSelectedMenu(index)
+  router.push(menus[index].routePath)
 }
 </script>
 <style lang="scss" scoped>

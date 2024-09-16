@@ -1,40 +1,40 @@
 // electron-main/index.ts
-import { app, BrowserWindow } from "electron";
-import { Window } from "./window";
-const isDevelopment: boolean = process.env.NODE_ENV !== "production";
+import { app, BrowserWindow } from 'electron'
+import { Window } from './window'
+const isDevelopment: boolean = process.env.NODE_ENV !== 'production'
 
 // 创建主窗口
 async function createWindow() {
-  let window = new Window();
+  let window = new Window()
 
-  window.listen();
-  window.createWindows({ isMainWin: true ,height:880,width:2000});
-  window.createTray();
+  window.listen()
+  window.createWindows({ isMainWin: true, height: 880, width: 2000 })
+  window.createTray()
 }
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
   }
-});
+})
 
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
-});
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})
 
-app.on("ready", async () => {
-  createWindow();
-});
+app.on('ready', async () => {
+  createWindow()
+})
 
 if (isDevelopment) {
-  if (process.platform === "win32") {
-    process.on("message", (data) => {
-      if (data === "graceful-exit") {
-        app.quit();
+  if (process.platform === 'win32') {
+    process.on('message', (data) => {
+      if (data === 'graceful-exit') {
+        app.quit()
       }
-    });
+    })
   } else {
-    process.on("SIGTERM", () => {
-      app.quit();
-    });
+    process.on('SIGTERM', () => {
+      app.quit()
+    })
   }
 }
