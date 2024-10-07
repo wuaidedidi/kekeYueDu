@@ -5,11 +5,13 @@ const HelloWorld = () => import('../components/HelloWorld.vue')
 import Workspace from '@/view/Analytics/Workspace/WorkSpace.vue'
 import SubscriptionStats from '@/view/Analytics/SubscriptionStats.vue'
 import WriterConsultation from '@/view/Analytics/WriterConsultation.vue'
-import WritingStats from '@/view/Analytics/WritingStats.vue'
+import WritingStats from '@/view/Analytics/Workspace/WritingStats/WritingStats.vue'
 import HelpCenter from '@/view/Analytics/HelpCenter.vue'
 import AllBooks from '@/view/Analytics/Workspace/AllBooks/AllBooks.vue'
 import Store from '@/view/Analytics/Workspace/Store/Store.vue'
 import CommitManage from '@/view/Analytics/CommitManage.vue'
+import DraftDetail from '@/view/Analytics/DraftDetail.vue'
+import Login from '@/view/Login/login.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -57,6 +59,10 @@ const routes: Array<RouteRecordRaw> = [
         path: 'commitManage',
         component: CommitManage,
       },
+      {
+        path: 'draft-detail',
+        component: DraftDetail,
+      },
     ],
   },
   {
@@ -68,6 +74,16 @@ const routes: Array<RouteRecordRaw> = [
       requireAuth: true,
     },
     component: HelloWorld,
+  },
+  {
+    path: '/login',
+    name: 'login',
+    meta: {
+      title: 'login',
+      keepAlive: true,
+      requireAuth: true,
+    },
+    component: Login,
   },
 ]
 
