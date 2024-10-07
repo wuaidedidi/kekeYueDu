@@ -10,6 +10,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
+    "skipLibCheck": true, // 可选，跳过库的类型检查
     "allowSyntheticDefaultImports": true, // 添加这行
     "lib": [
       "esnext",
@@ -34,7 +35,9 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "electron-main/**/*.ts",
-    "electron-preload/**/*.ts"
+    "electron-preload/**/*.ts",
+    "electron-preload/index.js",
+    "server/server.ts"
   ],
   "references": [
     {

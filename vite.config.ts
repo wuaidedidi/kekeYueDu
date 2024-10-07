@@ -2,35 +2,39 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import * as path from 'path'
 import electron from 'vite-plugin-electron/simple'
-
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-
-console.log(path.join(__dirname, './electron-main/index.ts'))
-console.log(path.join(__dirname, './electron-preload/index.ts'))
+import commonjs from '@rollup/plugin-commonjs'
 
 export default defineConfig({
   server: {
-    host: 'localhost', // 设置 VITE_DEV_SERVER_HOST
-    port: 3000, // 设置 VITE_DEV_SERVER_PORT
+    host: 'localhost',
+    port: 3000,
   },
   plugins: [
     vue(),
-    // Electron 插件配置
-
+    commonjs({
+      dynamicRequireTargets: [
+        path.resolve(__dirname, 'build/node_sqlite3.node'), // 确保路径正确
+      ],
+      ignoreDynamicRequires: false, // 可以尝试设置为 false
+    }),
     electron({
       main: {
-        // Shortcut of `build.lib.entry`
         entry: 'electron-main/index.ts',
         vite: {
           build: {
-            // 确保输出目录为 dist/electron-main
             rollupOptions: {
               output: {
                 dir: 'dist/electron-main',
-                format: 'cjs', // Electron 主进程需要 CommonJS 格式
+                format: 'cjs',
               },
+              external: [
+                'sqlite3', // 确保 sqlite3 被外部化
+                'bcrypt',
+                'server/*',
+              ],
             },
           },
         },
@@ -41,16 +45,14 @@ export default defineConfig({
           build: {
             rollupOptions: {
               output: {
-                dir: 'dist/electron-preload', // 将 preload 输出到单独的文件夹
-                format: 'cjs', // Electron 的 preload 进程也需要 CommonJS 格式
+                dir: 'dist/electron-preload',
+                format: 'cjs',
               },
             },
           },
         },
       },
     }),
-
-    // 自动导入 Element Plus 相关的插件配置
     AutoImport({
       resolvers: [ElementPlusResolver()],
     }),
@@ -63,9 +65,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
-
+  optimizeDeps: {
+    include: ['sqlite3', 'axios'],
+  },
   build: {
     outDir: 'dist',
-    emptyOutDir: true, // 默认情况下，若 outDir 在 root 目录下，则 Vite 会在构建时清空该目录
+    emptyOutDir: true,
   },
 })

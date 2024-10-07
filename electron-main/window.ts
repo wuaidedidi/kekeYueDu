@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu, Tray, IpcMainEvent } from 'electron'
-import path from 'path'
+// import path from 'path'
+const path = require('path')
 interface IWindowsCfg {
   id: number | null
   title: string
@@ -96,11 +97,13 @@ export class Window {
         contextIsolation: false, //上下文隔离
         nodeIntegration: true, //启用Node集成（是否完整的支持 node）
         webSecurity: false,
+        // preload: path.join(__dirname, '../electron-preload/index.js'),
+        // preload: path.resolve(__dirname, './electron-preload/index.js'),
         preload: path.join(__dirname, '../electron-preload/index.js'),
       },
     }
   }
-
+  // E:\electronProject\kekeYueDu\electron-preload
   // 获取窗口
   getWindow(id: number): any {
     return BrowserWindow.fromId(id)
@@ -109,6 +112,7 @@ export class Window {
   // 创建窗口
   createWindows(options: object) {
     console.log('------------create-WIndows...')
+    console.log(path.join(__dirname, '../electron-preload/index.js'))
     let args = Object.assign({}, windowsCfg, options)
     console.log('options----', options)
     // 判断窗口是否存在
@@ -130,7 +134,6 @@ export class Window {
 
     // 判断是否有父窗口
     if (args.parentId) {
-      console.log('parentId：' + args.parentId)
       opt.parent = this.getWindow(args.parentId) as BrowserWindow // 获取主窗口
     } else if (this.main) {
       console.log(666)
@@ -145,10 +148,14 @@ export class Window {
     console.log('opt', opt)
 
     let win = new BrowserWindow(opt)
+    console.log(
+      '===========,MMMMMMMMMMMMMMMMM=============' +
+        JSON.stringify(win, null, 2)
+    )
+
     // 打开开发者工具
     win.webContents.openDevTools()
 
-    console.log('窗口id：' + win)
     this.group[win.id] = {
       route: args.route,
       isMultiWindow: args.isMultiWindow,
@@ -278,6 +285,7 @@ export class Window {
 
     // 最大化
     ipcMain.on('window-max', (event, winId) => {
+      console.log(winId + '============================')
       if (winId) {
         this.getWindow(Number(winId)).maximize()
       } else {
