@@ -121,8 +121,8 @@ const selectMenu = (index: number) => {
 </script>
 <style lang="scss" scoped>
 .container {
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
   display: flex;
 
   .left-panel {

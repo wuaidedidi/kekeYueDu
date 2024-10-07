@@ -36,22 +36,13 @@
 </template>
 <script setup lang="ts">
 import { useMenuStore } from '@/store/menuStore'
-import { useIpcRenderer } from '@vueuse/electron'
-import { ElButton } from 'element-plus'
 
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 const router = useRouter()
-const ipcRenderer = useIpcRenderer()
-const openNewWin = () => {
-  ipcRenderer.send('window-new', {
-    route: '/helloworld',
-    width: 1200,
-    height: 1080,
-  })
-}
+
 interface Tag {
   name: string
   type: string
