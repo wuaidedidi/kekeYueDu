@@ -11,7 +11,8 @@
           :class="[tag.TagId === selectedMenu ? 'flash-tag' : 'gradient-tag']"
           @click="
             () => {
-              if (tag.TagId <= 2 && selectedMenu <= 2) {
+              console.log(tag)
+              if (tag.TagId <= 2 && tag.TagId != 0 && selectedMenu <= 2) {
                 return
               }
               console.log(tag.path)
