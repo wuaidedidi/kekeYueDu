@@ -40,7 +40,7 @@
         class="book"
         v-for="(item, index) in bookTemplates"
         :key="item.src"
-        @click="clickBookHandler"
+        @click="clickBookHandler(item.id)"
       >
         <el-image :src="item.src" />
         <div class="bookDescription">
@@ -118,6 +118,7 @@ import Dialog from './components/dialog.vue'
 import type { Book } from '@/typings/book'
 import router from '@/router'
 import axios from 'axios'
+import http from '@/utils/http'
 
 const dialogFormVisible = ref(false)
 const dialogAddFormVisible = ref(false)
@@ -125,45 +126,23 @@ const dialogAddFormVisible = ref(false)
 const dialogDeleteFormVisible = ref(false)
 
 const carouselPaths2 = [
-  '/allBooks/banner/carousel1.png',
-  '/allBooks/banner/carousel2.png',
-  '/allBooks/banner/carousel3.png',
-  '/allBooks/banner/carousel4.png',
+  './allBooks/banner/carousel1.png',
+  './allBooks/banner/carousel2.png',
+  './allBooks/banner/carousel3.png',
+  './allBooks/banner/carousel4.png',
 ]
 
-const bookTemplates = ref<Book[]>([
-  {
-    bookName: '虽随便白色大是大非快疯了分开了开放；群里看到',
-    fontCount: 1,
-    src: '/allBooks/bookList/bookTemplate1.png',
-  },
-  {
-    bookName: 'asdasasdasd',
-    fontCount: 2,
-    src: '/allBooks/bookList/bookTemplate2.png',
-  },
-  {
-    bookName: '3333333',
-    fontCount: 3.5,
-    src: '/allBooks/bookList/bookTemplate3.png',
-  },
-  {
-    bookName: '奥萨达实打实的',
-    fontCount: 0.5,
-    src: '/allBooks/bookList/bookTemplate4.png',
-  },
-  {
-    bookName: '奥萨达',
-    fontCount: 1.6,
-    src: '/allBooks/bookList/bookTemplate1.png',
-  },
+const bookTemplates = ref<Book[]>([])
 
-  {
-    bookName: '爱上打扫打扫打扫大',
-    fontCount: 5.5,
-    src: '/allBooks/bookList/bookTemplate2.png',
-  },
-])
+onMounted(() => {
+  initAllDraft()
+})
+const initAllDraft = async () => {
+  const res = await http.get('/api/allDraft')
+
+  bookTemplates.value = res.data
+}
+
 const checkEditFormIndex = ref()
 
 const reset = ref(false)
@@ -225,8 +204,8 @@ const handleAddConfirm = (formData: Book) => {
   console.log('新增书籍数据:', bookTemplates.value)
 }
 
-const clickBookHandler = () => {
-  router.push('/draft-detail')
+const clickBookHandler = (id: number) => {
+  router.push({ name: 'draftDetail', params: { id: id } })
 }
 
 const message = ref('')
