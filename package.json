@@ -9,7 +9,10 @@
     "format": "prettier --write 'src/**/*.{js,ts,vue,json,md}'",
     "dev": "vite",
     "build": "rimraf dist && vite build && electron-builder",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "electron dist/electron-main/index.js",
+    "build:renderer": "vite build",
+    "build:main": "tsc --project electron-main/tsconfig.json"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -19,7 +22,7 @@
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "echarts": "^5.5.1",
-    "element-plus": "^2.8.2",
+    "element-plus": "^2.8.5",
     "express": "^4.21.0",
     "mock-aws-s3": "^4.0.2",
     "nock": "^13.5.5",
