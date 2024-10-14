@@ -3,7 +3,7 @@
     <div class="header">
       <div @click="toggleFullScreen">
         <el-tooltip content="进入全屏CTRL">
-          <el-image src="/icon/quanping.png" />
+          <el-image src="./icon/quanping.png" />
         </el-tooltip>
         全屏
       </div>
@@ -12,7 +12,7 @@
         <template #reference>
           <div>
             <el-tooltip content="字体排版">
-              <el-image src="/icon/ziti.png" />
+              <el-image src="./icon/ziti.png" />
             </el-tooltip>
             字体
           </div>
@@ -105,7 +105,7 @@
           <template #reference>
             <div>
               <el-tooltip content="背景颜色">
-                <el-image src="/icon/beijing.png" />
+                <el-image src="./icon/beijing.png" />
               </el-tooltip>
               背景
             </div>
@@ -134,19 +134,19 @@
         "
       ></div>
       <el-tooltip content="撤销(Ctrl+z)">
-        <el-image src="/icon/zhongzuo.png" />
+        <el-image src="./icon/zhongzuo.png" />
       </el-tooltip>
       <el-tooltip content="撤销重做(Ctrl+shift+z)">
-        <el-image src="/icon/chexiao.png" />
+        <el-image src="./icon/chexiao.png" />
       </el-tooltip>
       <div @click="">
         <el-tooltip content="一键排版CtrlK">
-          <el-image src="/icon/zidongpaiban.png" />
+          <el-image src="./icon/zidongpaiban.png" />
         </el-tooltip>
       </div>
       <div @click="insertDivider">
         <el-tooltip content="分割线">
-          <el-image src="/icon/charu.png" />
+          <el-image src="./icon/charu.png" />
         </el-tooltip>
         插入
       </div>
@@ -157,7 +157,7 @@
             <template #reference>
               <div @click="replaceOpenPop">
                 <el-tooltip content="查找替换CtrlF">
-                  <el-image src="/icon/chazhaotihuan.png" /> </el-tooltip
+                  <el-image src="./icon/chazhaotihuan.png" /> </el-tooltip
                 >查找替换
               </div>
             </template>
@@ -178,11 +178,10 @@
                       v-model="replaceForm.searchText"
                       placeholder="输入查找词"
                       style="margin-left: 8px"
+                      @change="inputSearchTextHandler"
                     ></el-input>
-                    <el-button
-                      @click="replaceSearchAll"
-                      style="margin-left: 8px"
-                      >搜索全书</el-button
+                    <el-button @click="replaceInBook" style="margin-left: 8px"
+                      >全书查找</el-button
                     >
                   </div>
                 </el-form-item>
@@ -207,21 +206,31 @@
                 </el-form-item>
 
                 <el-form-item>
-                  <el-button @click="goToPrevious">上一个</el-button>
-                  <el-button @click="goToNext">下一个</el-button>
+                  <el-button @click="goToNextMatch">上一个</el-button>
+                  <el-button @click="goToPreviousMatch">下一个</el-button>
                   <el-button @click="replace">替换</el-button>
-                  <el-button @click="replaceCurrent">本章替换</el-button>
+                  <el-button @click="replaceInChapter">本章替换</el-button>
                 </el-form-item>
               </el-form>
             </div>
           </el-popover>
         </div>
-        <el-tooltip content="取名">
-          <el-image src="/icon/jiaosequming.png" />
-        </el-tooltip>
-        取名
+        <div
+          @click="
+            () => {
+              console.log(dialogVisible)
+              dialogVisible = true
+            }
+          "
+        >
+          <el-tooltip content="取名">
+            <el-image src="./icon/jiaosequming.png" />
+          </el-tooltip>
+          取名
+        </div>
+
         <el-tooltip content="历史">
-          <el-image src="/icon/lishi.png" />
+          <el-image src="./icon/lishi.png" />
         </el-tooltip>
         历史
       </div>
@@ -238,26 +247,35 @@
             :prefix-icon="Search"
           />
           <div class="addRow">
-            <ElButton type="primary">新建章</ElButton>
-            <ElButton>新建卷</ElButton>
+            <ElButton type="primary" @click="createChapter">新建章</ElButton>
+            <!-- 新建卷按钮 -->
+            <ElButton type="primary" @click="openVolumnDialog">新建卷</ElButton>
           </div>
           <div class="directory">
             <span>目录</span>
             <el-tooltip content="回收站">
-              <el-image src="/icon/huishouzhan.png" />
+              <el-image src="./icon/huishouzhan.png" />
             </el-tooltip>
 
             <el-tooltip content="导入导出">
-              <ElImage src="/icon/daorudaochu.png" />
+              <ElImage src="./icon/daorudaochu.png" />
             </el-tooltip>
             <el-tooltip content="排序">
-              <ElImage src="/icon/paixu.png" />
+              <ElImage src="./icon/paixu.png" />
             </el-tooltip>
           </div>
           <div class="bookSetInfo">
-            <el-image src="/icon/a-weidakaidewenjianjiajiami.png" />作品相关
+            <el-image src="./icon/a-weidakaidewenjianjiajiami.png" />作品相关
           </div>
-          <el-tree :data="treeData" :props="defaultProps" :icon="renderIcon" />
+          <el-tree
+            ref="treeRef"
+            :data="treeData"
+            :props="defaultProps"
+            :icon="renderIcon"
+            highlight-current
+            @node-click="nodeClickHandler"
+            node-key="key"
+          />
         </div>
       </div>
       <div class="mainContent">
@@ -269,11 +287,16 @@
               maxWidth: formSettings.contentWidth + '%',
             }"
           >
-            <input id="trix-editor" type="hidden" name="content" />
+            <input
+              id="trix-editor"
+              type="hidden"
+              name="content"
+              :value="trixContent"
+            />
             <trix-editor input="trix-editor"></trix-editor>
           </div>
           <div class="mainFooter">
-            <div class="addChapterButton">
+            <div class="addChapterButton" @click="createChapter">
               <el-icon><Plus /></el-icon>新建章节
             </div>
             <div class="bugFix">
@@ -377,6 +400,152 @@
       </div>
     </div>
   </div>
+  <!--dialog面板================================================-->
+  <el-dialog
+    title="取名面板"
+    v-model.async="dialogVisible"
+    width="800px"
+    center
+    class="naming-dialog"
+  >
+    <div class="dialog-content">
+      <!-- 左边分类标签 -->
+      <div class="dialog-left">
+        <el-tabs
+          v-model="activeTab"
+          tab-position="left"
+          @tab-click="handleTabClick"
+        >
+          <el-tab-pane label="人物" name="person"></el-tab-pane>
+          <el-tab-pane label="地点" name="place"></el-tab-pane>
+          <el-tab-pane label="招式" name="move"></el-tab-pane>
+          <el-tab-pane label="装备" name="equipment"></el-tab-pane>
+          <el-tab-pane label="怪物" name="monster"></el-tab-pane>
+          <el-tab-pane label="道具" name="item"></el-tab-pane>
+        </el-tabs>
+      </div>
+
+      <!-- 中间部分条件选择与按钮 -->
+      <div class="dialog-center">
+        <!-- 人物筛选条件 -->
+        <div v-if="activeTab === 'person'">
+          <h3>人物分类</h3>
+          <el-tag
+            :type="getNameform.region === 'china' ? 'primary' : ''"
+            @click="setTag('region', 'china')"
+            >中国</el-tag
+          >
+          <el-tag
+            :type="getNameform.region === 'japan' ? 'primary' : ''"
+            @click="setTag('region', 'japan')"
+            >日本</el-tag
+          >
+          <el-tag
+            :type="getNameform.region === 'west' ? 'primary' : ''"
+            @click="setTag('region', 'west')"
+            >西方</el-tag
+          >
+          <br />
+          <el-tag
+            :type="getNameform.gender === 'male' ? 'primary' : ''"
+            @click="setTag('gender', 'male')"
+            >男性</el-tag
+          >
+          <el-tag
+            :type="getNameform.gender === 'female' ? 'primary' : ''"
+            @click="setTag('gender', 'female')"
+            >女性</el-tag
+          >
+          <el-tag
+            :type="getNameform.gender === 'neutral' ? 'primary' : ''"
+            @click="setTag('gender', 'neutral')"
+            >中性</el-tag
+          >
+        </div>
+
+        <!-- 地点筛选条件 -->
+        <div v-if="getNameActiveTab === 'place'">
+          <h3>地点分类</h3>
+          <el-tag
+            :type="getNameform.placeType === 'city' ? 'primary' : ''"
+            @click="setTag('placeType', 'city')"
+            >城市</el-tag
+          >
+          <el-tag
+            :type="getNameform.placeType === 'village' ? 'primary' : ''"
+            @click="setTag('placeType', 'village')"
+            >村庄</el-tag
+          >
+          <el-tag
+            :type="getNameform.placeType === 'forest' ? 'primary' : ''"
+            @click="setTag('placeType', 'forest')"
+            >森林</el-tag
+          >
+        </div>
+
+        <!-- 其他分类类似，依次类推... -->
+
+        <!-- 随机取名按钮 -->
+        <div class="random-name-btn">
+          <el-button type="primary" @click="generateName">随机取名</el-button>
+        </div>
+      </div>
+
+      <!-- 右边展示生成的名字 -->
+      <div class="dialog-right">
+        <h3>生成的名字</h3>
+        <div class="generated-names">
+          <el-tag
+            v-for="(name, index) in generatedNames"
+            :key="index"
+            type="success"
+          >
+            {{ name }}
+          </el-tag>
+        </div>
+      </div>
+    </div>
+  </el-dialog>
+
+  <!--============================新建分卷-->
+  <!-- 弹出的el-dialog -->
+  <el-dialog
+    title="分卷信息"
+    v-model="volumnDialogVisible"
+    width="500px"
+    center
+  >
+    <!-- 分卷名称 -->
+    <el-form
+      :model="volumnForm"
+      label-width="80px"
+      center="true"
+      align-center="true"
+    >
+      <el-form-item label="分卷名称">
+        <el-input
+          v-model="volumnForm.name"
+          placeholder="请输入分卷名称"
+        ></el-input>
+      </el-form-item>
+
+      <!-- 分卷简介 -->
+      <el-form-item label="分卷简介">
+        <el-input
+          v-model="volumnForm.description"
+          type="textarea"
+          placeholder="请输入分卷简介"
+          rows="3"
+        ></el-input>
+      </el-form-item>
+    </el-form>
+
+    <!-- 底部按钮 -->
+    <div slot="footer" class="dialog-footer">
+      <el-button @click="closeVolumnDialog">取消</el-button>
+      <el-button type="primary" @click="saveVolumn">保存</el-button>
+    </div>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -397,12 +566,39 @@ import {
   ElPopover,
   ElDialog,
   ElForm,
+  ElMessage,
 } from 'element-plus'
-import { h, onMounted, ref, toRaw, watch } from 'vue'
+import { computed, h, nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import 'trix/dist/trix.css'
 import 'trix'
+import { useRoute } from 'vue-router'
+import http from '@/utils/http'
+import { vi } from 'element-plus/es/locale'
+
+// 定义树节点的接口，包含 key 和 label
+interface TreeNode {
+  key: number
+  label: string
+  children?: TreeNode[]
+  id?: number
+  order?: number
+  title?: string
+  vid?: number
+}
+
+const route = useRoute() // 获取路由对象
+const bookId = route.params.id // 获取传递的用户 ID
+
+const currentcheckNode = ref()
+const matches = ref<number[]>([]) // 存储所有匹配的位置
+const currentMatchIndex = ref(0) // 当前匹配的索引
+const currentSearchValue = ref('')
+
+const treeRef = ref<InstanceType<typeof ElTree> | null>(null)
 
 const { ipcRenderer } = window
+const trixContent = ref('')
+// const currentNodeId = ref(0)
 
 const searchBook = ref('')
 
@@ -418,22 +614,58 @@ enum rightTab {
 }
 const currentRightTab = ref<number>(rightTab.NOTAB)
 // 树形数据
-const treeData = ref([
-  {
-    label: '作品相关',
-    isEmpty: true,
-    children: [{ label: '第一章' }, { label: '第二章' }],
-  },
+// const treeData = ref([
+//   {
+//     label: '作品相关',
+//     children: [{ label: '第一章' }, { label: '第二章' }],
+//   },
 
-  {
-    label: '卷一',
-    children: [{ label: '第一章' }, { label: '第二章' }],
-  },
-  {
-    label: '卷二',
-    children: [{ label: '第三章' }, { label: '第四章' }],
-  },
-])
+//   {
+//     label: '卷一',
+//     children: [{ label: '第一章' }, { label: '第二章' }],
+//   },
+//   {
+//     label: '卷二',
+//     children: [{ label: '第三章' }, { label: '第四章' }],
+//   },
+// ])
+const currentVolumeId = ref(0)
+const treeData = ref<TreeNode[]>([])
+
+onMounted(async () => {
+  await initTreeData()
+
+  // 确保 DOM 完成更新后执行
+  nextTick(() => {
+    // 检查 treeData 的存在性，确保有数据和子节点存在
+
+    if (treeData.value && treeData.value[1]?.children?.[0]?.key) {
+      const firstChildKey = treeData.value[1].children[0].key
+
+      treeRef.value?.setCurrentKey(firstChildKey) // 第二个参数为 true 表示自动滚动
+
+      // 手动触发 node-click 事件，模拟用户点击行为
+      const selectedNode = treeRef.value?.getCurrentNode()
+
+      if (selectedNode) {
+        nodeClickHandler(selectedNode) // 调用点击事件处理函数
+      }
+    } else {
+      console.warn('treeData 或子节点不存在，无法设置默认选中项')
+    }
+  })
+})
+
+const initTreeData = async () => {
+  try {
+    const res = await http.get('/api/treeData')
+
+    treeData.value = res.data
+    console.log(res.data)
+  } catch (error) {
+    console.error('获取树形数据失败', error)
+  }
+}
 
 // tree的默认属性
 const defaultProps = {
@@ -444,13 +676,19 @@ interface Tree {
   label: string
   children?: Tree[]
 }
-// 自定义图标渲染函数
+
 // 自定义图标渲染函数
 const renderIcon = (node: any, test: any, abc: any) => {
-  const iconSrc = node.children
-    ? '/icon/a-weidakaidewenjianjiajiami.png'
-    : '/icon/dakaidewenjianjia.png'
+  // 先检查 node.children 是否存在，并且确认是否为数组
+  const hasChildren = Array.isArray(node.children)
+
+  // 根据是否有子节点来判断使用哪个图标
+  const iconSrc = hasChildren
+    ? './icon/a-weidakaidewenjianjiajiami.png' // 有子节点时的图标
+    : './icon/dakaidewenjianjia.png' // 无子节点时的图标
+
   return h(ElImage, {
+    key: node.id,
     src: iconSrc, // 根据是否有子节点来判断使用哪个图标
     style: { width: '15px', height: '15px' },
   })
@@ -463,7 +701,6 @@ const toggleFullScreen = () => {
     console.error('ipcRenderer is not available')
   }
 }
-onMounted(async () => {})
 
 const activeTab = ref('text')
 
@@ -493,7 +730,6 @@ watch(
   () => {
     const trixEditor = document.querySelector('trix-editor') as HTMLElement
 
-    console.log(trixEditor)
     if (trixEditor) {
       const trixEditorInstance = (trixEditor as any).editor
 
@@ -510,61 +746,11 @@ watch(
 )
 
 const applyBackground = () => {
-  console.log('启动')
   const contentDetail = document.querySelector('.contentDetail') as HTMLElement
   if (contentDetail) {
     contentDetail.style.backgroundColor = formSettings.value.backgroundColor // 应用背景颜色
   }
 }
-
-// const formatText = () => {
-//   const trimEditor = document.querySelector('trix-editor') as HTMLElement
-
-//   if (trimEditor) {
-//     // 设置字体类型
-//     trimEditor.style.fontFamily =
-//       formSettings.value.fontType === 'default'
-//         ? 'initial'
-//         : formSettings.value.fontType
-
-//     // 设置字体大小
-//     trimEditor.style.fontSize = `${formSettings.value.fontSize}px`
-
-//     // 设置行高
-//     trimEditor.style.lineHeight = `${formSettings.value.lineHeight}em`
-
-//     // 设置段落间距
-//     trimEditor.style.marginBottom = formSettings.value.paragraphSpacing
-//       ? '1em'
-//       : '0'
-
-//     // 设置段落缩进
-//     trimEditor.querySelectorAll('p').forEach((p) => {
-//       ;(p as HTMLElement).style.textIndent = '2em' // 设置缩进为两个空格
-//     })
-
-//     // 处理章节标题
-//     const headings = trimEditor.querySelectorAll('h1, h2, h3')
-//     headings.forEach((heading) => {
-//       ;(heading as HTMLElement).style.fontSize = '1.5em' // 设置章节标题的大小
-//       ;(heading as HTMLElement).style.fontWeight = 'bold' // 加粗标题
-//       ;(heading as HTMLElement).style.textAlign = 'center' // 居中标题
-//     })
-
-//     // 插入分页符
-//     const newPage = document.createElement('div')
-//     newPage.style.pageBreakAfter = 'always' // 分页符样式
-//     trimEditor.appendChild(newPage)
-//   }
-// }
-
-// // 监听按键事件
-// document.addEventListener('keydown', (event) => {
-//   if (event.ctrlKey && event.key === 'k') {
-//     event.preventDefault() // 防止默认行为
-//     formatText() // 调用排版函数
-//   }
-// })
 
 const insertDivider = () => {
   const trixEditor = document.querySelector('trix-editor') as HTMLElement
@@ -617,6 +803,402 @@ const replaceCurrent = () => {
 }
 const rightTabClick = (element) => {
   currentRightTab.value = Number(element.index)
+}
+
+let saveInterval
+
+const saveChapterContent = async (
+  id,
+  vid,
+  title,
+  order,
+  updateContent?: string
+) => {
+  // 保存章节内容的逻辑
+
+  const chapterContent = getChapterContent() // 获取章节内容的函数
+
+  // 假设你有一个API来保存内容
+  const res = await http.post('/api/saveChapter', {
+    id: id,
+    content: updateContent ? updateContent : chapterContent,
+    vid: vid,
+    title: title,
+    order: order,
+  })
+  // JSON.stringify({ content: chapterContent })
+}
+const getChapterContent = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+
+    const content = trixEditorInstance.getDocument().toString()
+
+    return content
+  }
+}
+
+const nodeClickHandler = async (element) => {
+  // 清除之前的定时器
+  if (saveInterval) {
+    clearInterval(saveInterval)
+    saveInterval = null // 清除引用
+  }
+  if (!element.children) {
+    currentcheckNode.value = element
+    currentVolumeId.value = element.vid
+    const trixEditor = document.querySelector('trix-editor') as HTMLElement
+
+    const trixEditorInstance = (trixEditor as any).editor
+    // 根据章节 ID 获取内容
+    let chapterContent = await getFirstChapterContent(element.id) // 自定义的获取章节内容的函数
+
+    const contentLength = trixEditorInstance.getDocument().toString().length
+    trixEditorInstance.setSelectedRange([0, contentLength])
+    trixEditorInstance.deleteInDirection('forward')
+    if (!chapterContent) {
+      chapterContent = ''
+    }
+
+    trixEditorInstance.insertHTML(chapterContent)
+
+    // 启动新的定时器
+    saveInterval = setInterval(async () => {
+      await saveChapterContent(
+        element.id,
+        element.vid,
+        element.title,
+        element.order
+      ) // 自定义的保存函数
+    }, 5000) // 每5秒保存一次
+  } else {
+    currentVolumeId.value = element.id
+  }
+
+  // else {
+  //   currentCuelement.id
+  // }
+}
+const getFirstChapterContent = async (id: number) => {
+  try {
+    const url = '/api/getChapter/' + id
+
+    const response = await http.get(url)
+
+    return response.data // 返回章节内容，如果没有找到则返回空字符串
+  } catch (error) {
+    console.error('获取章节内容时出错:', error)
+    return ''
+  }
+}
+
+const inputSearchTextHandler = async (currentValue: string) => {
+  const chapterContent = getChapterContent() // 获取章节内容的函数
+  currentSearchValue.value = currentValue.trim() // 查找的词语
+
+  if (!currentSearchValue) return
+
+  // 正则表达式查找所有匹配项（忽略大小写）
+  const regex = new RegExp(currentSearchValue.value, 'gi')
+  matches.value = [] // 清空之前的匹配
+  let match
+
+  // 查找所有匹配项的起始位置
+  while ((match = regex.exec(chapterContent)) !== null) {
+    matches.value.push(match.index) // 存储匹配项的位置
+  }
+
+  // 高亮第一个匹配项
+  highlightCurrentMatch()
+}
+
+// 高亮当前匹配的词
+const highlightCurrentMatch = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+
+  const trixEditorInstance = (trixEditor as any).editor
+  const currentPosition = matches.value[currentMatchIndex.value]
+
+  if (currentPosition !== undefined) {
+    const searchValue = currentSearchValue.value
+    const content = trixEditorInstance.getDocument().toString()
+
+    // 分割内容，将匹配到的部分用 <mark> 标签包裹
+    const highlightedContent =
+      content.slice(0, currentPosition) +
+      `<strong style="background-color: yellow;">` +
+      content.slice(currentPosition, currentPosition + searchValue.length) +
+      `</strong>` +
+      content.slice(currentPosition + searchValue.length)
+
+    // 更新富文本内容
+    trixEditorInstance.setSelectedRange([0, content.length]) // 选中所有文本
+    trixEditorInstance.deleteInDirection('forward') // 删除所有文本
+    trixEditorInstance.insertHTML(highlightedContent) // 插入高亮后的文本
+  }
+}
+
+// 查找下一个匹配项
+const goToNextMatch = () => {
+  if (matches.value.length > 0) {
+    currentMatchIndex.value =
+      (currentMatchIndex.value + 1) % matches.value.length // 循环到下一个匹配项
+    highlightCurrentMatch() // 高亮显示
+  }
+}
+
+// 查找上一个匹配项
+const goToPreviousMatch = () => {
+  if (matches.value.length > 0) {
+    currentMatchIndex.value =
+      (currentMatchIndex.value - 1 + matches.value.length) %
+      matches.value.length // 循环到上一个匹配项
+    highlightCurrentMatch() // 高亮显示
+  }
+}
+
+const replaceInChapter = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  const trixEditorInstance = (trixEditor as any).editor
+  const chapterContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
+  const searchValue = currentSearchValue.value
+  const regex = new RegExp(searchValue, 'gi')
+  // 替换所有匹配项
+  const updatedContent = chapterContent.replace(
+    regex,
+    replaceForm.value.replaceText
+  )
+  // 更新富文本内容
+  trixEditorInstance.setSelectedRange([0, chapterContent.length])
+  trixEditorInstance.deleteInDirection('forward')
+  trixEditorInstance.insertHTML(updatedContent)
+}
+
+// 全书替换
+const replaceInBook = async () => {
+  const allChapters = await getAllChapters() // 获取全书所有章节的内容
+
+  allChapters.forEach(async (chapter) => {
+    const chapterContent = chapter.content // 获取每一章节的内容
+    const searchValue = replaceForm.value.searchText
+    const regex = new RegExp(searchValue, 'gi')
+
+    // 替换每一章的内容
+    const updatedContent = chapterContent.replace(
+      regex,
+      replaceForm.value.replaceText
+    )
+
+    // 保存每一章替换后的内容
+    await saveChapterContent(
+      chapter.id,
+      chapter.volume_id,
+      chapter.title,
+      chapter.order,
+      updatedContent
+    )
+
+    if (currentcheckNode.value.id === chapter.id) {
+      const trixEditor = document.querySelector('trix-editor') as HTMLElement
+      const trixEditorInstance = (trixEditor as any).editor
+      const chapterContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
+
+      trixEditorInstance.setSelectedRange([0, chapterContent.length])
+      trixEditorInstance.deleteInDirection('forward')
+      trixEditorInstance.insertHTML(updatedContent)
+    }
+  })
+}
+
+// 获取全书所有章节的内容
+const getAllChapters = async () => {
+  try {
+    const response = await http.get('/api/chapters')
+    return response.data // 返回章节数据
+  } catch (error) {
+    console.error('Error fetching chapters:', error)
+    return []
+  }
+}
+
+// 控制弹窗的可见性
+const dialogVisible = ref(false)
+const getNameActiveTab = ref('person')
+
+interface NameForm {
+  region: string // 人物分类的区域
+  gender: string // 人物分类的性别
+  placeType: string // 地点分类的类型
+}
+// 表单数据
+const getNameform = ref<NameForm>({
+  region: '', // 人物分类的区域
+  gender: '', // 人物分类的性别
+  placeType: '', // 地点分类的类型
+})
+// 存放生成的名字
+const generatedNames = ref<string[]>([])
+
+// 设置选中的 tag
+const setTag = (key: string, value: string) => {
+  getNameform.value[key] = value
+}
+// 生成随机名字
+const generateName = () => {
+  // 示例随机名字生成逻辑，可以根据选择的分类、区域等条件生成
+  let namesPool = {
+    china: ['张三', '李四', '王五'],
+    japan: ['Sakura', 'Taro', 'Haruto'],
+    west: ['John', 'Mary', 'Tom'],
+    city: ['Gotham', 'Metropolis', 'Springfield'],
+    village: ['Konoha', 'Pallet', 'Whiterun'],
+    forest: ['Blackwood', 'Dark Forest', 'Enchanted'],
+  }
+
+  let randomName = ''
+  if (activeTab.value === 'person') {
+    const regionNames = namesPool[getNameform.value.region] || []
+    randomName = regionNames[Math.floor(Math.random() * regionNames.length)]
+  } else if (activeTab.value === 'place') {
+    const placeNames = namesPool[getNameform.value.placeType] || []
+    randomName = placeNames[Math.floor(Math.random() * placeNames.length)]
+  }
+
+  // 将生成的名字添加到右边展示
+  generatedNames.value.push(randomName)
+}
+
+// 处理分类切换
+const handleTabClick = (tab) => {
+  console.log('当前选中的标签页: ', tab.name)
+}
+
+// 对话框的显示状态
+const volumnDialogVisible = ref(false)
+
+// 分卷表单的数据
+const volumnForm = ref({
+  name: '',
+  description: '',
+})
+
+// 打开对话框
+const openVolumnDialog = () => {
+  volumnDialogVisible.value = true
+}
+
+// 关闭对话框
+const closeVolumnDialog = () => {
+  volumnDialogVisible.value = false
+}
+
+// volumnTreeData 代表现有的分卷树
+const volumnTreeData = ref<any[]>([])
+
+// 保存分卷并传入后台
+const saveVolumn = async () => {
+  // 检查表单内容是否为空
+  if (!volumnForm.value.name) {
+    ElMessage.error('请填写分卷名称')
+    return
+  }
+
+  // 传入后台保存
+  const getCreateVolume = await saveVolumnToBackend()
+
+  // 创建新分卷对象
+  const newVolumn = {
+    id: getCreateVolume?.data.id,
+    key: treeData.value.length + 2,
+    label: getCreateVolume?.data.title,
+    children: [], // 新建的“refresh”卷可能有章节，因此初始化一个空数组
+    isVolumn: true,
+  }
+
+  // 将新分卷加入到 volumnTreeData 中
+  treeData.value.push(newVolumn)
+  // 使用 nextTick 确保 ElTree 组件在 DOM 中已更新后再调用 refresh
+  currentVolumeId.value = newVolumn.id
+  // 关闭对话框
+  closeVolumnDialog()
+}
+
+// 模拟保存到后台的API请求
+const saveVolumnToBackend = async () => {
+  try {
+    const response = await http.post('/api/saveVolume', {
+      bookId: bookId,
+      title: volumnForm.value.name,
+      order: treeData.value.length + 2,
+    })
+    console.log(response)
+
+    // 弹出保存成功的提示
+    ElMessage.success('新建分卷成功')
+    return response
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error('保存失败')
+  }
+}
+
+const createChapter = async () => {
+  // id, content,volume_id,title,\`order\`
+
+  let vid = currentVolumeId.value
+  // currentcheckNode.value?.vid
+  //   ? currentcheckNode.value.vid
+  //   : currentVolumeId.value
+
+  const children = treeData.value.find((e) => e.id === vid)?.children
+
+  let order = children ? children.length + 1 : 1
+
+  const param = {
+    content: '',
+    vid: vid,
+    title: '第' + order + '章',
+    order: order,
+  }
+
+  const res = await http.post('/api/createChapter', param)
+
+  const key = countNodes()
+  children?.push({
+    id: res.data.lastId,
+    key: key,
+    label: '第' + order + '章',
+    order: order,
+    title: '第' + order + '章',
+    vid: vid,
+  })
+  // 使用 nextTick 确保 DOM 完全更新后再设置选中状态
+  await nextTick()
+  treeRef.value?.setCurrentKey(key, true) // 第二个参数为 true 表示自动滚动
+
+  // 手动触发 node-click 事件，模拟用户点击行为
+  const selectedNode = treeRef.value?.getCurrentNode()
+
+  if (selectedNode) {
+    nodeClickHandler(selectedNode) // 调用点击事件处理函数
+  }
+}
+
+const countNodes = () => {
+  let count = 1
+
+  // 遍历所有的父节点
+  treeData.value.forEach((parentNode) => {
+    count += 1 // 父节点自己算一个
+    if (parentNode.children) {
+      // 如果有子节点，增加子节点的数量
+      count += parentNode.children.length
+    }
+  })
+
+  return count
 }
 </script>
 
@@ -795,5 +1377,37 @@ const rightTabClick = (element) => {
       }
     }
   }
+}
+.dialog-footer {
+  text-align: right;
+}
+.dialog-content {
+  display: flex;
+}
+
+.dialog-left {
+  width: 20%;
+  border-right: 1px solid #ebeef5;
+}
+
+.dialog-center {
+  width: 50%;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dialog-right {
+  width: 30%;
+  padding-left: 20px;
+}
+
+.generated-names {
+  margin-top: 10px;
+}
+
+.random-name-btn {
+  margin-top: 20px;
 }
 </style>
