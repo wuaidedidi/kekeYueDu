@@ -1,4 +1,9 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import {
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+  RouteRecordRaw,
+} from 'vue-router'
 
 const Index = () => import('../view/index/index.vue')
 const HelloWorld = () => import('../components/HelloWorld.vue')
@@ -17,6 +22,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'index',
+    redirect: '/login', // 设置重定向到登录页面
     meta: {
       title: '首页',
       keepAlive: true,
@@ -60,7 +66,8 @@ const routes: Array<RouteRecordRaw> = [
         component: CommitManage,
       },
       {
-        path: 'draft-detail',
+        path: 'draft-detail/:id',
+        name: 'draftDetail',
         component: DraftDetail,
       },
     ],
@@ -88,7 +95,8 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 })
+
 export default router

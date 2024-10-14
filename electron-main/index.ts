@@ -60,11 +60,28 @@ async function createWindow() {
       // contextIsolation: false,
     },
   })
-
+  win.webContents.on('did-finish-load', () => {
+    console.log('Renderer process has finished loading.')
+  })
+  // 在生产模式下也打开开发者工具
+  win.webContents.openDevTools()
+  win.webContents.on(
+    'did-fail-load',
+    (event, errorCode, errorDescription, validatedURL) => {
+      console.error(
+        'Failed to load:',
+        validatedURL,
+        'Error Code:',
+        errorCode,
+        'Description:',
+        errorDescription
+      )
+    }
+  )
   if (VITE_DEV_SERVER_URL) {
     // #298
-    // win.loadURL('http://localhost:3000/workspace/all-books')
     win.loadURL('http://localhost:3000/login')
+    // win.loadURL('http://localhost:3000/workspace/all-books')
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
   } else {
