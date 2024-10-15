@@ -165,3 +165,26 @@ ipcMain.on('toggle-fullscreen', (event) => {
     win.setFullScreen(!isFullScreen)
   }
 })
+
+// 窗口控制逻辑
+ipcMain.handle('minimize-window', () => {
+  if (win) {
+    win.minimize()
+  }
+})
+
+ipcMain.handle('maximize-window', () => {
+  if (win) {
+    if (win.isMaximized()) {
+      win.unmaximize()
+    } else {
+      win.maximize()
+    }
+  }
+})
+
+ipcMain.handle('close-window', () => {
+  if (win) {
+    win.close()
+  }
+})

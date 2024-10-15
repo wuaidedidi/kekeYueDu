@@ -27,8 +27,11 @@
         </el-tag>
         <div class="dragArea"></div>
       </div>
-
-      <div class="menuBar"></div>
+      <div class="menuBar">
+        <ElButton id="minimize-btn" @click="miniWindowClick">_ </ElButton>
+        <ElButton id="maximize-btn" @click="maxWindowClick">[ ]</ElButton>
+        <ElButton id="close-btn" @click="closeWindowClick">X</ElButton>
+      </div>
     </div>
     <div class="content">
       <router-view />
@@ -41,9 +44,10 @@ import { useMenuStore } from '@/store/menuStore'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { ElButton } from 'element-plus'
 
 const router = useRouter()
-
+const { ipcRenderer } = window
 interface Tag {
   name: string
   type: string
@@ -103,6 +107,16 @@ const closeTag = (tag: Tag & { TagId: number }) => {
 onMounted(() => {
   //初始化
 })
+
+const miniWindowClick = () => {
+  ipcRenderer.invoke('minimize-window')
+}
+const maxWindowClick = () => {
+  ipcRenderer.invoke('maximize-window')
+}
+const closeWindowClick = () => {
+  ipcRenderer.invoke('close-window')
+}
 </script>
 <style scoped lang="scss">
 html,
@@ -142,8 +156,26 @@ body {
 }
 .menuBar {
   display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+
   height: 100%;
   width: 200px;
+
+  button {
+    width: 40px;
+    height: 30px;
+    background: linear-gradient(45deg, #a03da4, #4c3195, #da55bb);
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-left: 5px;
+  }
+
+  button:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+  }
 }
 .content {
   flex: 1;
