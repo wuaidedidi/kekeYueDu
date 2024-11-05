@@ -335,6 +335,11 @@
                 v-show="rightTab.JIUCUO === currentRightTab"
               >
                 纠错面板
+                <el-button
+                  @click="currentRightTab = rightTab.NOTAB"
+                  type="danger"
+                  >X</el-button
+                >
               </div>
             </el-tab-pane>
             <el-tab-pane label="拼字">
@@ -351,8 +356,11 @@
                 拼字面板
                 <el-button
                   @click="currentRightTab = rightTab.NOTAB"
-                ></el-button></div
-            ></el-tab-pane>
+                  type="danger"
+                  >X</el-button
+                >
+              </div></el-tab-pane
+            >
             <el-tab-pane label="大纲">
               <template #label>
                 <div class="menuItem">
@@ -574,6 +582,7 @@ import 'trix'
 import { useRoute } from 'vue-router'
 import http from '@/utils/http'
 import { vi } from 'element-plus/es/locale'
+import { processText } from '@/utils/sensitiveWordUtils'
 
 // 定义树节点的接口，包含 key 和 label
 interface TreeNode {
@@ -803,6 +812,31 @@ const replaceCurrent = () => {
 }
 const rightTabClick = (element) => {
   currentRightTab.value = Number(element.index)
+
+  if (Number(element.index) === 0) {
+    sensitiveWordHandler()
+  }
+}
+
+/**
+ *对敏感词进行检测
+ */
+const sensitiveWordHandler = async () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  const trixEditorInstance = (trixEditor as any).editor
+  const chapterContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
+
+  trixEditorInstance.setSelectedRange([0, chapterContent.length])
+  trixEditorInstance.deleteInDirection('forward')
+  const resultText = await handleInputText(chapterContent)
+  console.log(resultText)
+  trixEditorInstance.insertHTML(resultText)
+}
+// 示例：调用 processText 方法
+async function handleInputText(inputText: string) {
+  // const inputText = '这里有一个傻逼和狗屎的例子。'
+  const resultText = await processText(inputText)
+  return resultText
 }
 
 let saveInterval
@@ -826,6 +860,7 @@ const saveChapterContent = async (
     title: title,
     order: order,
   })
+  console.log(res)
   // JSON.stringify({ content: chapterContent })
 }
 const getChapterContent = () => {
@@ -842,11 +877,12 @@ const getChapterContent = () => {
 
 const nodeClickHandler = async (element) => {
   // 清除之前的定时器
-  if (saveInterval) {
+  if (saveInterval !== null) {
     clearInterval(saveInterval)
     saveInterval = null // 清除引用
   }
   if (!element.children) {
+    console.log('进入节点内容')
     currentcheckNode.value = element
     currentVolumeId.value = element.vid
     const trixEditor = document.querySelector('trix-editor') as HTMLElement
@@ -866,11 +902,15 @@ const nodeClickHandler = async (element) => {
 
     // 启动新的定时器
     saveInterval = setInterval(async () => {
+      const trixEditor = document.querySelector('trix-editor') as HTMLElement
+      const trixEditorInstance = (trixEditor as any).editor
+      const newContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
       await saveChapterContent(
         element.id,
         element.vid,
         element.title,
-        element.order
+        element.order,
+        newContent
       ) // 自定义的保存函数
     }, 5000) // 每5秒保存一次
   } else {
