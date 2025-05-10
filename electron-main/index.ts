@@ -43,13 +43,17 @@ let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../electron-preload/index.js')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
+// 创建窗口，没有渐变过渡效果
 async function createWindow() {
+  // 创建窗口
   win = new BrowserWindow({
-    title: 'Main window',
+    title: 'KeKe Reading',
     icon: path.join(process.env.VITE_PUBLIC, 'favicon.ico'),
     width: 2000,
     height: 1000,
     frame: false,
+    show: true, // 直接显示窗口
+    backgroundColor: '#ffffff', // 标准背景色
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -60,11 +64,19 @@ async function createWindow() {
       // contextIsolation: false,
     },
   })
+
+  // 窗口就绪后的事件处理
+  win.once('ready-to-show', () => {
+    console.log('Window is ready to show')
+  })
+
   win.webContents.on('did-finish-load', () => {
     console.log('Renderer process has finished loading.')
   })
+
   // 在生产模式下也打开开发者工具
   win.webContents.openDevTools()
+
   win.webContents.on(
     'did-fail-load',
     (event, errorCode, errorDescription, validatedURL) => {
@@ -78,6 +90,7 @@ async function createWindow() {
       )
     }
   )
+
   if (VITE_DEV_SERVER_URL) {
     // #298
     win.loadURL('http://localhost:3000/login')
@@ -101,7 +114,11 @@ async function createWindow() {
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 }
 
-app.whenReady().then(createWindow)
+// 应用准备好后创建窗口
+app.whenReady().then(() => {
+  console.log('App is ready, creating window...')
+  createWindow()
+})
 
 app.on('window-all-closed', () => {
   win = null
@@ -185,6 +202,7 @@ ipcMain.handle('maximize-window', () => {
 
 ipcMain.handle('close-window', () => {
   if (win) {
+    // 直接关闭窗口，不使用淡出效果
     win.close()
   }
 })

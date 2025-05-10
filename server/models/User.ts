@@ -8,8 +8,9 @@ const createUserTable = async () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
       password TEXT
+      
     )
-  `)
+  )
 }
 
 const registerUser = async (username: string, password: string) => {

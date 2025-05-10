@@ -1,5 +1,20 @@
 <template>
-  <div class="content">
+  <div class="content" :class="{ 'content-loaded': appLoaded }">
+    <div class="loading-overlay" v-if="!appLoaded">
+      <div class="loader-container">
+        <div class="book">
+          <div class="book__page"></div>
+          <div class="book__page"></div>
+          <div class="book__page"></div>
+        </div>
+      </div>
+      <div class="loading-text">正在加载您的创作空间...</div>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
     <div class="header">
       <div @click="toggleFullScreen">
         <el-tooltip content="进入全屏CTRL">
@@ -151,6 +166,42 @@
         插入
       </div>
 
+      <!-- 添加Markdown格式按钮 -->
+      <div class="markdown-tools">
+        <el-tooltip content="标题1">
+          <el-button @click="insertHeading(1)">H1</el-button>
+        </el-tooltip>
+        <el-tooltip content="标题2">
+          <el-button @click="insertHeading(2)">H2</el-button>
+        </el-tooltip>
+        <el-tooltip content="标题3">
+          <el-button @click="insertHeading(3)">H3</el-button>
+        </el-tooltip>
+        <el-tooltip content="无序列表">
+          <el-button @click="insertList('unordered')">•</el-button>
+        </el-tooltip>
+        <el-tooltip content="有序列表">
+          <el-button @click="insertList('ordered')">1.</el-button>
+        </el-tooltip>
+        <el-tooltip content="引用">
+          <el-button @click="insertQuote">></el-button>
+        </el-tooltip>
+        <el-tooltip content="代码块">
+          <el-button @click="insertCodeBlock">```</el-button>
+        </el-tooltip>
+        <el-tooltip content="插入图片">
+          <el-upload
+            class="upload-demo"
+            action="/api/upload"
+            :show-file-list="false"
+            :on-success="handleImageUploadSuccess"
+            :before-upload="beforeImageUpload"
+          >
+            <el-button>图片</el-button>
+          </el-upload>
+        </el-tooltip>
+      </div>
+
       <div class="rightHeader">
         <div>
           <el-popover trigger="click" placement="bottom-start" width="300px">
@@ -180,28 +231,17 @@
                       style="margin-left: 8px"
                       @change="inputSearchTextHandler"
                     ></el-input>
-                    <el-button @click="replaceInBook" style="margin-left: 8px"
-                      >全书查找</el-button
-                    >
-                  </div>
-                </el-form-item>
-
-                <el-form-item>
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      margin-top: 8px;
-                      justify-content: center;
-                    "
-                  >
-                    <div style="width: 76px">替换:</div>
-
-                    <el-input
-                      v-model="replaceForm.replaceText"
-                      placeholder="输入替换词"
-                      style="margin-left: 8px"
-                    ></el-input>
+                    <div class="mb-2">
+                      <el-input
+                        placeholder="替换为"
+                        v-model="replaceForm.replaceText"
+                      ></el-input>
+                      <el-button
+                        @click="handleReplaceInBook"
+                        style="margin-left: 8px"
+                        >全书替换</el-button
+                      >
+                    </div>
                   </div>
                 </el-form-item>
 
@@ -323,7 +363,10 @@
           >
             <el-tab-pane label="纠错">
               <template #label>
-                <div class="menuItem">
+                <div
+                  class="menuItem"
+                  :class="{ active: rightTab.JIUCUO === currentRightTab }"
+                >
                   <div>
                     <el-icon><CircleCheckFilled /></el-icon>
                   </div>
@@ -334,17 +377,30 @@
                 class="rightTabContent"
                 v-show="rightTab.JIUCUO === currentRightTab"
               >
-                纠错面板
-                <el-button
-                  @click="currentRightTab = rightTab.NOTAB"
-                  type="danger"
-                  >X</el-button
-                >
+                <div class="panel-header">
+                  <span>纠错面板</span>
+                  <el-button
+                    @click="currentRightTab = rightTab.NOTAB"
+                    type="danger"
+                    size="small"
+                    circle
+                    class="close-btn"
+                  >
+                    <el-icon><Close /></el-icon>
+                  </el-button>
+                </div>
+                <div class="panel-content">
+                  <!-- 纠错面板内容 -->
+                  纠错功能区域
+                </div>
               </div>
             </el-tab-pane>
             <el-tab-pane label="拼字">
               <template #label>
-                <div class="menuItem">
+                <div
+                  class="menuItem"
+                  :class="{ active: rightTab.PINGZI === currentRightTab }"
+                >
                   <el-icon><EditPen /></el-icon>
                   <div>拼字</div>
                 </div></template
@@ -353,17 +409,30 @@
                 class="rightTabContent"
                 v-show="rightTab.PINGZI === currentRightTab"
               >
-                拼字面板
-                <el-button
-                  @click="currentRightTab = rightTab.NOTAB"
-                  type="danger"
-                  >X</el-button
-                >
+                <div class="panel-header">
+                  <span>拼字面板</span>
+                  <el-button
+                    @click="currentRightTab = rightTab.NOTAB"
+                    type="danger"
+                    size="small"
+                    circle
+                    class="close-btn"
+                  >
+                    <el-icon><Close /></el-icon>
+                  </el-button>
+                </div>
+                <div class="panel-content">
+                  <!-- 拼字面板内容 -->
+                  拼字功能区域
+                </div>
               </div></el-tab-pane
             >
             <el-tab-pane label="大纲">
               <template #label>
-                <div class="menuItem">
+                <div
+                  class="menuItem"
+                  :class="{ active: rightTab.DAGANG === currentRightTab }"
+                >
                   <el-icon><Comment /></el-icon>
                   <div>大纲</div>
                 </div>
@@ -372,12 +441,30 @@
                 class="rightTabContent"
                 v-show="rightTab.DAGANG === currentRightTab"
               >
-                大纲面板
+                <div class="panel-header">
+                  <span>大纲面板</span>
+                  <el-button
+                    @click="currentRightTab = rightTab.NOTAB"
+                    type="danger"
+                    size="small"
+                    circle
+                    class="close-btn"
+                  >
+                    <el-icon><Close /></el-icon>
+                  </el-button>
+                </div>
+                <div class="panel-content">
+                  <!-- 大纲面板内容 -->
+                  大纲功能区域
+                </div>
               </div></el-tab-pane
             >
             <el-tab-pane label="角色">
               <template #label>
-                <div class="menuItem">
+                <div
+                  class="menuItem"
+                  :class="{ active: rightTab.JIAOSE === currentRightTab }"
+                >
                   <el-icon><Avatar /></el-icon>
                   <div>角色</div>
                 </div>
@@ -386,12 +473,30 @@
                 class="rightTabContent"
                 v-show="rightTab.JIAOSE === currentRightTab"
               >
-                角色面板
+                <div class="panel-header">
+                  <span>角色面板</span>
+                  <el-button
+                    @click="currentRightTab = rightTab.NOTAB"
+                    type="danger"
+                    size="small"
+                    circle
+                    class="close-btn"
+                  >
+                    <el-icon><Close /></el-icon>
+                  </el-button>
+                </div>
+                <div class="panel-content">
+                  <!-- 角色面板内容 -->
+                  角色功能区域
+                </div>
               </div>
             </el-tab-pane>
             <el-tab-pane label="设定">
               <template #label>
-                <div class="menuItem">
+                <div
+                  class="menuItem"
+                  :class="{ active: rightTab.SHEDING === currentRightTab }"
+                >
                   <el-icon><Tools /></el-icon>
                   <div>设定</div>
                 </div>
@@ -400,12 +505,66 @@
                 class="rightTabContent"
                 v-show="rightTab.SHEDING === currentRightTab"
               >
-                设定面板
+                <div class="panel-header">
+                  <span>设定面板</span>
+                  <el-button
+                    @click="currentRightTab = rightTab.NOTAB"
+                    type="danger"
+                    size="small"
+                    circle
+                    class="close-btn"
+                  >
+                    <el-icon><Close /></el-icon>
+                  </el-button>
+                </div>
+                <div class="panel-content">
+                  <!-- 设定面板内容 -->
+                  设定功能区域
+                </div>
               </div></el-tab-pane
             >
+            <el-tab-pane label="预览">
+              <template #label>
+                <div
+                  class="menuItem"
+                  :class="{ active: rightTab.PREVIEW === currentRightTab }"
+                >
+                  <div>
+                    <el-icon><Document /></el-icon>
+                  </div>
+                  <div>预览</div>
+                </div>
+              </template>
+              <div
+                class="rightTabContent markdown-preview"
+                v-show="rightTab.PREVIEW === currentRightTab"
+              >
+                <div class="panel-header">
+                  <span>预览内容</span>
+                  <el-button
+                    @click="currentRightTab = rightTab.NOTAB"
+                    type="danger"
+                    size="small"
+                    circle
+                    class="close-btn"
+                  >
+                    <el-icon><Close /></el-icon>
+                  </el-button>
+                </div>
+                <div class="panel-content" v-html="renderedMarkdown"></div>
+              </div>
+            </el-tab-pane>
           </el-tabs>
         </div>
       </div>
+    </div>
+    <div class="save-status" :class="saveStatus">
+      <span v-if="saveStatus === 'saved'">已保存</span>
+      <span v-else-if="saveStatus === 'saving'">保存中...</span>
+      <span v-else>未保存</span>
+      <span v-if="lastSaveTime" class="last-save-time">
+        (最后保存: {{ lastSaveTime.toLocaleTimeString() }})
+      </span>
     </div>
   </div>
   <!--dialog面板================================================-->
@@ -543,7 +702,7 @@
           v-model="volumnForm.description"
           type="textarea"
           placeholder="请输入分卷简介"
-          rows="3"
+          :rows="3"
         ></el-input>
       </el-form-item>
     </el-form>
@@ -565,6 +724,8 @@ import {
   Avatar,
   Tools,
   Plus,
+  Document,
+  Close,
 } from '@element-plus/icons-vue'
 import {
   ElButton,
@@ -575,42 +736,94 @@ import {
   ElDialog,
   ElForm,
   ElMessage,
+  TabsPaneContext,
 } from 'element-plus'
-import { computed, h, nextTick, onMounted, ref, toRaw, watch } from 'vue'
+import {
+  computed,
+  h,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  toRaw,
+  watch,
+} from 'vue'
 import 'trix/dist/trix.css'
 import 'trix'
 import { useRoute } from 'vue-router'
 import http from '@/utils/http'
-import { vi } from 'element-plus/es/locale'
 import { processText } from '@/utils/sensitiveWordUtils'
+import type { TreeNodeData as ElTreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
+import { marked } from 'marked'
 
-// 定义树节点的接口，包含 key 和 label
-interface TreeNode {
-  key: number
-  label: string
-  children?: TreeNode[]
-  id?: number
-  order?: number
-  title?: string
-  vid?: number
+interface Chapter {
+  id: number
+  title: string
+  content: string
+  order: number
+  volumeId: number
 }
 
-const route = useRoute() // 获取路由对象
-const bookId = route.params.id // 获取传递的用户 ID
+interface TreeNodeData {
+  id: number
+  order: number
+  title: string
+  vid: number
+  children?: TreeNodeData[]
+  key?: number
+  label?: string
+  isVolumn?: boolean
+  data?: any
+  level?: number
+  expanded?: boolean
+  loaded?: boolean
+  disabled?: boolean
+  isLeaf?: boolean
+  parent?: TreeNodeData
+  rawNode?: any
+}
 
-const currentcheckNode = ref()
-const matches = ref<number[]>([]) // 存储所有匹配的位置
-const currentMatchIndex = ref(0) // 当前匹配的索引
+interface TreeNode extends TreeNodeData {
+  key: number
+  label: string
+}
+
+// 定义章节接口
+interface Chapter {
+  id: number
+  content: string
+  volume_id: number
+  title: string
+  order: number
+}
+
+// 定义保存状态类型
+type SaveStatus = 'saved' | 'saving' | 'unsaved'
+
+// 定义名字池接口
+interface NamesPool {
+  [key: string]: string[]
+}
+
+// 定义表单接口
+interface NameForm {
+  region: string
+  gender: string
+  placeType: string
+  [key: string]: string
+}
+
+const route = useRoute()
+const bookId = Number(route.params.id as string)
+
+const currentcheckNode = ref<TreeNode | null>(null)
+const matches = ref<number[]>([])
+const currentMatchIndex = ref(0)
 const currentSearchValue = ref('')
-
 const treeRef = ref<InstanceType<typeof ElTree> | null>(null)
-
 const { ipcRenderer } = window
 const trixContent = ref('')
-// const currentNodeId = ref(0)
-
 const searchBook = ref('')
-
 const editContent = ref('')
 
 enum rightTab {
@@ -619,49 +832,56 @@ enum rightTab {
   DAGANG = 2,
   JIAOSE = 3,
   SHEDING = 4,
+  PREVIEW = 5,
   NOTAB = 999,
 }
 const currentRightTab = ref<number>(rightTab.NOTAB)
-// 树形数据
-// const treeData = ref([
-//   {
-//     label: '作品相关',
-//     children: [{ label: '第一章' }, { label: '第二章' }],
-//   },
-
-//   {
-//     label: '卷一',
-//     children: [{ label: '第一章' }, { label: '第二章' }],
-//   },
-//   {
-//     label: '卷二',
-//     children: [{ label: '第三章' }, { label: '第四章' }],
-//   },
-// ])
 const currentVolumeId = ref(0)
 const treeData = ref<TreeNode[]>([])
 
+const appLoaded = ref(false)
+
 onMounted(async () => {
+  // 初始化数据
   await initTreeData()
 
   // 确保 DOM 完成更新后执行
   nextTick(() => {
     // 检查 treeData 的存在性，确保有数据和子节点存在
-
     if (treeData.value && treeData.value[1]?.children?.[0]?.key) {
       const firstChildKey = treeData.value[1].children[0].key
-
       treeRef.value?.setCurrentKey(firstChildKey) // 第二个参数为 true 表示自动滚动
 
       // 手动触发 node-click 事件，模拟用户点击行为
       const selectedNode = treeRef.value?.getCurrentNode()
-
       if (selectedNode) {
         nodeClickHandler(selectedNode) // 调用点击事件处理函数
       }
     } else {
       console.warn('treeData 或子节点不存在，无法设置默认选中项')
     }
+
+    // 设置键盘事件监听
+    document.addEventListener('keydown', handleKeyDown)
+
+    // 设置自动保存
+    setupAutoSave()
+    setupMarkdownPreview()
+
+    // 每30秒自动保存一次
+    saveInterval.value = setInterval(async () => {
+      if (saveStatus.value === 'unsaved' && currentcheckNode.value) {
+        await saveChapterContent(
+          currentcheckNode.value.id,
+          currentcheckNode.value.title
+        )
+      }
+    }, 30000)
+
+    // 延迟显示内容，添加平滑的加载体验
+    setTimeout(() => {
+      appLoaded.value = true
+    }, 800)
   })
 })
 
@@ -687,18 +907,15 @@ interface Tree {
 }
 
 // 自定义图标渲染函数
-const renderIcon = (node: any, test: any, abc: any) => {
-  // 先检查 node.children 是否存在，并且确认是否为数组
+const renderIcon = (node: TreeNode) => {
   const hasChildren = Array.isArray(node.children)
-
-  // 根据是否有子节点来判断使用哪个图标
   const iconSrc = hasChildren
-    ? './icon/a-weidakaidewenjianjiajiami.png' // 有子节点时的图标
-    : './icon/dakaidewenjianjia.png' // 无子节点时的图标
+    ? './icon/a-weidakaidewenjianjiajiami.png'
+    : './icon/dakaidewenjianjia.png'
 
   return h(ElImage, {
     key: node.id,
-    src: iconSrc, // 根据是否有子节点来判断使用哪个图标
+    src: iconSrc,
     style: { width: '15px', height: '15px' },
   })
 }
@@ -810,11 +1027,31 @@ const goToNext = () => {
 const replaceCurrent = () => {
   // 实现本章替换的逻辑
 }
-const rightTabClick = (element) => {
-  currentRightTab.value = Number(element.index)
+const rightTabClick = (element: TabsPaneContext) => {
+  console.log('标签点击:', element.index, '当前选中:', currentRightTab.value)
 
-  if (Number(element.index) === 0) {
+  // 如果点击当前已经激活的标签，则关闭它
+  if (currentRightTab.value === Number(element.index)) {
+    currentRightTab.value = rightTab.NOTAB
+    console.log('关闭当前标签')
+    return
+  }
+
+  // 否则，激活点击的标签
+  currentRightTab.value = Number(element.index)
+  console.log('激活标签:', currentRightTab.value)
+
+  // 根据标签索引处理不同的功能
+  if (currentRightTab.value === rightTab.JIUCUO) {
+    console.log('处理纠错功能')
     sensitiveWordHandler()
+  } else if (currentRightTab.value === rightTab.PREVIEW) {
+    console.log('处理预览功能')
+    // 确保DOM已更新后再获取trix-editor的内容
+    nextTick(() => {
+      console.log('立即更新预览...')
+      updateMarkdownPreview()
+    })
   }
 }
 
@@ -839,95 +1076,78 @@ async function handleInputText(inputText: string) {
   return resultText
 }
 
-let saveInterval
+// 添加保存状态相关的变量
+const saveStatus = ref<'saved' | 'saving' | 'unsaved'>('saved')
+const lastSaveTime = ref<Date | null>(null)
+const saveInterval = ref<NodeJS.Timeout | null>(null)
 
+// 改进的保存章节内容函数
 const saveChapterContent = async (
-  id,
-  vid,
-  title,
-  order,
+  id: number,
   updateContent?: string
-) => {
-  // 保存章节内容的逻辑
+): Promise<void> => {
+  try {
+    saveStatus.value = 'saving'
+    const chapterContent = updateContent || getCurrentEditorContent()
 
-  const chapterContent = getChapterContent() // 获取章节内容的函数
+    const res = await http.post('/api/saveChapter', {
+      id,
+      content: chapterContent,
+    })
 
-  // 假设你有一个API来保存内容
-  const res = await http.post('/api/saveChapter', {
-    id: id,
-    content: updateContent ? updateContent : chapterContent,
-    vid: vid,
-    title: title,
-    order: order,
-  })
-  console.log(res)
-  // JSON.stringify({ content: chapterContent })
-}
-const getChapterContent = () => {
-  const trixEditor = document.querySelector('trix-editor') as HTMLElement
-
-  if (trixEditor) {
-    const trixEditorInstance = (trixEditor as any).editor
-
-    const content = trixEditorInstance.getDocument().toString()
-
-    return content
-  }
-}
-
-const nodeClickHandler = async (element) => {
-  // 清除之前的定时器
-  if (saveInterval !== null) {
-    clearInterval(saveInterval)
-    saveInterval = null // 清除引用
-  }
-  if (!element.children) {
-    console.log('进入节点内容')
-    currentcheckNode.value = element
-    currentVolumeId.value = element.vid
-    const trixEditor = document.querySelector('trix-editor') as HTMLElement
-
-    const trixEditorInstance = (trixEditor as any).editor
-    // 根据章节 ID 获取内容
-    let chapterContent = await getFirstChapterContent(element.id) // 自定义的获取章节内容的函数
-
-    const contentLength = trixEditorInstance.getDocument().toString().length
-    trixEditorInstance.setSelectedRange([0, contentLength])
-    trixEditorInstance.deleteInDirection('forward')
-    if (!chapterContent) {
-      chapterContent = ''
+    if (res.status === 200) {
+      saveStatus.value = 'saved'
+      lastSaveTime.value = new Date()
+      ElMessage.success('保存成功')
+    } else {
+      saveStatus.value = 'unsaved'
+      ElMessage.error('保存失败，请重试')
     }
+  } catch (error) {
+    saveStatus.value = 'unsaved'
+    ElMessage.error('保存失败，请检查网络连接')
+    console.error('保存失败:', error)
+  }
+}
 
-    trixEditorInstance.insertHTML(chapterContent)
+// 监听编辑器内容变化
+const setupAutoSave = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    trixEditor.addEventListener('trix-change', () => {
+      saveStatus.value = 'unsaved'
+    })
+  }
+}
 
-    // 启动新的定时器
-    saveInterval = setInterval(async () => {
-      const trixEditor = document.querySelector('trix-editor') as HTMLElement
-      const trixEditorInstance = (trixEditor as any).editor
-      const newContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
-      await saveChapterContent(
-        element.id,
-        element.vid,
-        element.title,
-        element.order,
-        newContent
-      ) // 自定义的保存函数
-    }, 5000) // 每5秒保存一次
-  } else {
-    currentVolumeId.value = element.id
+// 处理Element Plus树节点点击事件
+const nodeClickHandler = (data: ElTreeNodeData) => {
+  const treeData = data as unknown as TreeNodeData
+
+  if (treeData.children && treeData.children.length > 0) {
+    return
   }
 
-  // else {
-  //   currentCuelement.id
-  // }
+  const node: TreeNode = {
+    id: Number(treeData.id || 0),
+    key: Number(treeData.id || 0),
+    label: treeData.label || '',
+    title: treeData.label || '',
+    order: treeData.order || 0,
+    vid: treeData.vid || 0,
+  }
+
+  currentcheckNode.value = node
+  if (node.id) {
+    getChapterContent(node.id)
+  }
 }
-const getFirstChapterContent = async (id: number) => {
+
+const getFirstChapterContent = async (id: number): Promise<string> => {
   try {
     const url = '/api/getChapter/' + id
-
     const response = await http.get(url)
-
-    return response.data // 返回章节内容，如果没有找到则返回空字符串
+    return response.data || ''
   } catch (error) {
     console.error('获取章节内容时出错:', error)
     return ''
@@ -935,10 +1155,10 @@ const getFirstChapterContent = async (id: number) => {
 }
 
 const inputSearchTextHandler = async (currentValue: string) => {
-  const chapterContent = getChapterContent() // 获取章节内容的函数
+  const chapterContent = getCurrentEditorContent() // 获取章节内容
   currentSearchValue.value = currentValue.trim() // 查找的词语
 
-  if (!currentSearchValue) return
+  if (!currentSearchValue.value) return
 
   // 正则表达式查找所有匹配项（忽略大小写）
   const regex = new RegExp(currentSearchValue.value, 'gi')
@@ -1017,39 +1237,19 @@ const replaceInChapter = () => {
 }
 
 // 全书替换
-const replaceInBook = async () => {
-  const allChapters = await getAllChapters() // 获取全书所有章节的内容
-
-  allChapters.forEach(async (chapter) => {
-    const chapterContent = chapter.content // 获取每一章节的内容
-    const searchValue = replaceForm.value.searchText
-    const regex = new RegExp(searchValue, 'gi')
-
-    // 替换每一章的内容
-    const updatedContent = chapterContent.replace(
-      regex,
-      replaceForm.value.replaceText
-    )
-
-    // 保存每一章替换后的内容
-    await saveChapterContent(
-      chapter.id,
-      chapter.volume_id,
-      chapter.title,
-      chapter.order,
-      updatedContent
-    )
-
-    if (currentcheckNode.value.id === chapter.id) {
-      const trixEditor = document.querySelector('trix-editor') as HTMLElement
-      const trixEditorInstance = (trixEditor as any).editor
-      const chapterContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
-
-      trixEditorInstance.setSelectedRange([0, chapterContent.length])
-      trixEditorInstance.deleteInDirection('forward')
-      trixEditorInstance.insertHTML(updatedContent)
-    }
-  })
+const replaceInBook = async (oldName: string, newName: string) => {
+  try {
+    const response = await fetch('/api/replace', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ oldName, newName }),
+    })
+    await response.json()
+  } catch (error) {
+    console.error('替换失败:', error)
+  }
 }
 
 // 获取全书所有章节的内容
@@ -1082,13 +1282,12 @@ const getNameform = ref<NameForm>({
 const generatedNames = ref<string[]>([])
 
 // 设置选中的 tag
-const setTag = (key: string, value: string) => {
+const setTag = (key: keyof NameForm, value: string) => {
   getNameform.value[key] = value
 }
 // 生成随机名字
 const generateName = () => {
-  // 示例随机名字生成逻辑，可以根据选择的分类、区域等条件生成
-  let namesPool = {
+  const namesPool: NamesPool = {
     china: ['张三', '李四', '王五'],
     japan: ['Sakura', 'Taro', 'Haruto'],
     west: ['John', 'Mary', 'Tom'],
@@ -1106,13 +1305,12 @@ const generateName = () => {
     randomName = placeNames[Math.floor(Math.random() * placeNames.length)]
   }
 
-  // 将生成的名字添加到右边展示
   generatedNames.value.push(randomName)
 }
 
 // 处理分类切换
-const handleTabClick = (tab) => {
-  console.log('当前选中的标签页: ', tab.name)
+const handleTabClick = (tab: { props: { name: string } }) => {
+  activeTab.value = tab.props.name
 }
 
 // 对话框的显示状态
@@ -1146,14 +1344,19 @@ const saveVolumn = async () => {
   }
 
   // 传入后台保存
-  const getCreateVolume = await saveVolumnToBackend()
+  const response = await saveVolumnToBackend()
+
+  if (!response) return
 
   // 创建新分卷对象
   const newVolumn = {
-    id: getCreateVolume?.data.id,
+    id: response.data.id,
     key: treeData.value.length + 2,
-    label: getCreateVolume?.data.title,
-    children: [], // 新建的“refresh”卷可能有章节，因此初始化一个空数组
+    label: response.data.title,
+    title: response.data.title,
+    order: treeData.value.length + 2,
+    vid: response.data.id,
+    children: [], // 新建的分卷可能有章节，因此初始化一个空数组
     isVolumn: true,
   }
 
@@ -1165,7 +1368,7 @@ const saveVolumn = async () => {
   closeVolumnDialog()
 }
 
-// 模拟保存到后台的API请求
+// 修改saveVolumnToBackend函数
 const saveVolumnToBackend = async () => {
   try {
     const response = await http.post('/api/saveVolume', {
@@ -1181,6 +1384,7 @@ const saveVolumnToBackend = async () => {
   } catch (error) {
     console.error('保存失败:', error)
     ElMessage.error('保存失败')
+    return null
   }
 }
 
@@ -1240,6 +1444,331 @@ const countNodes = () => {
 
   return count
 }
+
+// 插入标题，并在预览模式下更新预览
+const insertHeading = (level: number) => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+    if (!trixEditorInstance) return
+
+    // 获取当前选区位置
+    const currentPosition = trixEditorInstance.getSelectedRange()[0]
+
+    // 检查是否需要先插入新行
+    if (currentPosition > 0) {
+      const content = trixEditorInstance.getDocument().toString()
+      if (content[currentPosition - 1] !== '\n') {
+        trixEditorInstance.insertString('\n')
+      }
+    }
+
+    // 插入HTML标题
+    trixEditorInstance.insertHTML(`<h${level}>标题${level}</h${level}>`)
+
+    // 如果当前是预览模式，立即更新预览
+    if (currentRightTab.value === rightTab.PREVIEW) {
+      nextTick(() => {
+        updateMarkdownPreview()
+      })
+    }
+  }
+}
+
+// 插入列表，使用HTML格式
+const insertList = (type: 'ordered' | 'unordered') => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+    if (!trixEditorInstance) return
+
+    if (type === 'ordered') {
+      trixEditorInstance.insertHTML('<ol><li>有序列表项</li></ol>')
+    } else {
+      trixEditorInstance.insertHTML('<ul><li>无序列表项</li></ul>')
+    }
+
+    // 如果当前是预览模式，立即更新预览
+    if (currentRightTab.value === rightTab.PREVIEW) {
+      nextTick(() => {
+        updateMarkdownPreview()
+      })
+    }
+  }
+}
+
+// 插入引用，使用HTML格式
+const insertQuote = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+    if (!trixEditorInstance) return
+
+    trixEditorInstance.insertHTML(
+      '<blockquote style="border-left: 4px solid #ddd; padding-left: 1em; color: #666;">引用内容</blockquote>'
+    )
+
+    // 如果当前是预览模式，立即更新预览
+    if (currentRightTab.value === rightTab.PREVIEW) {
+      nextTick(() => {
+        updateMarkdownPreview()
+      })
+    }
+  }
+}
+
+// 插入代码块，使用HTML格式
+const insertCodeBlock = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+    if (!trixEditorInstance) return
+
+    trixEditorInstance.insertHTML(
+      '<pre style="background-color: #f6f8fa; padding: 1em; border-radius: 5px;"><code>// 这里是代码块</code></pre>'
+    )
+
+    // 如果当前是预览模式，立即更新预览
+    if (currentRightTab.value === rightTab.PREVIEW) {
+      nextTick(() => {
+        updateMarkdownPreview()
+      })
+    }
+  }
+}
+
+// 添加快捷键支持
+const handleKeyDown = (event: KeyboardEvent) => {
+  // 检查是否按下了Ctrl键
+  if (event.ctrlKey) {
+    switch (event.key) {
+      case '1':
+        event.preventDefault()
+        insertHeading(1)
+        break
+      case '2':
+        event.preventDefault()
+        insertHeading(2)
+        break
+      case '3':
+        event.preventDefault()
+        insertHeading(3)
+        break
+      case 'l':
+        event.preventDefault()
+        insertList('unordered')
+        break
+      case 'o':
+        event.preventDefault()
+        insertList('ordered')
+        break
+      case 'q':
+        event.preventDefault()
+        insertQuote()
+        break
+      case 'k':
+        event.preventDefault()
+        insertCodeBlock()
+        break
+    }
+  }
+}
+
+// 图片上传前的验证
+const beforeImageUpload = (file: File) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
+  }
+  return true
+}
+
+// 图片上传成功后的处理
+const handleImageUploadSuccess = (response: any) => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+    const imageUrl = response.url // 假设服务器返回图片URL
+    const markdownImage = `![图片描述](${imageUrl})`
+    trixEditorInstance.insertString(markdownImage)
+  }
+}
+
+// 获取章节内容
+const getChapterContent = async (id: number): Promise<void> => {
+  try {
+    const url = '/api/getChapter/' + id
+    const response = await http.get(url)
+    trixContent.value = response.data || ''
+
+    // 设置编辑器内容
+    nextTick(() => {
+      const trixEditor = document.querySelector('trix-editor') as HTMLElement
+      if (trixEditor) {
+        const trixEditorInstance = (trixEditor as any).editor
+        trixEditorInstance.loadHTML(trixContent.value)
+      }
+    })
+  } catch (error) {
+    console.error('获取章节内容时出错:', error)
+    trixContent.value = ''
+  }
+}
+
+// 仅用于获取当前编辑器内容的函数
+const getCurrentEditorContent = (): string => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+    // 使用trix正确的API获取HTML内容
+    return trixEditorInstance.getDocument().toString()
+  }
+  return ''
+}
+
+// 定义API函数
+const getChapters = async (volumeId: number): Promise<Chapter[]> => {
+  try {
+    const response = await fetch(`/api/chapters/${volumeId}`)
+    return await response.json()
+  } catch (error) {
+    console.error('获取章节列表失败:', error)
+    return []
+  }
+}
+
+const updateChapterContent = async (
+  chapterId: number,
+  content: string
+): Promise<void> => {
+  try {
+    await fetch(`/api/chapters/${chapterId}/content`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content }),
+    })
+  } catch (error) {
+    console.error('更新章节内容失败:', error)
+  }
+}
+
+// 修改handleNodeClick函数
+const handleNodeClick = (data: ElTreeNodeData) => {
+  nodeClickHandler(data)
+}
+
+// 修改handleDragEnd函数
+const handleDragEnd = (
+  draggingNode: ElTreeNodeData,
+  dropNode: ElTreeNodeData
+) => {
+  // 处理拖拽结束逻辑
+}
+
+const handleCheck = (data: ElTreeNodeData, checked: boolean) => {
+  const treeData = data as unknown as TreeNodeData
+  if (treeData.children && treeData.children.length > 0) {
+    return
+  }
+  // ... existing code ...
+}
+
+// 添加处理全书替换的事件处理函数
+const handleReplaceInBook = () => {
+  if (currentSearchValue.value && replaceForm.value.replaceText) {
+    replaceInBook(currentSearchValue.value, replaceForm.value.replaceText)
+  } else {
+    ElMessage.error('请输入查找内容和替换内容')
+  }
+}
+
+// 添加Markdown预览功能
+const renderedMarkdown = ref('')
+
+const updateMarkdownPreview = () => {
+  try {
+    const trixEditor = document.querySelector('trix-editor') as HTMLElement
+    if (!trixEditor) {
+      renderedMarkdown.value = '<p>预览出错：找不到编辑器元素</p>'
+      return
+    }
+
+    // 直接使用trix-editor的innerHTML获取内容
+    renderedMarkdown.value = trixEditor.innerHTML
+
+    // 调试输出
+    console.log('预览内容已更新，长度:', trixEditor.innerHTML.length)
+  } catch (error) {
+    console.error('预览渲染错误:', error)
+    renderedMarkdown.value = '<p>预览出错</p>'
+  }
+}
+
+// 监听编辑器内容变化，更新预览
+const setupMarkdownPreview = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    // 监听trix-change事件，当编辑器内容变化时更新预览
+    trixEditor.addEventListener('trix-change', () => {
+      console.log('编辑器内容变化')
+      // 如果当前显示的是预览标签页，则更新预览内容
+      if (currentRightTab.value === rightTab.PREVIEW) {
+        updateMarkdownPreview()
+      }
+    })
+
+    // 初始加载后自动触发一次预览更新
+    nextTick(() => {
+      console.log('初始预览更新')
+      if (currentRightTab.value === rightTab.PREVIEW) {
+        updateMarkdownPreview()
+      }
+    })
+
+    // 创建一个定时检查器，确保预览面板在激活时能够显示内容
+    const previewInterval = setInterval(() => {
+      if (currentRightTab.value === rightTab.PREVIEW) {
+        updateMarkdownPreview()
+      }
+    }, 2000) // 每2秒检查一次
+
+    // 为定时器添加数据属性，以便在卸载时清理
+    const markerElement = document.createElement('div')
+    markerElement.style.display = 'none'
+    markerElement.dataset.previewInterval = previewInterval.toString()
+    document.body.appendChild(markerElement)
+  }
+}
+
+// 添加onUnmounted函数来清理资源
+onUnmounted(() => {
+  // 清理键盘事件监听
+  document.removeEventListener('keydown', handleKeyDown)
+
+  // 清理自动保存定时器
+  if (saveInterval.value) {
+    clearInterval(saveInterval.value)
+  }
+
+  // 清理预览更新定时器
+  const previewIntervals = document.querySelectorAll('[data-preview-interval]')
+  previewIntervals.forEach((interval) => {
+    if (interval && typeof interval === 'object' && 'id' in interval) {
+      clearInterval(Number(interval.id))
+    }
+  })
+
+  console.log('组件已卸载，资源已清理')
+})
 </script>
 
 <style lang="scss" scoped>
@@ -1248,6 +1777,100 @@ const countNodes = () => {
   width: 100%;
   display: flex;
   flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+
+  &.content-loaded {
+    opacity: 1;
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition:
+      opacity 0.5s ease-out,
+      visibility 0.5s ease-out;
+
+    .loading-text {
+      margin-top: 30px;
+      font-size: 20px;
+      color: #4a4a4a;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+    }
+
+    .loading-dots {
+      margin-top: 15px;
+      display: flex;
+      span {
+        width: 8px;
+        height: 8px;
+        margin: 0 5px;
+        background-color: #4a4a4a;
+        border-radius: 50%;
+        display: inline-block;
+        animation: dots 1.4s infinite ease-in-out both;
+
+        &:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+
+        &:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+      }
+    }
+
+    .loader-container {
+      perspective: 1000px;
+    }
+
+    .book {
+      position: relative;
+      width: 100px;
+      height: 120px;
+      transform-style: preserve-3d;
+      animation: bookRotate 4s infinite linear;
+
+      &__page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        background-color: #1989fa;
+        border-radius: 5px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+
+        &:nth-child(1) {
+          transform: rotateY(0deg) translateZ(10px);
+          background: linear-gradient(45deg, #1989fa, #53a8ff);
+        }
+
+        &:nth-child(2) {
+          transform: rotateY(30deg) translateZ(5px);
+          background: linear-gradient(45deg, #53a8ff, #85c1ff);
+        }
+
+        &:nth-child(3) {
+          transform: rotateY(60deg) translateZ(0);
+          background: linear-gradient(45deg, #85c1ff, #b3d8ff);
+        }
+      }
+    }
+  }
+
   .header {
     height: 45px;
     width: 100%;
@@ -1351,9 +1974,14 @@ const countNodes = () => {
         gap: 20px;
         background-color: #ffffff;
         align-items: center;
+        position: relative;
 
         .right-tabs {
-          el-tab-pane {
+          .el-tabs__content {
+            overflow: visible; /* 允许内容溢出以显示浮动面板 */
+          }
+
+          .el-tab-pane {
             position: relative;
           }
 
@@ -1363,7 +1991,18 @@ const countNodes = () => {
             top: 95px;
             background-color: #ffffff;
             width: 500px;
-            height: 100%;
+            height: calc(100vh - 140px);
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            padding: 15px;
+            overflow-y: auto;
+            transition:
+              transform 0.3s ease-in-out,
+              opacity 0.3s ease;
+            /* 默认隐藏所有面板 */
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
           }
         }
         .menuItem {
@@ -1373,6 +2012,10 @@ const countNodes = () => {
           align-items: center;
           &:hover {
             background-color: #f5eeee;
+          }
+          &.active {
+            color: var(--el-color-primary);
+            background-color: #ecf5ff;
           }
         }
       }
@@ -1449,5 +2092,194 @@ const countNodes = () => {
 
 .random-name-btn {
   margin-top: 20px;
+}
+
+.markdown-tools {
+  display: flex;
+  gap: 8px;
+  margin-left: 20px;
+
+  .el-button {
+    padding: 4px 8px;
+    min-width: 32px;
+  }
+
+  .upload-demo {
+    display: inline-block;
+  }
+}
+
+.save-status {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+
+  &.saved {
+    background-color: #67c23a;
+    color: white;
+  }
+
+  &.saving {
+    background-color: #e6a23c;
+    color: white;
+  }
+
+  &.unsaved {
+    background-color: #f56c6c;
+    color: white;
+  }
+
+  .last-save-time {
+    margin-left: 8px;
+    font-size: 12px;
+    opacity: 0.8;
+  }
+}
+
+.rightTabContent {
+  // 通用面板样式
+  .panel-header,
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eaecef;
+
+    span {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .close-btn {
+      padding: 6px;
+    }
+  }
+
+  .panel-content {
+    height: calc(100% - 50px); // 减去标题栏高度
+    overflow-y: auto;
+  }
+}
+
+// Markdown预览面板特殊样式
+.rightTabContent.markdown-preview {
+  width: 700px !important; /* 预览面板宽度更宽 */
+  background-color: #fdfdfd;
+  border-left: 1px solid #ececec;
+  padding: 20px 30px;
+  overflow-y: auto;
+  line-height: 1.6;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+  :deep(h1) {
+    font-size: 2em;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+  }
+
+  :deep(h2) {
+    font-size: 1.5em;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+  }
+
+  :deep(h3) {
+    font-size: 1.25em;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+  }
+
+  :deep(h4),
+  :deep(h5),
+  :deep(h6) {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+  }
+
+  :deep(p) {
+    margin: 1em 0;
+  }
+
+  :deep(ul),
+  :deep(ol) {
+    padding-left: 2em;
+    margin: 1em 0;
+  }
+
+  :deep(blockquote) {
+    border-left: 4px solid #ddd;
+    padding-left: 1em;
+    color: #666;
+    margin: 1em 0;
+  }
+
+  :deep(code) {
+    font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: rgba(27, 31, 35, 0.05);
+    border-radius: 3px;
+  }
+
+  :deep(pre) {
+    background-color: #f6f8fa;
+    padding: 1em;
+    border-radius: 5px;
+    overflow-x: auto;
+
+    code {
+      background-color: transparent;
+      padding: 0;
+    }
+  }
+
+  :deep(img) {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* 修复预览面板显示问题 */
+.rightTabContent[v-show='true'],
+.rightTabContent.markdown-preview[v-show='true'] {
+  transform: translateX(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@keyframes bookRotate {
+  0% {
+    transform: rotateY(0deg) rotateX(20deg);
+  }
+  100% {
+    transform: rotateY(360deg) rotateX(20deg);
+  }
+}
+
+@keyframes dots {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }
 </style>
