@@ -49,11 +49,15 @@ const { visible, title, formData, formIndex, currentForm } = defineProps<{
 }>()
 
 const form = reactive<Book>({
-  ...formData[formIndex!],
+  id: 0,
+  bookName: '',
+  fontCount: 0,
+  src: '/allBooks/bookList/bookTemplate4.png'
 })
 
-if (!formIndex) {
-  form.src = '/allBooks/bookList/bookTemplate4.png'
+// 如果是编辑模式，初始化表单数据
+if (formIndex !== undefined && formData[formIndex]) {
+  Object.assign(form, formData[formIndex])
 }
 // 定义 emits，用于通知父组件
 const emit = defineEmits(['update:visible', 'confirm'])
@@ -71,12 +75,14 @@ watch(
 watch(
   () => formIndex,
   (newIndex) => {
-    if (firstOpen) {
-      Object.assign(currentForm!, form)
+    if (firstOpen && currentForm) {
+      Object.assign(currentForm, form)
       firstOpen = false
     }
 
-    Object.assign(form, formData[newIndex!])
+    if (newIndex !== undefined && formData[newIndex]) {
+      Object.assign(form, formData[newIndex])
+    }
   }
 )
 
@@ -84,7 +90,9 @@ watch(
 const handleClose = () => {
   emit('update:visible', false) // 通知父组件更新 visible 的值为 false
 
-  Object.assign(form, currentForm)
+  if (currentForm) {
+    Object.assign(form, currentForm)
+  }
 }
 
 // 点击确认时，提交表单并关闭对话框

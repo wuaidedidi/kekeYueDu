@@ -11,7 +11,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true, // 可选，跳过库的类型检查
-    "allowSyntheticDefaultImports": true, // 添加这行
+    "allowSyntheticDefaultImports": true,
     "lib": [
       "esnext",
       "dom"
@@ -20,7 +20,6 @@
       "./node_modules/@types",
       "./src/typings"
     ],
-    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [

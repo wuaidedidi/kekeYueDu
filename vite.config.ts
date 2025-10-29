@@ -14,7 +14,13 @@ export default defineConfig({
     port: 3000,
   },
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.startsWith('trix-')
+        }
+      }
+    }),
     // commonjs({
     //   dynamicRequireTargets: [
     //     path.resolve(__dirname, 'build/node_sqlite3.node'), // 确保路径正确

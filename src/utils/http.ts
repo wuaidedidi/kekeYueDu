@@ -8,7 +8,7 @@ import axios, {
 
 // 创建 axios 实例
 const http: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '', // 从环境变量获取 baseURL
+  baseURL: 'http://localhost:8080/api', // 指向简化服务器
   timeout: 10000, // 请求超时时间
 })
 

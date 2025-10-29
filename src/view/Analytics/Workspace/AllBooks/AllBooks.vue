@@ -19,6 +19,7 @@
         type="primary"
         color="#626aef"
         :icon="Plus"
+        @click="createNewBook"
         >新建作品</el-button
       >
       <el-button :icon="Plus" color="#626aef" plain @click="CreateDraft"
@@ -112,7 +113,7 @@
 
 <script setup lang="ts">
 import { Grid, Plus, Setting } from '@element-plus/icons-vue'
-import { ElButton, ElImage, ElNotification, ElMessageBox } from 'element-plus'
+import { ElButton, ElImage, ElNotification, ElMessageBox, ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import Dialog from './components/dialog.vue'
 import type { Book } from '@/typings/book'
@@ -138,9 +139,28 @@ onMounted(() => {
   initAllDraft()
 })
 const initAllDraft = async () => {
-  const res = await http.get('/api/allDraft')
+  try {
+    const res = await http.get('/allDraft')
 
-  bookTemplates.value = res.data
+    // 确保API响应数据正确
+    const draftsData = res.data?.data || res.data || []
+
+    // 将API返回的数据转换为Book格式
+    const drafts = draftsData.map((draft: any, index: number) => ({
+      id: draft.id || index + 1,
+      bookName: draft.bookName || '未命名草稿',
+      fontCount: draft.fontCount || 0,
+      src: draft.src || `./allBooks/banner/carousel${(index % 4) + 1}.png`
+    }))
+
+    bookTemplates.value = drafts
+    console.log('加载的草稿数据:', drafts)
+  } catch (error) {
+    console.error('加载草稿失败:', error)
+    ElMessage.error('加载草稿失败，请稍后重试')
+    // 设置默认数据防止页面崩溃
+    bookTemplates.value = []
+  }
 }
 
 const checkEditFormIndex = ref()
@@ -165,8 +185,8 @@ const openMessAge = () => {
         message: '删除成功',
         offset: 200,
       })
-      const deleteIndex = bookTemplates.value.findIndex((item, index) => {
-        return form.bookName === form.bookName
+      const deleteIndex = bookTemplates.value.findIndex((item) => {
+        return item.bookName === form.bookName
       })
 
       bookTemplates.value.splice(deleteIndex, 1)
@@ -184,6 +204,35 @@ const CreateDraft = () => {
   dialogAddFormVisible.value = true
 }
 
+const createNewBook = async () => {
+  try {
+    console.log('新建作品')
+
+    // 直接创建一个新作品
+    const res = await http.post('/createBook', {
+      bookName: '新作品',
+      fontCount: 0,
+      src: './allBooks/bookList/bookTemplate1.png'
+    })
+
+    if (res.data.success) {
+      ElMessage.success('作品创建成功')
+
+      // 刷新草稿列表
+      await initAllDraft()
+
+      // 跳转到新作品的编辑页面
+      const newBookId = res.data.data.id
+      router.push({ name: 'draftDetail', params: { id: newBookId.toString() } })
+    } else {
+      ElMessage.error(res.data.message || '创建作品失败')
+    }
+  } catch (error) {
+    console.error('创建作品失败:', error)
+    ElMessage.error('创建作品失败，请稍后重试')
+  }
+}
+
 // 处理确认事件
 const handleConfirm = (formData: { name: string }) => {
   // 找到要更新的书籍索引
@@ -198,22 +247,48 @@ const handleConfirm = (formData: { name: string }) => {
   // 这里可以进行进一步的处理
 }
 
-const handleAddConfirm = (formData: Book) => {
-  bookTemplates.value.push(formData)
-  dialogAddFormVisible.value = false
-  console.log('新增书籍数据:', bookTemplates.value)
+const handleAddConfirm = async (formData: Book) => {
+  try {
+    // 调用后端API创建草稿
+    const res = await http.post('/createDraft', {
+      bookName: formData.bookName,
+      fontCount: formData.fontCount,
+      src: formData.src
+    })
+
+    if (res.data.success) {
+      // 刷新草稿列表
+      await initAllDraft()
+      dialogAddFormVisible.value = false
+      ElMessage.success('草稿创建成功')
+    } else {
+      ElMessage.error(res.data.message || '创建草稿失败')
+    }
+  } catch (error) {
+    console.error('创建草稿失败:', error)
+    ElMessage.error('创建草稿失败，请稍后重试')
+  }
 }
 
 const clickBookHandler = (id: number) => {
-  router.push({ name: 'draftDetail', params: { id: id } })
+  console.log('点击书籍，ID:', id)
+
+  if (!id || isNaN(id) || id <= 0) {
+    ElMessage.warning('无效的书籍ID')
+    return
+  }
+
+  try {
+    router.push({ name: 'draftDetail', params: { id: id.toString() } })
+  } catch (error) {
+    console.error('路由跳转失败:', error)
+    ElMessage.error('页面跳转失败，请重试')
+  }
 }
 
-const message = ref('')
-
-onMounted(async () => {
-  const response = await axios.get('http://localhost:8080/')
-  message.value = response.data
-  console.log(message.value)
+onMounted(() => {
+  // 组件挂载时的初始化逻辑
+  console.log('AllBooks component mounted')
 })
 </script>
 <style lang="scss" scoped>

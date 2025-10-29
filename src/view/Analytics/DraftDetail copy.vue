@@ -492,7 +492,7 @@ onMounted(async () => {
 
 const initTreeData = async () => {
   try {
-    const res = await http.get('/api/treeData')
+    const res = await http.get('/treeData')
 
     treeData.value = res.data
   } catch (error) {
@@ -646,7 +646,7 @@ const saveChapterContent = async (
   const chapterContent = getChapterContent() // 获取章节内容的函数
 
   // 假设你有一个API来保存内容
-  const res = await http.post('/api/saveChapter', {
+  const res = await http.post('/saveChapter', {
     id: id,
     content: updateContent ? updateContent : chapterContent,
     vid: vid,
@@ -702,7 +702,7 @@ const nodeClickHandler = async (element) => {
 }
 const getFirstChapterContent = async (id: number) => {
   try {
-    const url = '/api/getChapter/' + id
+    const url = '/getChapter/' + id
 
     const response = await http.get(url)
 
@@ -834,7 +834,7 @@ const replaceInBook = async () => {
 // 获取全书所有章节的内容
 const getAllChapters = async () => {
   try {
-    const response = await http.get('/api/chapters')
+    const response = await http.get('/chapters')
     return response.data // 返回章节数据
   } catch (error) {
     console.error('Error fetching chapters:', error)

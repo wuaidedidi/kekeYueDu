@@ -1,0 +1,22 @@
+import { useUserStore } from '@/store/userStore'
+
+// 路由守卫
+export const setupRouterGuards = (router: any) => {
+  router.beforeEach((to: any, from: any, next: any) => {
+    const userStore = useUserStore()
+
+    // 检查路由是否需要认证
+    const requiresAuth = to.matched.some((record: any) => record.meta.requiresAuth)
+
+    if (requiresAuth && !userStore.isLoggedIn) {
+      // 需要认证但用户未登录，跳转到登录页
+      next('/login')
+    } else if (to.path === '/login' && userStore.isLoggedIn) {
+      // 已登录用户访问登录页，跳转到主页
+      next('/workspace/all-books')
+    } else {
+      // 正常访问
+      next()
+    }
+  })
+}

@@ -1,0 +1,476 @@
+const express = require('express');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const sqlite3 = require('sqlite3').verbose();
+
+const app = express();
+const PORT = 8081; // 使用不同端口避免冲突
+
+// JWT密钥 - 生产环境应使用环境变量
+const JWT_SECRET = 'kekeYueDu_secret_key_2025';
+
+// 中间件
+app.use(cors());
+app.use(express.json());
+
+// JWT认证中间件
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: '访问被拒绝，需要认证令牌'
+    });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        message: '令牌无效或已过期'
+      });
+    }
+
+    req.user = user;
+    next();
+  });
+};
+
+// 内存数据库用于测试
+const users = [];
+let userIdCounter = 1;
+let draftIdCounter = 1;
+
+// === 用户认证路由 ===
+
+// 用户注册
+app.post('/api/register', async (req, res) => {
+  try {
+    const { username, password, confirmPassword } = req.body;
+
+    // 数据验证
+    if (!username || !password || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: '请填写所有字段'
+      });
+    }
+
+    if (username.trim().length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: '用户名至少需要3个字符'
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: '密码至少需要6个字符'
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: '两次输入的密码不一致'
+      });
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLetter || !hasNumber) {
+      return res.status(400).json({
+        success: false,
+        message: '密码必须包含字母和数字'
+      });
+    }
+
+    // 检查用户名是否已存在
+    const existingUser = users.find(u => u.username === username.trim());
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: '用户名已存在'
+      });
+    }
+
+    // 密码加密
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // 创建新用户
+    const newUser = {
+      id: userIdCounter++,
+      username: username.trim(),
+      password: hashedPassword,
+      email: null,
+      created_at: new Date().toISOString()
+    };
+
+    users.push(newUser);
+
+    console.log('新用户注册成功:', { id: newUser.id, username: newUser.username });
+
+    // 为新注册用户生成JWT令牌
+    const token = jwt.sign(
+      {
+        id: newUser.id,
+        username: newUser.username
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: '注册成功',
+      data: {
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          created_at: newUser.created_at
+        },
+        token: token
+      }
+    });
+
+  } catch (error) {
+    console.error('注册错误:', error);
+    res.status(500).json({
+      success: false,
+      message: '服务器错误，请稍后重试'
+    });
+  }
+});
+
+// 用户登录
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: '请输入用户名和密码'
+      });
+    }
+
+    // 查找用户
+    const user = users.find(u => u.username === username.trim());
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: '用户名或密码错误'
+      });
+    }
+
+    // 验证密码
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        message: '用户名或密码错误'
+      });
+    }
+
+    // 生成JWT令牌
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' } // 令牌有效期24小时
+    );
+
+    // 登录成功
+    const { password: _, ...userInfo } = user;
+
+    res.json({
+      success: true,
+      message: '登录成功',
+      data: {
+        user: userInfo,
+        token: token
+      }
+    });
+
+  } catch (error) {
+    console.error('登录错误:', error);
+    res.status(500).json({
+      success: false,
+      message: '服务器错误，请稍后重试'
+    });
+  }
+});
+
+// 获取用户信息
+app.get('/api/profile', (req, res) => {
+  const userId = parseInt(req.query.userId);
+
+  if (!userId) {
+    return res.status(400).json({
+      success: false,
+      message: '用户ID不能为空'
+    });
+  }
+
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: '用户不存在'
+    });
+  }
+
+  const { password: _, ...userInfo } = user;
+
+  res.json({
+    success: true,
+    data: { user: userInfo }
+  });
+});
+
+// 更新用户信息
+app.put('/api/profile', (req, res) => {
+  const { userId, updates } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({
+      success: false,
+      message: '用户ID不能为空'
+    });
+  }
+
+  const userIndex = users.findIndex(u => u.id === parseInt(userId));
+  if (userIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: '用户不存在'
+    });
+  }
+
+  // 更新允许的字段
+  if (updates.email !== undefined) {
+    users[userIndex].email = updates.email;
+  }
+
+  const { password: _, ...userInfo } = users[userIndex];
+
+  res.json({
+    success: true,
+    message: '更新成功',
+    data: { user: userInfo }
+  });
+});
+
+// === 写作相关路由 ===
+
+const drafts = [
+  {
+    id: 1,
+    title: '示例小说：奇幻之旅',
+    content: '这是一个示例小说的内容，讲述了主人公在奇幻世界中的冒险故事...',
+    created_at: '2025-10-29T00:00:00Z',
+    updated_at: '2025-10-29T00:00:00Z'
+  },
+  {
+    id: 2,
+    title: '科幻故事：星际远征',
+    content: '在遥远的未来，人类已经征服了银河系的众多星球...',
+    created_at: '2025-10-28T00:00:00Z',
+    updated_at: '2025-10-28T00:00:00Z'
+  }
+];
+
+// 章节数据存储
+let chapterIdCounter = 3;
+const chapters = [
+  {
+    id: 1,
+    title: '第一章：开始',
+    content: '<p>这是第一章的内容，讲述了冒险的开始...</p>',
+    volumeId: 1,
+    bookId: 1,
+    order: 1,
+    created_at: '2025-10-29T00:00:00Z',
+    updated_at: '2025-10-29T00:00:00Z'
+  },
+  {
+    id: 2,
+    title: '第二章：冒险',
+    content: '<p>这是第二章的内容，主人公踏上了冒险之旅...</p>',
+    volumeId: 1,
+    bookId: 1,
+    order: 2,
+    created_at: '2025-10-29T00:00:00Z',
+    updated_at: '2025-10-29T00:00:00Z'
+  }
+];
+
+// 获取所有草稿 - 需要认证
+app.get('/api/allDraft', authenticateToken, (req, res) => {
+  res.json({
+    success: true,
+    data: drafts
+  });
+});
+
+// 创建草稿 - 需要认证
+app.post('/api/createDraft', authenticateToken, (req, res) => {
+  const { title, content } = req.body;
+
+  if (!title) {
+    return res.status(400).json({
+      success: false,
+      message: '标题不能为空'
+    });
+  }
+
+  const newDraft = {
+    id: draftIdCounter++,
+    title,
+    content: content || '',
+    user_id: req.user.id, // 使用认证用户的ID
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  drafts.push(newDraft);
+
+  res.status(201).json({
+    success: true,
+    message: '草稿创建成功',
+    data: { id: newDraft.id }
+  });
+});
+
+// 获取树形数据 - 需要认证
+app.get('/api/treeData', authenticateToken, (req, res) => {
+  const treeData = [
+    {
+      id: 1,
+      title: '我的小说',
+      type: 'book',
+      children: [
+        {
+          id: 1,
+          title: '第一卷',
+          type: 'volume',
+          children: [
+            { id: 1, title: '第一章：开始', type: 'chapter' },
+            { id: 2, title: '第二章：冒险', type: 'chapter' }
+          ]
+        }
+      ]
+    }
+  ];
+
+  res.json({
+    success: true,
+    data: treeData
+  });
+});
+
+// 其他路由的简化版本
+app.post('/api/saveChapter', authenticateToken, (req, res) => {
+  const { id, content } = req.body;
+
+  if (!id || content === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: '缺少必要参数'
+    });
+  }
+
+  // 查找并更新章节数据
+  const chapterIndex = chapters.findIndex(ch => ch.id === parseInt(id));
+  if (chapterIndex !== -1) {
+    chapters[chapterIndex].content = content;
+    chapters[chapterIndex].updated_at = new Date().toISOString();
+
+    console.log(`章节 ID ${id} 已更新，内容长度: ${content.length}`);
+
+    res.json({
+      success: true,
+      message: '章节保存成功',
+      data: chapters[chapterIndex]
+    });
+  } else {
+    res.status(404).json({
+      success: false,
+      message: '章节不存在'
+    });
+  }
+});
+
+app.get('/api/getChapter/:id', authenticateToken, (req, res) => {
+  const chapter = chapters.find(ch => ch.id === parseInt(req.params.id));
+
+  if (!chapter) {
+    return res.status(404).json({
+      success: false,
+      message: '章节不存在'
+    });
+  }
+
+  res.json({
+    success: true,
+    data: chapter
+  });
+});
+
+app.post('/api/saveVolume', authenticateToken, (req, res) => {
+  const { title } = req.body;
+  const savedVolume = {
+    id: Date.now(),
+    title,
+    order: 1
+  };
+
+  res.json({
+    success: true,
+    message: '分卷保存成功',
+    data: savedVolume
+  });
+});
+
+app.post('/api/createChapter', authenticateToken, (req, res) => {
+  const createdChapter = {
+    id: Date.now(),
+    title: req.body.title || '新章节',
+    content: req.body.content || ''
+  };
+
+  res.json({
+    success: true,
+    message: '章节创建成功',
+    data: createdChapter
+  });
+});
+
+// 图片上传接口 - 需要认证
+app.post('/api/upload', authenticateToken, (req, res) => {
+  // 注意：这里简化处理，实际项目中需要使用multer等中间件处理文件上传
+  res.status(501).json({
+    success: false,
+    message: '图片上传功能待实现，请使用本地图片'
+  });
+});
+
+// 根路由
+app.get('/', (req, res) => {
+  res.send('kekeYueDu 简化服务器运行中!');
+});
+
+// 启动服务器
+app.listen(PORT, () => {
+  console.log(`🚀 kekeYueDu 简化服务器运行在 http://localhost:${PORT}`);
+  console.log('📚 所有API端点已就绪');
+});
+
+console.log('启动测试服务器...');

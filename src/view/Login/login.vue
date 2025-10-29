@@ -155,30 +155,51 @@ const agree = ref(false)
 // 登录操作
 const login = async () => {
   if (!agree.value) {
-    return alert('请先同意用户协议和隐私政策')
+    ElMessage({
+      message: '请先同意用户协议和隐私政策',
+      type: 'warning',
+    })
+    return
   }
+
+  // 基础验证
+  if (!accountLoginForm.value.username || !accountLoginForm.value.password) {
+    ElMessage({
+      message: '请输入用户名和密码',
+      type: 'warning',
+    })
+    return
+  }
+
   try {
-    const response = await http.post('/api/login', {
-      username: accountLoginForm.value.username,
+    const response = await http.post('/login', {
+      username: accountLoginForm.value.username.trim(),
       password: accountLoginForm.value.password,
     })
-    console.log(response.status)
-    if (response.status >= 200 && response.status < 300) {
+
+    if (response.data.success) {
+      // 保存用户信息和token
+      localStorage.setItem('user', JSON.stringify(response.data.data.user))
+      localStorage.setItem('token', response.data.data.token)
+
       ElMessage({
-        message: '登陆成功',
+        message: response.data.message,
         type: 'success',
       })
+
       router.push('/workspace/all-books')
     } else {
       ElMessage({
-        message: '登陆失败',
-        type: 'warning',
+        message: response.data.message || '登录失败',
+        type: 'error',
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('登录错误:', error)
+    const message = error.response?.data?.message || '网络错误，请稍后重试'
     ElMessage({
-      message: '登陆失败',
-      type: 'warning',
+      message: message,
+      type: 'error',
     })
   }
 }
@@ -186,39 +207,98 @@ const login = async () => {
 const register = async () => {
   const { username, password, confirmPassword } = accountRegisterForm.value
 
-  // 表单验证
+  // 基础验证
   if (!username || !password || !confirmPassword) {
-    return alert('请填写所有字段')
+    ElMessage({
+      message: '请填写所有字段',
+      type: 'warning',
+    })
+    return
   }
+
   if (password !== confirmPassword) {
-    return alert('两次输入的密码不一致')
+    ElMessage({
+      message: '两次输入的密码不一致',
+      type: 'warning',
+    })
+    return
+  }
+
+  // 用户名长度验证
+  if (username.trim().length < 3) {
+    ElMessage({
+      message: '用户名至少需要3个字符',
+      type: 'warning',
+    })
+    return
+  }
+
+  if (username.trim().length > 20) {
+    ElMessage({
+      message: '用户名不能超过20个字符',
+      type: 'warning',
+    })
+    return
+  }
+
+  // 密码强度验证
+  if (password.length < 6) {
+    ElMessage({
+      message: '密码至少需要6个字符',
+      type: 'warning',
+    })
+    return
+  }
+
+  const hasLetter = /[a-zA-Z]/.test(password)
+  const hasNumber = /[0-9]/.test(password)
+
+  if (!hasLetter || !hasNumber) {
+    ElMessage({
+      message: '密码必须包含字母和数字',
+      type: 'warning',
+    })
+    return
   }
 
   try {
-    const response = await fetch('http://localhost:8080/api/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }), // 只需传递用户名和密码
+    const response = await http.post('/register', {
+      username: username.trim(),
+      password,
+      confirmPassword
     })
 
-    if (response.ok) {
-      alert('注册成功！')
+    if (response.data.success) {
+      ElMessage({
+        message: response.data.message,
+        type: 'success',
+      })
+
       // 清空表单
       accountRegisterForm.value = {
         username: '',
         password: '',
         confirmPassword: '',
       }
-      showRegister.value = false // 返回登录界面
-      router.push('workspace/all-books')
+
+      // 自动切换到登录界面
+      showRegister.value = false
+
+      // 预填用户名
+      accountLoginForm.value.username = username.trim()
     } else {
-      const errorMessage = await response.text()
-      alert('注册失败：' + errorMessage)
+      ElMessage({
+        message: response.data.message || '注册失败',
+        type: 'error',
+      })
     }
-  } catch (error) {
-    alert('注册失败：' + error.message)
+  } catch (error: any) {
+    console.error('注册错误:', error)
+    const message = error.response?.data?.message || error.message || '网络错误，请稍后重试'
+    ElMessage({
+      message: '注册失败：' + message,
+      type: 'error',
+    })
   }
 }
 
@@ -239,7 +319,7 @@ const handleTabClick = (tab) => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-image: url('/login/loginBackground.png');
+  background-image: url('/login_assets/loginBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

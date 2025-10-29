@@ -748,7 +748,6 @@ import {
   toRaw,
   watch,
 } from 'vue'
-import 'trix/dist/trix.css'
 import 'trix'
 import { useRoute } from 'vue-router'
 import http from '@/utils/http'
@@ -756,13 +755,7 @@ import { processText } from '@/utils/sensitiveWordUtils'
 import type { TreeNodeData as ElTreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { marked } from 'marked'
 
-interface Chapter {
-  id: number
-  title: string
-  content: string
-  order: number
-  volumeId: number
-}
+// 删除重复的 Chapter 接口定义，使用下面的定义
 
 interface TreeNodeData {
   id: number
@@ -815,6 +808,12 @@ interface NameForm {
 
 const route = useRoute()
 const bookId = Number(route.params.id as string)
+
+// 检查bookId是否有效
+if (!bookId || isNaN(bookId)) {
+  console.error('无效的书籍ID:', route.params.id)
+  // 可以选择重定向到其他页面或显示错误信息
+}
 
 const currentcheckNode = ref<TreeNode | null>(null)
 const matches = ref<number[]>([])
@@ -887,10 +886,12 @@ onMounted(async () => {
 
 const initTreeData = async () => {
   try {
-    const res = await http.get('/api/treeData')
+    const res = await http.get('/treeData')
 
-    treeData.value = res.data
-    console.log(res.data)
+    // 确保获取正确的数据格式
+    const rawData = res.data?.data || res.data || []
+    treeData.value = rawData
+    console.log('树形数据:', JSON.stringify(rawData, null, 2))
   } catch (error) {
     console.error('获取树形数据失败', error)
   }
@@ -899,7 +900,7 @@ const initTreeData = async () => {
 // tree的默认属性
 const defaultProps = {
   children: 'children',
-  label: 'label',
+  label: 'title',
 }
 interface Tree {
   label: string
@@ -1080,6 +1081,7 @@ async function handleInputText(inputText: string) {
 const saveStatus = ref<'saved' | 'saving' | 'unsaved'>('saved')
 const lastSaveTime = ref<Date | null>(null)
 const saveInterval = ref<NodeJS.Timeout | null>(null)
+const autoSaveTimeout = ref<NodeJS.Timeout | null>(null)
 
 // 改进的保存章节内容函数
 const saveChapterContent = async (
@@ -1087,10 +1089,25 @@ const saveChapterContent = async (
   updateContent?: string
 ): Promise<void> => {
   try {
+    // 验证章节ID有效性
+    if (!id || id <= 0 || !currentcheckNode.value || currentcheckNode.value.id !== id) {
+      console.warn('保存章节时ID无效或不匹配，跳过保存:', {
+        saveId: id,
+        currentNodeId: currentcheckNode.value?.id
+      })
+      return
+    }
+
     saveStatus.value = 'saving'
     const chapterContent = updateContent || getCurrentEditorContent()
 
-    const res = await http.post('/api/saveChapter', {
+    console.log('开始保存章节:', {
+      id,
+      title: currentcheckNode.value.title,
+      contentLength: chapterContent.length
+    })
+
+    const res = await http.post('/saveChapter', {
       id,
       content: chapterContent,
     })
@@ -1115,8 +1132,26 @@ const setupAutoSave = () => {
   const trixEditor = document.querySelector('trix-editor') as HTMLElement
   if (trixEditor) {
     trixEditor.addEventListener('trix-change', () => {
+      console.log('编辑器内容变化，标记为未保存')
       saveStatus.value = 'unsaved'
+
+      // 清除之前的自动保存定时器
+      if (autoSaveTimeout.value) {
+        clearTimeout(autoSaveTimeout.value)
+        autoSaveTimeout.value = null
+      }
+
+      // 延迟3秒后自动保存
+      autoSaveTimeout.value = setTimeout(() => {
+        if (saveStatus.value === 'unsaved' && currentcheckNode.value) {
+          console.log('执行自动保存，章节ID:', currentcheckNode.value.id)
+          saveChapterContent(currentcheckNode.value.id)
+        }
+        autoSaveTimeout.value = null
+      }, 3000)
     })
+  } else {
+    console.warn('未找到trix-editor元素')
   }
 }
 
@@ -1128,6 +1163,13 @@ const nodeClickHandler = (data: ElTreeNodeData) => {
     return
   }
 
+  // 清除当前的自动保存定时器，避免切换章节时保存错误的内容
+  if (autoSaveTimeout.value) {
+    clearTimeout(autoSaveTimeout.value)
+    autoSaveTimeout.value = null
+    console.log('切换章节，清除自动保存定时器')
+  }
+
   const node: TreeNode = {
     id: Number(treeData.id || 0),
     key: Number(treeData.id || 0),
@@ -1137,6 +1179,7 @@ const nodeClickHandler = (data: ElTreeNodeData) => {
     vid: treeData.vid || 0,
   }
 
+  console.log('切换到章节:', node.title, 'ID:', node.id)
   currentcheckNode.value = node
   if (node.id) {
     getChapterContent(node.id)
@@ -1145,7 +1188,7 @@ const nodeClickHandler = (data: ElTreeNodeData) => {
 
 const getFirstChapterContent = async (id: number): Promise<string> => {
   try {
-    const url = '/api/getChapter/' + id
+    const url = '/getChapter/' + id
     const response = await http.get(url)
     return response.data || ''
   } catch (error) {
@@ -1236,26 +1279,25 @@ const replaceInChapter = () => {
   trixEditorInstance.insertHTML(updatedContent)
 }
 
-// 全书替换
+// 全书替换 - 使用现有章节保存API逐个替换
 const replaceInBook = async (oldName: string, newName: string) => {
   try {
-    const response = await fetch('/api/replace', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ oldName, newName }),
-    })
-    await response.json()
+    console.log('全书替换功能：', oldName, '->', newName)
+    // TODO: 实现批量替换逻辑
+    // 1. 获取所有章节
+    // 2. 对每个章节内容进行替换
+    // 3. 逐个保存章节
+    ElMessage.info('全书替换功能待实现，请手动替换')
   } catch (error) {
     console.error('替换失败:', error)
+    ElMessage.error('替换失败')
   }
 }
 
 // 获取全书所有章节的内容
 const getAllChapters = async () => {
   try {
-    const response = await http.get('/api/chapters')
+    const response = await http.get('/chapters')
     return response.data // 返回章节数据
   } catch (error) {
     console.error('Error fetching chapters:', error)
@@ -1371,7 +1413,7 @@ const saveVolumn = async () => {
 // 修改saveVolumnToBackend函数
 const saveVolumnToBackend = async () => {
   try {
-    const response = await http.post('/api/saveVolume', {
+    const response = await http.post('/saveVolume', {
       bookId: bookId,
       title: volumnForm.value.name,
       order: treeData.value.length + 2,
@@ -1407,11 +1449,11 @@ const createChapter = async () => {
     order: order,
   }
 
-  const res = await http.post('/api/createChapter', param)
+  const res = await http.post('/createChapter', param)
 
   const key = countNodes()
   children?.push({
-    id: res.data.lastId,
+    id: res.data.data.id,
     key: key,
     label: '第' + order + '章',
     order: order,
@@ -1604,16 +1646,48 @@ const handleImageUploadSuccess = (response: any) => {
 // 获取章节内容
 const getChapterContent = async (id: number): Promise<void> => {
   try {
-    const url = '/api/getChapter/' + id
+    console.log('开始加载章节内容，ID:', id)
+
+    // 清除当前的自动保存定时器，避免在加载新章节内容时触发旧章节的保存
+    if (autoSaveTimeout.value) {
+      clearTimeout(autoSaveTimeout.value)
+      autoSaveTimeout.value = null
+      console.log('加载章节内容，清除自动保存定时器')
+    }
+
+    const url = '/getChapter/' + id
     const response = await http.get(url)
-    trixContent.value = response.data || ''
+
+    // 正确提取章节内容，处理API响应格式
+    let content = ''
+    if (response.data) {
+      if (typeof response.data === 'string') {
+        content = response.data
+      } else if (response.data.data && typeof response.data.data === 'string') {
+        content = response.data.data
+      } else if (response.data.data && response.data.data.content && typeof response.data.data.content === 'string') {
+        content = response.data.data.content
+      } else if (response.data.content && typeof response.data.content === 'string') {
+        content = response.data.content
+      } else {
+        console.warn('未知的API响应格式:', response.data)
+        content = ''
+      }
+    }
+
+    trixContent.value = content
 
     // 设置编辑器内容
     nextTick(() => {
       const trixEditor = document.querySelector('trix-editor') as HTMLElement
       if (trixEditor) {
         const trixEditorInstance = (trixEditor as any).editor
-        trixEditorInstance.loadHTML(trixContent.value)
+        if (typeof trixContent.value === 'string') {
+          trixEditorInstance.loadHTML(trixContent.value)
+        } else {
+          console.warn('trixContent不是字符串类型:', typeof trixContent.value)
+          trixEditorInstance.loadHTML('')
+        }
       }
     })
   } catch (error) {
@@ -1626,18 +1700,52 @@ const getChapterContent = async (id: number): Promise<void> => {
 const getCurrentEditorContent = (): string => {
   const trixEditor = document.querySelector('trix-editor') as HTMLElement
   if (trixEditor) {
-    const trixEditorInstance = (trixEditor as any).editor
-    // 使用trix正确的API获取HTML内容
-    return trixEditorInstance.getDocument().toString()
+    // 使用trix编辑器的innerHTML获取HTML内容
+    return trixEditor.innerHTML
   }
   return ''
 }
 
-// 定义API函数
+// 定义API函数 - 使用现有的treeData API获取章节列表
 const getChapters = async (volumeId: number): Promise<Chapter[]> => {
   try {
-    const response = await fetch(`/api/chapters/${volumeId}`)
-    return await response.json()
+    // 从treeData中提取指定volume的章节
+    const response = await http.get('/treeData')
+    const treeData = response.data.data || response.data
+
+    // 递归查找指定volumeId的章节
+    const findChaptersInVolume = (items: any[], targetVolumeId: number): Chapter[] => {
+      const chapters: Chapter[] = []
+
+      for (const item of items) {
+        if (item.type === 'volume' && item.id === targetVolumeId) {
+          // 找到目标卷，收集所有章节
+          if (item.children) {
+            for (const chapter of item.children) {
+              if (chapter.type === 'chapter') {
+                chapters.push({
+                  id: chapter.id,
+                  title: chapter.title,
+                  content: '', // 章节内容需要单独获取
+                  volumeId: targetVolumeId,
+                  bookId: item.bookId || 1,
+                  order: chapters.length + 1,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+              }
+            }
+          }
+        } else if (item.children) {
+          // 递归查找
+          chapters.push(...findChaptersInVolume(item.children, targetVolumeId))
+        }
+      }
+
+      return chapters
+    }
+
+    return findChaptersInVolume(treeData, volumeId)
   } catch (error) {
     console.error('获取章节列表失败:', error)
     return []
@@ -1649,15 +1757,14 @@ const updateChapterContent = async (
   content: string
 ): Promise<void> => {
   try {
-    await fetch(`/api/chapters/${chapterId}/content`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ content }),
+    // 使用现有的saveChapter API
+    await http.post('/saveChapter', {
+      id: chapterId,
+      content: content
     })
   } catch (error) {
     console.error('更新章节内容失败:', error)
+    throw error
   }
 }
 
@@ -1757,6 +1864,13 @@ onUnmounted(() => {
   // 清理自动保存定时器
   if (saveInterval.value) {
     clearInterval(saveInterval.value)
+    saveInterval.value = null
+  }
+
+  // 清理自动保存延迟定时器
+  if (autoSaveTimeout.value) {
+    clearTimeout(autoSaveTimeout.value)
+    autoSaveTimeout.value = null
   }
 
   // 清理预览更新定时器
