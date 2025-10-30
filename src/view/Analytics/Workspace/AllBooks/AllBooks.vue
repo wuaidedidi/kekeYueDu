@@ -293,99 +293,204 @@ onMounted(() => {
 <style lang="scss" scoped>
 .content {
   height: 100%;
-  width: 90%;
+  width: min(90%, 1400px); // 限制最大宽度，防止超宽屏幕变形
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  padding: 0 1rem; // 添加内边距防止贴边
 
   .addBookEdit {
-    height: 80px;
+    height: clamp(4rem, 8vh, 6rem); // 响应式高度
+    min-height: 60px; // 最小高度
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    flex-shrink: 0; // 防止压缩
+
+    // 按钮间距使用相对单位
+    .el-button {
+      margin: 0 clamp(0.5rem, 1vw, 1rem);
+      font-size: clamp(0.875rem, 1vw, 1rem); // 响应式字体
+      height: auto;
+      padding: clamp(0.5rem, 1vh, 0.75rem) clamp(1rem, 2vw, 1.5rem);
+    }
   }
+
   .bookList {
     display: flex;
     flex: 1;
-    gap: 30px;
-    flex-wrap: wrap; /* 自动换行 */
+    gap: clamp(1rem, 2vw, 2rem); // 响应式间距
+    flex-wrap: wrap;
     justify-content: flex-start;
+    align-content: flex-start; // 内容从顶部开始
+
     .book {
-      height: 250px;
-      width: calc(20% - 30px);
+      // 使用响应式尺寸，基于rem和vw
+      width: clamp(280px, 18vw, 320px);
+      min-width: 280px; // 最小宽度
+      max-width: 320px; // 最大宽度
+      height: clamp(200px, 25vw, 280px); // 保持宽高比
       display: flex;
       flex-direction: column;
 
+      // 图片容器
       .el-image {
         display: flex;
-        border-radius: 5px;
-        height: 150px;
+        border-radius: clamp(4px, 1vw, 8px);
+        height: 60%; // 使用百分比而非固定像素
         width: 100%;
-        // object-fit: cover; /* 保持图片的宽高比 */
-      }
-      .bookDescription {
-        margin-top: 5px;
-        display: flex;
-        height: 60px;
-        overflow: hidden; /* 溢出隐藏 */
-        text-overflow: ellipsis; /* 溢出时显示省略号 */
-        text-align: left;
-      }
-      .description {
-        flex: 1;
-        height: 100%;
-        overflow: hidden; /* 溢出隐藏 */
-        text-overflow: ellipsis; /* 溢出时显示省略号 */
-        text-align: left;
-      }
-      .iconMore {
-        height: 100%;
-        width: 20px;
+        overflow: hidden;
 
-        .popperSet {
+        :deep(img) {
+          width: 100%;
+          height: 100%;
+          object-fit: cover; // 保持图片比例
+          transition: transform 0.3s ease;
         }
-        .starIcon:hover {
-          animation: colorChange 3s linear infinite;
-        }
-        .starIcon {
-          outline: none; /* 取消默认的选中边框 */
-          border: none; /* 如果有其他类型的边框，也一并取消 */
+
+        &:hover :deep(img) {
+          transform: scale(1.05); // 悬停微缩放效果
         }
       }
-      .textCount {
-        margin-top: 10px;
-        height: 20px;
-        color: rgb(148, 145, 145);
-        font-size: small;
+
+      // 描述区域
+      .bookDescription {
+        margin-top: clamp(0.5rem, 1vh, 0.75rem);
+        display: flex;
+        height: 30%; // 使用百分比
+        overflow: hidden;
         text-align: left;
+
+        .description {
+          flex: 1;
+          font-size: clamp(0.875rem, 1.2vw, 1rem); // 响应式字体
+          line-height: 1.4;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2; // 最多显示2行
+          -webkit-box-orient: vertical;
+          word-break: break-word; // 防止长单词破坏布局
+        }
+
+        .iconMore {
+          height: 100%;
+          width: clamp(1.25rem, 2vw, 1.5rem);
+          flex-shrink: 0;
+          display: flex;
+          align-items: flex-start;
+          padding-top: 0.25rem;
+
+          .popperSet {
+          }
+
+          .starIcon {
+            outline: none;
+            border: none;
+            cursor: pointer;
+            font-size: clamp(0.875rem, 1.2vw, 1rem);
+            transition: all 0.3s ease;
+
+            &:hover {
+              animation: colorChange 3s linear infinite;
+              transform: scale(1.1);
+            }
+          }
+        }
+      }
+
+      // 文字计数
+      .textCount {
+        margin-top: clamp(0.5rem, 1vh, 0.75rem);
+        height: auto;
+        color: rgb(148, 145, 145);
+        font-size: clamp(0.75rem, 1vw, 0.875rem); // 响应式字体
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
 
+  // 轮播图响应式
   .el-carousel {
-    margin-top: 20px;
-  }
-  .carouselImage {
-    height: 100%;
-    width: 100%;
-    border-radius: 20px;
-  }
-  .el-carousel-item {
+    margin-top: clamp(1rem, 2vh, 1.5rem);
+    height: clamp(150px, 20vh, 200px);
+    border-radius: clamp(12px, 2vw, 20px);
+    overflow: hidden;
+
+    .carouselImage {
+      height: 100%;
+      width: 100%;
+      border-radius: inherit;
+      object-fit: cover;
+    }
+
+    .el-carousel-item {
+      border-radius: inherit;
+      overflow: hidden;
+    }
   }
 }
 
+// 优化的动画
 @keyframes colorChange {
   0% {
-    color: #ffcc00; /* 起始颜色 */
+    color: #ffcc00;
     transform: rotate(0deg);
   }
   50% {
-    color: #750983; /* 中间颜色 */
+    color: #750983;
     transform: rotate(180deg);
   }
   100% {
-    color: #ffcc00; /* 结束颜色，与起始颜色一致，形成循环 */
+    color: #ffcc00;
     transform: rotate(360deg);
+  }
+}
+
+// 响应式断点
+@media screen and (max-width: 1400px) {
+  .content .bookList .book {
+    width: calc(25% - 1rem);
+    max-width: none;
+  }
+}
+
+@media screen and (max-width: 1200px) {
+  .content .bookList .book {
+    width: calc(33.333% - 1rem);
+    max-width: none;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .content {
+    width: 95%;
+    padding: 0 0.5rem;
+  }
+
+  .content .bookList .book {
+    width: calc(50% - 0.5rem);
+    max-width: none;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .content {
+    width: 98%;
+    padding: 0 0.25rem;
+  }
+
+  .content .bookList .book {
+    width: 100%;
+    max-width: none;
+  }
+
+  .content .addBookEdit .el-button {
+    margin: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
   }
 }
 </style>

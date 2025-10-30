@@ -323,28 +323,151 @@ const handleTabClick = (tab) => {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  min-height: 500px; // 最小高度
   background-image: url('/login_assets/loginBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  padding: 1rem; // 添加内边距防止贴边
 }
 
 .login-box {
-  width: 400px;
-  padding: 30px;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  width: clamp(320px, 40vw, 480px); // 响应式宽度
+  max-width: 90vw; // 最大宽度不超过视窗90%
+  padding: clamp(1.5rem, 4vw, 2.5rem); // 响应式内边距
+  background-color: rgba(255, 255, 255, 0.95); // 添加透明度
+  backdrop-filter: blur(10px); // 背景模糊效果
+  border-radius: clamp(8px, 2vw, 16px); // 响应式圆角
+  box-shadow: 0 clamp(2px, 0.5vw, 12px) rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 clamp(4px, 1vw, 20px) rgba(0, 0, 0, 0.15);
+  }
 }
 
 .el-tabs {
-  margin-bottom: 0;
+  margin-bottom: clamp(1rem, 2vh, 1.5rem);
+
+  :deep(.el-tabs__header) {
+    margin-bottom: clamp(1.5rem, 3vh, 2rem);
+  }
+
+  :deep(.el-tabs__item) {
+    font-size: clamp(0.875rem, 1.2vw, 1rem);
+    padding: clamp(0.75rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem);
+  }
+
+  :deep(.el-tabs__active-bar) {
+    height: 3px;
+    border-radius: 2px;
+  }
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* 调整每个元素的垂直间距 */
+  gap: clamp(1.25rem, 3vh, 1.75rem); // 响应式间距
+
+  .el-form-item {
+    margin-bottom: 0; // 移除默认的margin，使用gap控制间距
+
+    :deep(.el-form-item__label) {
+      font-size: clamp(0.875rem, 1.1vw, 1rem);
+      line-height: 1.4;
+      padding-bottom: 0.5rem;
+    }
+
+    :deep(.el-input__wrapper) {
+      border-radius: clamp(6px, 1vw, 8px);
+      padding: clamp(0.5rem, 1vh, 0.75rem) clamp(0.75rem, 1.5vw, 1rem);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+
+      &:hover {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    :deep(.el-input__inner) {
+      font-size: clamp(0.875rem, 1.1vw, 1rem);
+      line-height: 1.4;
+    }
+  }
+
+  .el-button {
+    margin-top: clamp(0.5rem, 1vh, 0.75rem);
+    height: clamp(2.5rem, 5vh, 3rem);
+    border-radius: clamp(6px, 1.5vw, 8px);
+    font-size: clamp(0.875rem, 1.1vw, 1rem);
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(98, 106, 239, 0.3);
+    }
+  }
+}
+
+// 社交登录按钮
+.social-login {
+  display: flex;
+  gap: clamp(0.75rem, 1.5vw, 1rem);
+  margin-top: clamp(1rem, 2vh, 1.5rem);
+
+  .el-button {
+    flex: 1;
+    height: clamp(2.25rem, 4.5vh, 2.75rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+
+    :deep(span) {
+      font-size: clamp(0.75rem, 1vw, 0.875rem);
+    }
+  }
+}
+
+// 响应式断点
+@media screen and (max-width: 768px) {
+  .login-container {
+    padding: 0.5rem;
+  }
+
+  .login-box {
+    width: 95vw;
+    max-width: 400px;
+    padding: 1.5rem;
+  }
+
+  .login-form {
+    gap: 1rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .login-container {
+    align-items: flex-start; // 小屏幕从顶部开始
+    padding-top: 2rem;
+  }
+
+  .login-box {
+    width: 100vw;
+    max-width: none;
+    border-radius: clamp(8px, 2vw, 12px) clamp(8px, 2vw, 12px) 0 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .login-form {
+    gap: 1.25rem;
+  }
 }
 
 .username-password-row {

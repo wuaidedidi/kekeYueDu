@@ -1998,93 +1998,148 @@ onUnmounted(() => {
   }
 
   .header {
-    height: 45px;
+    height: clamp(40px, 6vh, 60px); // 响应式高度
     width: 100%;
     display: flex;
     align-items: center;
-    border-bottom: 1px lightgray solid;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0 clamp(0.5rem, 1vw, 1rem);
+    flex-shrink: 0;
 
     .rightHeader {
       display: flex;
       align-items: center;
       margin-left: auto;
+      gap: clamp(0.5rem, 1vw, 1rem);
+
+      .el-button {
+        height: clamp(28px, 4vh, 36px);
+        font-size: clamp(0.75rem, 1vw, 0.875rem);
+        padding: 0 clamp(0.5rem, 1vw, 0.75rem);
+      }
     }
 
     .el-image {
-      margin: 0px 5px 0px 20px;
-      height: 15px;
-      width: 15px;
+      margin: 0 clamp(3px, 0.5vw, 5px) 0 clamp(10px, 2vw, 20px);
+      height: clamp(12px, 2vh, 18px);
+      width: clamp(12px, 2vh, 18px);
     }
   }
+
   .main {
     width: 100%;
     background-color: #ffffff;
     flex: 1;
     display: flex;
+    overflow: hidden; // 防止内容溢出
+
     .aside {
       height: 100%;
-      width: 300px;
+      width: clamp(250px, 25vw, 350px); // 响应式宽度
+      min-width: 250px; // 最小宽度
+      max-width: 350px; // 最大宽度
+      border-right: 1px solid #e0e0e0;
+      flex-shrink: 0;
 
       .asideContent {
         margin: 0 auto;
-        margin-top: 20px;
+        margin-top: clamp(1rem, 2vh, 1.5rem);
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        gap: 15px;
-        height: 100%; /* 可根据需要调整 */
+        gap: clamp(0.75rem, 2vh, 1rem);
+        height: 100%;
         width: 90%;
+        padding-bottom: clamp(1rem, 2vh, 1.5rem);
+
         .addRow {
-          height: 50px;
+          height: clamp(40px, 6vh, 50px);
           display: flex;
           width: 100%;
           justify-content: center;
+          gap: clamp(0.5rem, 1vw, 0.75rem);
+
           button {
             flex: 1;
+            height: 100%;
+            font-size: clamp(0.75rem, 1vw, 0.875rem);
+            border-radius: clamp(4px, 1vw, 6px);
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            }
           }
         }
+
         .directory {
           display: flex;
           justify-content: flex-end;
           align-items: center;
           width: 100%;
+          padding: clamp(0.5rem, 1vh, 0.75rem) 0;
+
           .el-image {
-            margin-left: 10px;
-            height: 15px;
-            width: 15px;
+            margin-left: clamp(5px, 1vw, 10px);
+            height: clamp(12px, 2vh, 18px);
+            width: clamp(12px, 2vh, 18px);
           }
+
           span {
             margin-right: auto;
             color: rgb(159, 152, 152);
-            font-size: small;
+            font-size: clamp(0.75rem, 1vw, 0.875rem);
           }
         }
+
         .bookSetInfo {
           display: flex;
           justify-content: flex-start;
           width: 100%;
           align-items: center;
-          font-size: small;
+          font-size: clamp(0.75rem, 1vw, 0.875rem);
+          padding: clamp(0.5rem, 1vh, 0.75rem) 0;
+
           .el-image {
-            margin-right: 10px;
-            height: 15px;
-            width: 15px;
+            margin-right: clamp(5px, 1vw, 10px);
+            height: clamp(12px, 2vh, 18px);
+            width: clamp(12px, 2vh, 18px);
           }
         }
+
         .el-tree {
           width: 100%;
+          flex: 1;
+          overflow-y: auto;
+
+          :deep(.el-tree-node__content) {
+            height: clamp(32px, 5vh, 40px);
+            padding: clamp(4px, 0.5vw, 8px) 0;
+          }
+
           .custom-node {
             width: 100%;
-            height: 20px;
+            height: 100%;
+            display: flex;
+            align-items: center;
 
             .el-image {
-              height: 15px;
+              height: clamp(12px, 2vh, 16px);
+              width: clamp(12px, 2vh, 16px);
+              margin-right: clamp(4px, 0.5vw, 8px);
+            }
+
+            span {
+              font-size: clamp(0.75rem, 1vw, 0.875rem);
+              line-height: 1.4;
             }
           }
         }
       }
     }
+
     .mainContent {
       height: 100%;
       width: 100%;
@@ -2092,40 +2147,49 @@ onUnmounted(() => {
       background-color: #f3f3f6;
       display: flex;
       justify-content: flex-end;
+      overflow: hidden;
+
       .mainRight {
         height: 100%;
-        width: 50px;
+        width: clamp(40px, 5vw, 60px);
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: clamp(1rem, 2vh, 1.5rem);
         background-color: #ffffff;
         align-items: center;
         position: relative;
+        flex-shrink: 0;
 
         .right-tabs {
-          .el-tabs__content {
-            overflow: visible; /* 允许内容溢出以显示浮动面板 */
+          height: 100%;
+          width: 100%;
+
+          :deep(.el-tabs__content) {
+            overflow: visible;
           }
 
-          .el-tab-pane {
+          :deep(.el-tab-pane) {
             position: relative;
           }
 
           .rightTabContent {
             position: fixed;
-            right: 50px;
-            top: 95px;
+            right: clamp(40px, 5vw, 60px);
+            top: clamp(80px, 10vh, 120px);
             background-color: #ffffff;
-            width: 500px;
-            height: calc(100vh - 140px);
-            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+            width: clamp(300px, 40vw, 600px);
+            height: clamp(300px, 60vh, calc(100vh - 140px));
+            max-width: 80vw;
+            max-height: 80vh;
+            box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+            border-radius: clamp(8px, 1.5vw, 16px) 0 0 clamp(8px, 1.5vw, 16px);
             z-index: 10;
-            padding: 15px;
+            padding: clamp(1rem, 2vh, 1.5rem);
             overflow-y: auto;
             transition:
               transform 0.3s ease-in-out,
               opacity 0.3s ease;
-            /* 默认隐藏所有面板 */
+            // 默认隐藏所有面板
             transform: translateX(100%);
             opacity: 0;
             pointer-events: none;
@@ -2149,36 +2213,241 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         flex: 1;
+        min-width: 0; // 防止flex子项溢出
+        overflow: hidden;
+
         .contentDetail {
-          /* 你的样式 */
-          border: 1px solid lightgray;
-          padding: 10px;
-          height: 100%; /* 根据需要设置高度 */
-          overflow-y: auto; /* 如果内容超过可视区域，允许滚动 */
-          line-height: 1.5; /* 默认行间距 */
-          max-width: 100%; /* 默认宽度为100% */
-        }
-        .mainFooter {
-          border-top: 1px rgb(167, 163, 163) solid;
-          width: 100%;
-          height: 30px;
-          display: flex;
-          align-items: center;
-          font-size: 12px;
-          .addChapterButton {
-            &:hover {
-              background-color: rgb(236, 231, 231);
+          flex: 1;
+          border: 1px solid #e0e0e0;
+          padding: clamp(0.75rem, 2vh, 1.5rem);
+          height: 100%;
+          overflow-y: auto;
+          overflow-x: hidden; // 防止横向滚动
+          line-height: 1.6;
+          max-width: 100%;
+          background-color: #ffffff;
+          border-radius: clamp(4px, 0.5vw, 8px);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+
+          // Trix编辑器样式优化
+          :deep(trix-editor) {
+            min-height: clamp(300px, 60vh, 800px);
+            padding: clamp(1rem, 2vh, 1.5rem);
+            font-size: clamp(0.875rem, 1.2vw, 1rem);
+            line-height: 1.7;
+            color: #333;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            border-radius: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            // 编辑器工具栏样式
+            &::before {
+              content: '';
+              display: none; // 隐藏默认工具栏
+            }
+
+            // 编辑器内容区域
+            .trix-content {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              font-size: inherit;
+              line-height: inherit;
+              color: inherit;
+
+              // 标题样式
+              h1, h2, h3, h4, h5, h6 {
+                margin: clamp(1rem, 2vh, 1.5rem) 0 clamp(0.5rem, 1vh, 0.75rem) 0;
+                font-weight: 600;
+                line-height: 1.3;
+                color: #2c3e50;
+              }
+
+              h1 { font-size: clamp(1.5rem, 3vw, 2rem); }
+              h2 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+              h3 { font-size: clamp(1.1rem, 2vw, 1.5rem); }
+              h4 { font-size: clamp(1rem, 1.8vw, 1.25rem); }
+              h5 { font-size: clamp(0.9rem, 1.6vw, 1.1rem); }
+              h6 { font-size: clamp(0.8rem, 1.4vw, 1rem); }
+
+              // 段落样式
+              p {
+                margin: clamp(0.75rem, 1.5vh, 1rem) 0;
+                text-align: justify;
+                word-wrap: break-word;
+                word-break: break-word;
+              }
+
+              // 列表样式
+              ul, ol {
+                margin: clamp(0.5rem, 1vh, 0.75rem) 0;
+                padding-left: clamp(1.5rem, 3vw, 2rem);
+
+                li {
+                  margin: clamp(0.25rem, 0.5vh, 0.5rem) 0;
+                  line-height: inherit;
+                }
+              }
+
+              // 引用样式
+              blockquote {
+                margin: clamp(1rem, 2vh, 1.5rem) 0;
+                padding: clamp(0.75rem, 1.5vh, 1rem) clamp(1rem, 2vw, 1.5rem);
+                border-left: clamp(3px, 0.3vw, 5px) solid #42b983;
+                background-color: #f8f9fa;
+                border-radius: 0 4px 4px 0;
+                color: #6c757d;
+                font-style: italic;
+              }
+
+              // 代码样式
+              pre {
+                margin: clamp(1rem, 2vh, 1.5rem) 0;
+                padding: clamp(1rem, 2vh, 1.25rem);
+                background-color: #f6f8fa;
+                border-radius: clamp(4px, 0.5vw, 8px);
+                overflow-x: auto;
+                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                font-size: clamp(0.8rem, 1vw, 0.9rem);
+                line-height: 1.5;
+
+                code {
+                  background: none;
+                  padding: 0;
+                  border-radius: 0;
+                  color: inherit;
+                }
+              }
+
+              code {
+                background-color: #f1f3f4;
+                color: #d73a49;
+                padding: 0.2em 0.4em;
+                border-radius: 3px;
+                font-size: 85%;
+                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+              }
+
+              // 链接样式
+              a {
+                color: #42b983;
+                text-decoration: none;
+                border-bottom: 1px solid transparent;
+                transition: border-color 0.3s ease;
+
+                &:hover {
+                  border-bottom-color: #42b983;
+                }
+              }
+
+              // 图片样式
+              img {
+                max-width: 100%;
+                height: auto;
+                border-radius: clamp(4px, 0.5vw, 8px);
+                margin: clamp(0.5rem, 1vh, 0.75rem) 0;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+              }
+
+              // 表格样式
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: clamp(1rem, 2vh, 1.5rem) 0;
+                font-size: clamp(0.875rem, 1.2vw, 1rem);
+
+                th, td {
+                  border: 1px solid #e0e0e0;
+                  padding: clamp(0.5rem, 1vh, 0.75rem) clamp(0.75rem, 1.5vw, 1rem);
+                  text-align: left;
+                }
+
+                th {
+                  background-color: #f8f9fa;
+                  font-weight: 600;
+                }
+              }
+
+              // 分隔线样式
+              hr {
+                border: none;
+                height: 1px;
+                background-color: #e0e0e0;
+                margin: clamp(1.5rem, 3vh, 2rem) 0;
+              }
+            }
+
+            // 选中状态样式
+            &.trix-focused {
+              outline: none;
+              box-shadow: inset 0 0 0 2px rgba(66, 185, 131, 0.3);
             }
           }
+
+          // 滚动条美化
+          &::-webkit-scrollbar {
+            width: clamp(6px, 1vw, 8px);
+          }
+
+          &::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+
+            &:hover {
+              background: #a8a8a8;
+            }
+          }
+        }
+
+        .mainFooter {
+          border-top: 1px solid #e0e0e0;
+          width: 100%;
+          height: clamp(35px, 5vh, 45px);
+          min-height: 35px; // 最小高度
+          display: flex;
+          align-items: center;
+          font-size: clamp(0.7rem, 1vw, 0.8rem);
+          padding: 0 clamp(0.75rem, 1.5vw, 1rem);
+          background-color: #fafafa;
+          flex-shrink: 0;
+
+          .addChapterButton {
+            padding: clamp(0.25rem, 0.5vh, 0.5rem) clamp(0.75rem, 1.5vw, 1rem);
+            font-size: inherit;
+            border-radius: clamp(3px, 0.4vw, 5px);
+            transition: all 0.3s ease;
+
+            &:hover {
+              background-color: #f0f0f0;
+              transform: translateY(-1px);
+            }
+          }
+
           .bugFix {
             margin-left: auto;
             height: 100%;
             display: flex;
-            gap: 10px;
+            gap: clamp(0.5rem, 1vw, 0.75rem);
             align-items: center;
+
             .bugText {
+              padding: clamp(0.25rem, 0.5vh, 0.5rem) clamp(0.5rem, 1vw, 0.75rem);
+              font-size: inherit;
+              border-radius: clamp(3px, 0.4vw, 5px);
+              cursor: pointer;
+              transition: all 0.3s ease;
+
               &:hover {
-                background-color: rgb(236, 231, 231);
+                background-color: #f0f0f0;
+                transform: translateY(-1px);
               }
             }
           }
@@ -2222,46 +2491,265 @@ onUnmounted(() => {
 
 .markdown-tools {
   display: flex;
-  gap: 8px;
-  margin-left: 20px;
+  gap: clamp(4px, 1vw, 8px);
+  margin-left: clamp(1rem, 2vw, 1.5rem);
+  flex-wrap: wrap; // 允许换行
+  align-items: center;
 
   .el-button {
-    padding: 4px 8px;
-    min-width: 32px;
+    padding: clamp(4px, 0.8vh, 8px) clamp(6px, 1.2vw, 12px);
+    min-width: clamp(28px, 4vw, 40px);
+    height: clamp(28px, 4vh, 36px);
+    font-size: clamp(0.7rem, 1vw, 0.8rem);
+    border-radius: clamp(3px, 0.4vw, 5px);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .el-icon {
+      font-size: clamp(0.8rem, 1.2vw, 1rem);
+    }
   }
 
   .upload-demo {
     display: inline-block;
+
+    :deep(.el-upload) {
+      .el-button {
+        height: inherit;
+        font-size: inherit;
+      }
+    }
+  }
+
+  // 工具组样式
+  .tool-group {
+    display: flex;
+    gap: clamp(2px, 0.5vw, 4px);
+    padding: 0 clamp(4px, 0.8vw, 8px);
+    border-right: 1px solid #e0e0e0;
+    align-items: center;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    .el-button {
+      min-width: clamp(24px, 3vw, 32px);
+      height: clamp(24px, 3.5vh, 32px);
+      padding: 0;
+      aspect-ratio: 1; // 保持正方形
+    }
   }
 }
 
 .save-status {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-
-  &.saved {
-    background-color: #67c23a;
-    color: white;
-  }
+  bottom: clamp(1rem, 2vh, 1.5rem);
+  right: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(6px, 1vh, 8px) clamp(12px, 2vw, 16px);
+  border-radius: clamp(4px, 0.5vw, 8px);
+  font-size: clamp(0.7rem, 1vw, 0.8rem);
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1000;
+  transition: all 0.3s ease;
 
   &.saving {
-    background-color: #e6a23c;
+    background-color: rgba(64, 158, 255, 0.9);
     color: white;
   }
 
-  &.unsaved {
-    background-color: #f56c6c;
+  &.saved {
+    background-color: rgba(103, 194, 58, 0.9);
     color: white;
   }
 
-  .last-save-time {
-    margin-left: 8px;
-    font-size: 12px;
-    opacity: 0.8;
+  &.error {
+    background-color: rgba(245, 108, 108, 0.9);
+    color: white;
+  }
+}
+
+// 编辑器工具栏样式
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 16px);
+  padding: clamp(0.5rem, 1vh, 0.75rem) clamp(1rem, 2vw, 1.5rem);
+  background-color: #fafafa;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: clamp(4px, 0.5vw, 8px) clamp(4px, 0.5vw, 8px) 0 0;
+  flex-wrap: wrap;
+  min-height: clamp(40px, 6vh, 50px);
+
+  .toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 0.8vw, 8px);
+    padding-right: clamp(8px, 1.5vw, 16px);
+    border-right: 1px solid #d0d0d0;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    .toolbar-label {
+      font-size: clamp(0.7rem, 1vw, 0.8rem);
+      color: #666;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .el-button {
+      height: clamp(24px, 3.5vh, 32px);
+      min-width: clamp(24px, 3vw, 32px);
+      padding: 0 clamp(4px, 0.8vw, 8px);
+      font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+
+      &.is-active {
+        background-color: #42b983;
+        color: white;
+        border-color: #42b983;
+      }
+    }
+
+    .el-input-number {
+      width: clamp(60px, 8vw, 100px);
+
+      :deep(.el-input__inner) {
+        height: clamp(24px, 3.5vh, 32px);
+        font-size: clamp(0.7rem, 1vw, 0.8rem);
+      }
+    }
+
+    .el-color-picker {
+      width: clamp(24px, 3.5vh, 32px);
+      height: clamp(24px, 3.5vh, 32px);
+
+      :deep(.el-color-picker__trigger) {
+        width: 100%;
+        height: 100%;
+        border-radius: clamp(3px, 0.4vw, 5px);
+      }
+    }
+  }
+}
+
+// 浮动面板内容样式优化
+.panel-content {
+  height: calc(100% - clamp(40px, 6vh, 60px)); // 减去标题栏高度
+  overflow-y: auto;
+  padding: clamp(0.75rem, 1.5vh, 1rem);
+
+  // 自定义滚动条
+  &::-webkit-scrollbar {
+    width: clamp(4px, 0.8vw, 6px);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+
+  // 设置面板样式
+  .settings-section {
+    margin-bottom: clamp(1rem, 2vh, 1.5rem);
+
+    .settings-title {
+      font-size: clamp(0.8rem, 1.2vw, 1rem);
+      font-weight: 600;
+      color: #333;
+      margin-bottom: clamp(0.5rem, 1vh, 0.75rem);
+      padding-bottom: clamp(4px, 0.8vh, 8px);
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: clamp(0.75rem, 1.5vh, 1rem);
+      padding: clamp(0.5rem, 1vh, 0.75rem);
+      background-color: #f8f9fa;
+      border-radius: clamp(4px, 0.5vw, 8px);
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background-color: #f0f2f5;
+      }
+
+      .settings-label {
+        font-size: clamp(0.7rem, 1vw, 0.8rem);
+        color: #666;
+        flex: 1;
+      }
+
+      .settings-control {
+        flex-shrink: 0;
+        margin-left: clamp(0.5rem, 1vw, 0.75rem);
+
+        .el-slider {
+          width: clamp(80px, 12vw, 120px);
+
+          :deep(.el-slider__runway) {
+            height: 4px;
+          }
+        }
+
+        .el-switch {
+          transform: scale(0.9);
+        }
+      }
+    }
+  }
+
+  // 字符统计样式
+  .char-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: clamp(0.75rem, 1.5vh, 1rem);
+    margin-bottom: clamp(1rem, 2vh, 1.5rem);
+
+    .stat-item {
+      padding: clamp(0.75rem, 1.5vh, 1rem);
+      background-color: #f8f9fa;
+      border-radius: clamp(4px, 0.5vw, 8px);
+      text-align: center;
+      border-left: 3px solid #42b983;
+
+      .stat-value {
+        font-size: clamp(1.2rem, 2vw, 1.5rem);
+        font-weight: 600;
+        color: #42b983;
+        margin-bottom: 0.25rem;
+      }
+
+      .stat-label {
+        font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
   }
 }
 
@@ -2406,6 +2894,688 @@ onUnmounted(() => {
   }
   40% {
     transform: scale(1);
+  }
+}
+
+// 响应式断点 - DraftDetail组件专用
+@media screen and (max-width: 1400px) {
+  .main {
+    .aside {
+      width: clamp(220px, 22vw, 300px);
+    }
+
+    .mainContent .mainRight {
+      width: clamp(35px, 4.5vw, 50px);
+    }
+
+    .mainLeft {
+      .contentDetail {
+        :deep(trix-editor) {
+          min-height: clamp(250px, 50vh, 700px);
+          font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+        }
+      }
+
+      .mainFooter {
+        .bugFix {
+          gap: clamp(4px, 0.8vw, 6px);
+        }
+      }
+    }
+  }
+
+  .markdown-tools {
+    .tool-group {
+      .el-button {
+        min-width: clamp(20px, 2.5vw, 28px);
+        height: clamp(20px, 2.5vh, 28px);
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 1200px) {
+  .main {
+    flex-direction: column;
+
+    .aside {
+      width: 100%;
+      height: clamp(180px, 25vh, 280px);
+      border-right: none;
+      border-bottom: 1px solid #e0e0e0;
+
+      .asideContent {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: clamp(0.75rem, 1.5vh, 1rem);
+        gap: clamp(0.5rem, 1vw, 0.75rem);
+
+        .el-tree {
+          min-width: clamp(250px, 30vw, 350px);
+          flex-shrink: 0;
+
+          :deep(.el-tree-node__content) {
+            height: clamp(28px, 4vh, 36px);
+            padding: 0 clamp(4px, 0.8vw, 8px);
+          }
+        }
+
+        .addRow {
+          min-width: 150px;
+          height: clamp(32px, 5vh, 40px);
+        }
+      }
+    }
+
+    .mainContent {
+      .mainRight {
+        width: clamp(32px, 4vw, 45px);
+
+        .right-tabs .rightTabContent {
+          width: clamp(280px, 35vw, 550px);
+          right: clamp(32px, 4vw, 45px);
+        }
+      }
+
+      .mainLeft {
+        .contentDetail {
+          :deep(trix-editor) {
+            min-height: clamp(280px, 55vh, 600px);
+            padding: clamp(0.75rem, 1.5vh, 1.25rem);
+            font-size: clamp(0.85rem, 1.1vw, 0.95rem);
+
+            .trix-content {
+              h1 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); }
+              h2 { font-size: clamp(1.1rem, 2vw, 1.5rem); }
+              h3 { font-size: clamp(1rem, 1.8vw, 1.3rem); }
+              h4 { font-size: clamp(0.9rem, 1.6vw, 1.15rem); }
+              h5 { font-size: clamp(0.85rem, 1.5vw, 1rem); }
+              h6 { font-size: clamp(0.75rem, 1.3vw, 0.9rem); }
+            }
+          }
+        }
+
+        .mainFooter {
+          height: clamp(30px, 4.5vh, 40px);
+          padding: 0 clamp(0.5rem, 1vw, 0.75rem);
+          font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+
+          .bugFix {
+            gap: clamp(3px, 0.6vw, 5px);
+
+            .bugText {
+              padding: clamp(2px, 0.4vh, 4px) clamp(4px, 0.8vw, 6px);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .markdown-tools {
+    margin-left: clamp(0.75rem, 1.5vw, 1rem);
+    gap: clamp(3px, 0.6vw, 6px);
+
+    .el-button {
+      min-width: clamp(24px, 3vw, 32px);
+      height: clamp(24px, 3.5vh, 32px);
+      font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+    }
+
+    .tool-group {
+      padding: 0 clamp(3px, 0.6vw, 6px);
+
+      .el-button {
+        min-width: clamp(20px, 2.5vw, 26px);
+        height: clamp(20px, 2.5vh, 26px);
+      }
+    }
+  }
+
+  .editor-toolbar {
+    padding: clamp(0.4rem, 0.8vh, 0.6rem) clamp(0.75rem, 1.5vw, 1rem);
+    gap: clamp(6px, 1vw, 12px);
+    min-height: clamp(35px, 5vh, 45px);
+
+    .toolbar-section {
+      gap: clamp(3px, 0.6vw, 6px);
+      padding-right: clamp(6px, 1vw, 12px);
+
+      .el-button {
+        height: clamp(20px, 2.5vh, 26px);
+        min-width: clamp(20px, 2.5vw, 26px);
+        font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .header {
+    height: clamp(50px, 8vh, 70px);
+    padding: 0 0.5rem;
+
+    .rightHeader {
+      .el-button {
+        height: clamp(24px, 5vh, 32px);
+        font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+        padding: 0 clamp(0.4rem, 0.8vw, 0.5rem);
+      }
+    }
+  }
+
+  .main {
+    .aside {
+      height: clamp(160px, 22vh, 220px);
+
+      .asideContent {
+        padding: clamp(0.5rem, 1vh, 0.75rem);
+        gap: clamp(0.4rem, 0.8vw, 0.6rem);
+
+        .addRow {
+          height: clamp(28px, 5vh, 36px);
+
+          button {
+            font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+          }
+        }
+
+        .el-tree {
+          :deep(.el-tree-node__content) {
+            height: clamp(24px, 3.5vh, 32px);
+            padding: 0 clamp(3px, 0.6vw, 6px);
+
+            .custom-node {
+              span {
+                font-size: clamp(0.7rem, 1vw, 0.8rem);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .mainContent {
+      .mainRight {
+        width: clamp(28px, 3.5vw, 38px);
+        gap: clamp(0.6rem, 1.2vh, 0.8rem);
+
+        .right-tabs .rightTabContent {
+          width: clamp(230px, 40vw, 380px);
+          height: clamp(230px, 50vh, calc(100vh - 90px));
+          right: clamp(28px, 3.5vw, 38px);
+          top: clamp(65px, 8vh, 95px);
+          padding: clamp(0.6rem, 1.2vh, 0.8rem);
+          border-radius: clamp(6px, 1vw, 12px) 0 0 clamp(6px, 1vw, 12px);
+        }
+      }
+
+      .mainLeft {
+        .contentDetail {
+          :deep(trix-editor) {
+            min-height: clamp(260px, 50vh, 500px);
+            padding: clamp(0.6rem, 1.2vh, 0.8rem);
+            font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+
+            .trix-content {
+              h1 { font-size: clamp(1.2rem, 2.2vw, 1.6rem); }
+              h2 { font-size: clamp(1rem, 1.8vw, 1.4rem); }
+              h3 { font-size: clamp(0.9rem, 1.6vw, 1.2rem); }
+              h4 { font-size: clamp(0.85rem, 1.4vw, 1.1rem); }
+              h5 { font-size: clamp(0.8rem, 1.3vw, 1rem); }
+              h6 { font-size: clamp(0.7rem, 1.2vw, 0.85rem); }
+
+              p {
+                margin: clamp(0.6rem, 1.2vh, 0.8rem) 0;
+              }
+
+              ul, ol {
+                padding-left: clamp(1.2rem, 2.5vw, 1.5rem);
+                margin: clamp(0.4rem, 0.8vh, 0.6rem) 0;
+              }
+
+              blockquote {
+                margin: clamp(0.8rem, 1.5vh, 1.2rem) 0;
+                padding: clamp(0.6rem, 1.2vh, 0.8rem) clamp(0.8rem, 1.5vw, 1rem);
+                border-left-width: clamp(2px, 0.3vw, 3px);
+              }
+
+              pre {
+                margin: clamp(0.8rem, 1.5vh, 1.2rem) 0;
+                padding: clamp(0.8rem, 1.5vh, 1rem);
+                font-size: clamp(0.75rem, 1vw, 0.85rem);
+              }
+
+              img {
+                margin: clamp(0.4rem, 0.8vh, 0.6rem) 0;
+              }
+            }
+          }
+        }
+
+        .mainFooter {
+          height: clamp(28px, 4vh, 38px);
+          padding: 0 clamp(0.4rem, 0.8vw, 0.6rem);
+          font-size: clamp(0.6rem, 0.85vw, 0.7rem);
+
+          .addChapterButton {
+            padding: clamp(2px, 0.4vh, 3px) clamp(0.5rem, 1vw, 0.6rem);
+          }
+
+          .bugFix {
+            gap: clamp(2px, 0.4vw, 3px);
+
+            .bugText {
+              padding: clamp(2px, 0.4vh, 3px) clamp(3px, 0.6vw, 4px);
+              font-size: inherit;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .markdown-tools {
+    margin-left: clamp(0.5rem, 1vw, 0.75rem);
+    gap: clamp(2px, 0.4vw, 4px);
+
+    .el-button {
+      min-width: clamp(20px, 2.5vw, 28px);
+      height: clamp(20px, 2.5vh, 28px);
+      font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+      padding: 0 clamp(3px, 0.6vw, 5px);
+    }
+
+    .tool-group {
+      padding: 0 clamp(2px, 0.4vw, 4px);
+
+      .el-button {
+        min-width: clamp(16px, 2vw, 22px);
+        height: clamp(16px, 2vh, 22px);
+      }
+    }
+  }
+
+  .editor-toolbar {
+    padding: clamp(0.3rem, 0.6vh, 0.4rem) clamp(0.5rem, 1vw, 0.75rem);
+    gap: clamp(4px, 0.8vw, 8px);
+    min-height: clamp(30px, 4.5vh, 40px);
+
+    .toolbar-section {
+      gap: clamp(2px, 0.4vw, 4px);
+      padding-right: clamp(4px, 0.8vw, 8px);
+
+      .toolbar-label {
+        font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+      }
+
+      .el-button {
+        height: clamp(18px, 2.2vh, 24px);
+        min-width: clamp(18px, 2.2vw, 24px);
+        font-size: clamp(0.55rem, 0.75vw, 0.65rem);
+        padding: 0 clamp(2px, 0.4vw, 4px);
+      }
+
+      .el-input-number {
+        width: clamp(50px, 6vw, 70px);
+
+        :deep(.el-input__inner) {
+          height: clamp(18px, 2.2vh, 24px);
+          font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+        }
+      }
+
+      .el-color-picker {
+        width: clamp(18px, 2.2vh, 24px);
+        height: clamp(18px, 2.2vh, 24px);
+      }
+    }
+  }
+
+  .save-status {
+    bottom: clamp(0.8rem, 1.5vh, 1rem);
+    right: clamp(0.8rem, 1.5vw, 1rem);
+    padding: clamp(4px, 0.8vh, 6px) clamp(8px, 1.5vw, 12px);
+    font-size: clamp(0.6rem, 0.85vw, 0.7rem);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .content {
+    padding: 0 clamp(0.125rem, 0.5vw, 0.25rem);
+  }
+
+  .header {
+    height: clamp(55px, 9vh, 75px);
+    flex-wrap: wrap;
+    padding: 0 clamp(0.25rem, 0.8vw, 0.5rem);
+
+    .rightHeader {
+      width: 100%;
+      justify-content: center;
+      margin-top: clamp(0.25rem, 0.5vh, 0.4rem);
+      gap: clamp(0.25rem, 0.6vw, 0.4rem);
+
+      .el-button {
+        height: clamp(20px, 3.5vh, 28px);
+        font-size: clamp(0.55rem, 0.8vw, 0.65rem);
+        padding: 0 clamp(0.3rem, 0.7vw, 0.4rem);
+      }
+    }
+  }
+
+  .main {
+    .aside {
+      height: clamp(140px, 18vh, 180px);
+
+      .asideContent {
+        flex-direction: column;
+        padding: clamp(0.3rem, 0.8vh, 0.5rem);
+        gap: clamp(0.3rem, 0.8vw, 0.5rem);
+
+        .directory span,
+        .bookSetInfo {
+          font-size: clamp(0.55rem, 0.85vw, 0.65rem);
+        }
+
+        .el-tree :deep(.el-tree-node__content) {
+          height: clamp(22px, 3vh, 28px);
+          padding: 0 clamp(2px, 0.4vw, 4px);
+
+          .custom-node {
+            span {
+              font-size: clamp(0.6rem, 0.9vw, 0.7rem);
+            }
+
+            .el-image {
+              width: clamp(10px, 1.5vh, 12px);
+              height: clamp(10px, 1.5vh, 12px);
+              margin-right: clamp(2px, 0.3vw, 3px);
+            }
+          }
+        }
+
+        .addRow {
+          height: clamp(24px, 4vh, 32px);
+          gap: clamp(0.2rem, 0.5vw, 0.3rem);
+
+          button {
+            font-size: clamp(0.55rem, 0.8vw, 0.65rem);
+            padding: 0 clamp(0.3rem, 0.7vw, 0.4rem);
+          }
+        }
+      }
+    }
+
+    .mainContent {
+      .mainRight {
+        width: clamp(22px, 2.5vw, 30px);
+        gap: clamp(0.4rem, 0.8vh, 0.6rem);
+
+        .right-tabs .rightTabContent {
+          width: calc(100vw - clamp(22px, 2.5vw, 30px));
+          height: clamp(200px, 55vh, calc(100vh - 70px));
+          right: clamp(22px, 2.5vw, 30px);
+          top: clamp(55px, 8vh, 85px);
+          border-radius: clamp(6px, 1vw, 10px) clamp(6px, 1vw, 10px) 0 0;
+          padding: clamp(0.5rem, 1vh, 0.6rem);
+          box-shadow: -2px 0 8px rgba(0, 0, 0, 0.12);
+        }
+      }
+
+      .mainLeft {
+        .contentDetail {
+          :deep(trix-editor) {
+            min-height: clamp(240px, 45vh, 400px);
+            padding: clamp(0.4rem, 1vh, 0.6rem);
+            font-size: clamp(0.75rem, 1.1vw, 0.85rem);
+            line-height: 1.6;
+
+            .trix-content {
+              h1 { font-size: clamp(1.1rem, 2vw, 1.4rem); }
+              h2 { font-size: clamp(0.95rem, 1.6vw, 1.25rem); }
+              h3 { font-size: clamp(0.85rem, 1.4vw, 1.1rem); }
+              h4 { font-size: clamp(0.8rem, 1.3vw, 1rem); }
+              h5 { font-size: clamp(0.75rem, 1.2vw, 0.9rem); }
+              h6 { font-size: clamp(0.65rem, 1.1vw, 0.8rem); }
+
+              p {
+                margin: clamp(0.5rem, 1vh, 0.7rem) 0;
+                font-size: inherit;
+                line-height: 1.6;
+              }
+
+              ul, ol {
+                padding-left: clamp(1rem, 2vw, 1.2rem);
+                margin: clamp(0.3rem, 0.7vh, 0.5rem) 0;
+
+                li {
+                  margin: clamp(0.2rem, 0.4vh, 0.3rem) 0;
+                }
+              }
+
+              blockquote {
+                margin: clamp(0.6rem, 1.2vh, 0.9rem) 0;
+                padding: clamp(0.5rem, 1vh, 0.6rem) clamp(0.6rem, 1.2vw, 0.8rem);
+                border-left-width: clamp(2px, 0.3vw, 3px);
+                font-size: clamp(0.7rem, 1vw, 0.8rem);
+              }
+
+              pre {
+                margin: clamp(0.6rem, 1.2vh, 0.9rem) 0;
+                padding: clamp(0.6rem, 1.2vh, 0.8rem);
+                font-size: clamp(0.65rem, 1vw, 0.75rem);
+                line-height: 1.4;
+                overflow-x: auto;
+              }
+
+              code {
+                font-size: clamp(0.6rem, 0.9vw, 0.7rem);
+                padding: 0.1em 0.3em;
+              }
+
+              a {
+                font-size: inherit;
+              }
+
+              img {
+                margin: clamp(0.3rem, 0.7vh, 0.5rem) 0;
+                border-radius: clamp(3px, 0.5vw, 6px);
+              }
+
+              table {
+                font-size: clamp(0.7rem, 1vw, 0.8rem);
+
+                th, td {
+                  padding: clamp(0.3rem, 0.7vh, 0.5rem) clamp(0.4rem, 0.8vw, 0.6rem);
+                }
+              }
+
+              hr {
+                margin: clamp(1rem, 1.5vh, 1.3rem) 0;
+              }
+            }
+          }
+        }
+
+        .mainFooter {
+          height: clamp(25px, 3.5vh, 35px);
+          padding: 0 clamp(0.3rem, 0.7vw, 0.4rem);
+          font-size: clamp(0.5rem, 0.75vw, 0.6rem);
+
+          .addChapterButton {
+            padding: clamp(1px, 0.3vh, 2px) clamp(0.3rem, 0.7vw, 0.4rem);
+            font-size: inherit;
+          }
+
+          .bugFix {
+            gap: clamp(1px, 0.3vw, 2px);
+
+            .bugText {
+              padding: clamp(1px, 0.3vh, 2px) clamp(2px, 0.4vw, 3px);
+              font-size: inherit;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .markdown-tools {
+    margin-left: clamp(0.3rem, 0.7vw, 0.5rem);
+    gap: clamp(1px, 0.3vw, 2px);
+    flex-wrap: wrap;
+
+    .el-button {
+      min-width: clamp(16px, 2vw, 22px);
+      height: clamp(16px, 2vh, 22px);
+      font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+      padding: 0 clamp(2px, 0.4vw, 3px);
+    }
+
+    .tool-group {
+      padding: 0 clamp(1px, 0.2vw, 2px);
+
+      .el-button {
+        min-width: clamp(12px, 1.5vw, 18px);
+        height: clamp(12px, 1.5vh, 18px);
+        border-radius: 2px;
+      }
+    }
+  }
+
+  .editor-toolbar {
+    padding: clamp(0.2rem, 0.4vh, 0.3rem) clamp(0.3rem, 0.7vw, 0.4rem);
+    gap: clamp(2px, 0.4vw, 4px);
+    min-height: clamp(25px, 3.5vh, 35px);
+
+    .toolbar-section {
+      gap: clamp(1px, 0.2vw, 2px);
+      padding-right: clamp(2px, 0.4vw, 4px);
+
+      .toolbar-label {
+        font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+        display: none; // 小屏幕隐藏标签节省空间
+      }
+
+      .el-button {
+        height: clamp(14px, 1.8vh, 20px);
+        min-width: clamp(14px, 1.8vw, 20px);
+        font-size: clamp(0.45rem, 0.65vw, 0.55rem);
+        padding: 0 clamp(1px, 0.2vw, 2px);
+        border-radius: 2px;
+      }
+
+      .el-input-number {
+        width: clamp(40px, 5vw, 55px);
+
+        :deep(.el-input__inner) {
+          height: clamp(14px, 1.8vh, 20px);
+          font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+        }
+      }
+
+      .el-color-picker {
+        width: clamp(14px, 1.8vh, 20px);
+        height: clamp(14px, 1.8vh, 20px);
+
+        :deep(.el-color-picker__trigger) {
+          border-radius: 2px;
+        }
+      }
+    }
+  }
+
+  .save-status {
+    bottom: clamp(0.5rem, 1vh, 0.7rem);
+    right: clamp(0.5rem, 1vw, 0.7rem);
+    padding: clamp(3px, 0.6vh, 4px) clamp(6px, 1.2vw, 8px);
+    font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+    border-radius: clamp(3px, 0.5vw, 6px);
+  }
+
+  // 浮动面板内容优化
+  .panel-content {
+    padding: clamp(0.4rem, 0.8vh, 0.5rem);
+
+    .settings-section {
+      .settings-title {
+        font-size: clamp(0.7rem, 1vw, 0.8rem);
+        margin-bottom: clamp(0.3rem, 0.6vh, 0.4rem);
+      }
+
+      .settings-item {
+        padding: clamp(0.3rem, 0.6vh, 0.4rem);
+        margin-bottom: clamp(0.5rem, 1vh, 0.6rem);
+
+        .settings-label {
+          font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+        }
+
+        .settings-control {
+          .el-slider {
+            width: clamp(60px, 8vw, 80px);
+          }
+        }
+      }
+    }
+
+    .char-stats {
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: clamp(0.4rem, 0.8vh, 0.5rem);
+
+      .stat-item {
+        padding: clamp(0.4rem, 0.8vh, 0.5rem);
+
+        .stat-value {
+          font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+        }
+
+        .stat-label {
+          font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+        }
+      }
+    }
+  }
+
+  // 优化Markdown预览在小屏幕上的显示
+  .rightTabContent.markdown-preview {
+    width: 100% !important;
+    padding: clamp(0.5rem, 1vh, 0.6rem) !important;
+
+    :deep(h1) {
+      font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+      margin: clamp(0.8rem, 1.2vh, 1rem) 0 clamp(0.4rem, 0.6vh, 0.5rem) 0;
+    }
+
+    :deep(h2) {
+      font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+      margin: clamp(0.7rem, 1vh, 0.9rem) 0 clamp(0.3rem, 0.5vh, 0.4rem) 0;
+    }
+
+    :deep(h3) {
+      font-size: clamp(0.85rem, 1.3vw, 1rem);
+      margin: clamp(0.6rem, 0.9vh, 0.8rem) 0 clamp(0.25rem, 0.4vh, 0.3rem) 0;
+    }
+
+    :deep(p) {
+      font-size: clamp(0.7rem, 1vw, 0.8rem);
+      margin: clamp(0.5rem, 0.8vh, 0.6rem) 0;
+    }
+
+    :deep(ul), :deep(ol) {
+      padding-left: clamp(1rem, 1.5vw, 1.2rem);
+    }
+
+    :deep(blockquote) {
+      padding: clamp(0.4rem, 0.8vh, 0.5rem) clamp(0.5rem, 1vw, 0.7rem);
+      font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+    }
+
+    :deep(pre) {
+      padding: clamp(0.5rem, 1vh, 0.6rem);
+      font-size: clamp(0.6rem, 0.9vw, 0.7rem);
+    }
   }
 }
 </style>

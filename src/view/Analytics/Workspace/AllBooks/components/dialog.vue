@@ -104,15 +104,122 @@ const handleConfirm = () => {
 <style lang="scss" scoped>
 .draftInfoSet {
   display: flex;
-  height: 200px;
+  height: clamp(150px, 25vh, 200px); // 响应式高度
+  gap: clamp(1rem, 2vw, 1.5rem); // 添加间距
+  align-items: center;
+
   .draftInfoSetInput {
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
+    flex: 1;
   }
+
   .draftEditImage {
-    width: 150px;
-    border-radius: 5px;
+    width: clamp(120px, 20vw, 180px); // 响应式宽度
+    height: auto; // 保持宽高比
+    border-radius: clamp(4px, 1vw, 8px);
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// 响应式弹窗样式
+:deep(.el-dialog) {
+  width: clamp(400px, 80vw, 600px); // 响应式宽度
+  max-width: 90vw;
+  border-radius: clamp(8px, 2vw, 16px);
+
+  @media screen and (max-width: 480px) {
+    width: 95vw;
+    margin: 0 auto;
+  }
+}
+
+:deep(.el-dialog__header) {
+  padding: clamp(1rem, 2vh, 1.5rem);
+  border-bottom: 1px solid #f0f0f0;
+
+  .el-dialog__title {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    font-weight: 600;
+  }
+}
+
+:deep(.el-dialog__body) {
+  padding: clamp(1.5rem, 3vh, 2rem);
+}
+
+:deep(.el-dialog__footer) {
+  padding: clamp(1rem, 2vh, 1.5rem) clamp(1.5rem, 3vh, 2rem);
+  border-top: 1px solid #f0f0f0;
+}
+
+// 表单响应式样式
+:deep(.el-form) {
+  .el-form-item {
+    margin-bottom: 0;
+
+    .el-form-item__label {
+      font-size: clamp(0.875rem, 1.2vw, 1rem);
+      line-height: 1.4;
+      padding-bottom: 0.5rem;
+    }
+
+    .el-input {
+      .el-input__wrapper {
+        border-radius: clamp(6px, 1vw, 8px);
+        padding: clamp(0.5rem, 1vh, 0.75rem) clamp(0.75rem, 1.5vw, 1rem);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+
+        &:hover, &.is-focus {
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+      }
+
+      .el-input__inner {
+        font-size: clamp(0.875rem, 1.2vw, 1rem);
+        line-height: 1.4;
+      }
+    }
+  }
+}
+
+// 按钮响应式样式
+:deep(.dialog-footer) {
+  .el-button {
+    height: clamp(2.25rem, 4vh, 2.75rem);
+    border-radius: clamp(6px, 1.5vw, 8px);
+    font-size: clamp(0.875rem, 1.2vw, 1rem);
+    padding: clamp(0.5rem, 1vh, 0.75rem) clamp(1.5rem, 3vw, 2rem);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(98, 106, 239, 0.3);
+    }
+  }
+}
+
+// 移动端优化
+@media screen and (max-width: 768px) {
+  .draftInfoSet {
+    flex-direction: column;
+    height: auto;
+    text-align: center;
+
+    .draftInfoSetInput {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .draftEditImage {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 1rem;
+    }
   }
 }
 </style>
