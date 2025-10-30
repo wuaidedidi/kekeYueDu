@@ -64,7 +64,7 @@
           <div class="wechat-login-box">
             <p>请使用微信扫一扫进行登录</p>
             <img
-              src="https://via.placeholder.com/150"
+              :src="wechatQrcodeSrc"
               alt="微信二维码"
               class="wechat-qrcode"
             />
@@ -129,6 +129,9 @@ import router from '@/router'
 import { ref } from 'vue'
 import http from '@/utils/http'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/store/userStore'
+// 本地二维码占位图，避免外链被阻断
+const wechatQrcodeSrc = new URL('../../assets/logo.png', import.meta.url).href
 
 // 当前激活的标签
 const activeTab = ref('account')
@@ -151,6 +154,8 @@ const accountRegisterForm = ref({
 
 // 用户同意复选框
 const agree = ref(false)
+// 用户状态管理
+const userStore = useUserStore()
 
 // 登录操作
 const login = async () => {
@@ -178,9 +183,8 @@ const login = async () => {
     })
 
     if (response.data.success) {
-      // 保存用户信息和token
-      localStorage.setItem('user', JSON.stringify(response.data.data.user))
-      localStorage.setItem('token', response.data.data.token)
+      // 通过 Pinia Store 保存用户信息和 token，确保路由守卫识别为已登录
+      userStore.setUser(response.data.data.user, response.data.data.token)
 
       ElMessage({
         message: response.data.message,

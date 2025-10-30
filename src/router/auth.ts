@@ -5,8 +5,10 @@ export const setupRouterGuards = (router: any) => {
   router.beforeEach((to: any, from: any, next: any) => {
     const userStore = useUserStore()
 
-    // 检查路由是否需要认证
-    const requiresAuth = to.matched.some((record: any) => record.meta.requiresAuth)
+    // 检查路由是否需要认证（兼容 requireAuth 与 requiresAuth）
+    const requiresAuth = to.matched.some(
+      (record: any) => record.meta?.requireAuth || record.meta?.requiresAuth
+    )
 
     if (requiresAuth && !userStore.isLoggedIn) {
       // 需要认证但用户未登录，跳转到登录页

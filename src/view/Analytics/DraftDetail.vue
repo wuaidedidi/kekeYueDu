@@ -192,7 +192,8 @@
         <el-tooltip content="插入图片">
           <el-upload
             class="upload-demo"
-            action="/api/upload"
+            :action="uploadAction"
+            :headers="uploadHeaders"
             :show-file-list="false"
             :on-success="handleImageUploadSuccess"
             :before-upload="beforeImageUpload"
@@ -839,6 +840,17 @@ const currentVolumeId = ref(0)
 const treeData = ref<TreeNode[]>([])
 
 const appLoaded = ref(false)
+
+// 上传地址与鉴权头
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+const API_ROOT = API_BASE.endsWith('/api')
+  ? API_BASE
+  : API_BASE.replace(/\/$/, '') + '/api'
+const uploadAction = computed(() => API_ROOT + '/upload')
+const uploadHeaders = computed(() => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+})
 
 onMounted(async () => {
   // 初始化数据

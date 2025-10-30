@@ -3,9 +3,17 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const multer = require('multer');
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
+const JWT_SECRET = process.env.JWT_SECRET || 'keke-dev-secret';
+const CLIENT_ORIGIN = (process.env.VITE_DEV_SERVER_HOST && process.env.VITE_DEV_SERVER_PORT)
+  ? `http://${process.env.VITE_DEV_SERVER_HOST}:${process.env.VITE_DEV_SERVER_PORT}`
+  : undefined;
 
 // 数据库连接
 const db = new sqlite3.Database('./database.sqlite', (err) => {
@@ -18,62 +26,116 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
 });
 
 // 中间件
-app.use(cors());
+app.use(cors({
+  origin: CLIENT_ORIGIN || true,
+  credentials: true,
+}));
 app.use(express.json());
+
+// JSON 解析错误统一处理，避免返回 HTML 错误页
+app.use((err, req, res, next) => {
+  if (err && err.type === 'entity.parse.failed') {
+    console.error('JSON解析失败:', err);
+    return res.status(400).json({ success: false, message: '请求体不是有效的 JSON' });
+  }
+  next(err);
+});
+
+// 静态资源：上传目录
+const uploadsDir = path.join(__dirname, 'uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
+app.use('/uploads', express.static(uploadsDir));
+
+// multer 配置：保存到 uploads 目录
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname) || '';
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+// 认证中间件
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: '未提供认证令牌' });
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    next();
+  } catch (err) {
+    return res.status(403).json({ success: false, message: '令牌无效或已过期' });
+  }
+};
 
 // 初始化数据库表
 function initDatabase() {
-  // 用户表
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      email TEXT UNIQUE,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+  db.serialize(() => {
+    // 用户表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  // 草稿表
-  db.run(`
-    CREATE TABLE IF NOT EXISTS drafts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      content TEXT,
-      user_id INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-  `);
+    // 草稿表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS drafts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT,
+        user_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `);
 
-  // 分卷表
-  db.run(`
-    CREATE TABLE IF NOT EXISTS volumes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      book_id INTEGER,
-      order_index INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+    // 分卷表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS volumes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        book_id INTEGER,
+        order_index INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  // 章节表
-  db.run(`
-    CREATE TABLE IF NOT EXISTS chapters (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      content TEXT,
-      volume_id INTEGER,
-      order_index INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (volume_id) REFERENCES volumes (id)
-    )
-  `);
+    // 章节表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS chapters (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT,
+        volume_id INTEGER,
+        order_index INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (volume_id) REFERENCES volumes (id)
+      )
+    `);
 
-  console.log('数据库表初始化完成');
+    console.log('数据库表初始化完成');
+  });
 }
 
 // === 用户认证路由 ===
@@ -124,6 +186,7 @@ app.post('/api/register', async (req, res) => {
     // 检查用户名是否已存在
     db.get('SELECT id FROM users WHERE username = ?', [username.trim()], async (err, existingUser) => {
       if (err) {
+        console.error('查询用户名是否存在时出错:', err);
         return res.status(500).json({
           success: false,
           message: '服务器错误'
@@ -138,7 +201,13 @@ app.post('/api/register', async (req, res) => {
       }
 
       // 密码加密
-      const hashedPassword = await bcrypt.hash(password, 12);
+      let hashedPassword;
+      try {
+        hashedPassword = await bcrypt.hash(password, 12);
+      } catch (hashErr) {
+        console.error('密码加密失败:', hashErr);
+        return res.status(500).json({ success: false, message: '服务器错误' });
+      }
 
       // 插入新用户
       db.run(
@@ -146,6 +215,7 @@ app.post('/api/register', async (req, res) => {
         [username.trim(), hashedPassword],
         function(err) {
           if (err) {
+            console.error('插入新用户失败:', err);
             return res.status(500).json({
               success: false,
               message: '注册失败'
@@ -153,39 +223,24 @@ app.post('/api/register', async (req, res) => {
           }
 
           const newUserId = this.lastID;
+          const minimalUser = { id: newUserId, username: username.trim() };
 
-          // 获取新注册的用户信息
-          db.get(
-            'SELECT id, username, created_at FROM users WHERE id = ?',
-            [newUserId],
-            (err, newUser) => {
-              if (err) {
-                console.error('获取用户信息错误:', err);
-                return res.status(500).json({
-                  success: false,
-                  message: '注册成功但获取用户信息失败'
-                });
-              }
-
-              if (!newUser) {
-                console.error('未找到新注册的用户，ID:', newUserId);
-                return res.status(500).json({
-                  success: false,
-                  message: '注册成功但用户信息创建失败'
-                });
-              }
-
-              console.log('新用户注册成功:', newUser);
-              res.status(201).json({
-                success: true,
-                message: '注册成功',
-                data: {
-                  user: newUser,
-                  token: 'mock-token-' + Date.now()
-                }
-              });
-            }
+          console.log('新用户注册成功:', minimalUser);
+          const token = jwt.sign(
+            { id: minimalUser.id, username: minimalUser.username },
+            JWT_SECRET,
+            { expiresIn: '7d' }
           );
+
+          // 直接返回最小用户信息，避免因旧表缺少列导致查询失败
+          res.status(201).json({
+            success: true,
+            message: '注册成功',
+            data: {
+              user: minimalUser,
+              token
+            }
+          });
         }
       );
     });
@@ -241,12 +296,17 @@ app.post('/api/login', async (req, res) => {
         // 登录成功，返回用户信息（不包含密码）
         const { password: _, ...userInfo } = user;
 
+        const token = jwt.sign(
+          { id: userInfo.id, username: userInfo.username },
+          JWT_SECRET,
+          { expiresIn: '7d' }
+        );
         res.json({
           success: true,
           message: '登录成功',
           data: {
             user: userInfo,
-            token: 'mock-token-' + Date.now()
+            token
           }
         });
       }
@@ -260,14 +320,22 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// 获取用户信息
-app.get('/api/profile', (req, res) => {
-  const userId = req.query.userId;
+// 获取用户信息（需认证）
+app.get('/api/profile', authenticateToken, (req, res) => {
+  const userId = req.query.userId || (req.user && req.user.id);
 
   if (!userId) {
     return res.status(400).json({
       success: false,
       message: '用户ID不能为空'
+    });
+  }
+
+  // 禁止越权更新：仅允许更新本人信息
+  if (req.user && Number(userId) !== Number(req.user.id)) {
+    return res.status(403).json({
+      success: false,
+      message: '无权更新其他用户信息'
     });
   }
 
@@ -297,9 +365,10 @@ app.get('/api/profile', (req, res) => {
   );
 });
 
-// 更新用户信息
-app.put('/api/profile', (req, res) => {
-  const { userId, updates } = req.body;
+// 更新用户信息（需认证）
+app.put('/api/profile', authenticateToken, (req, res) => {
+  const { userId: bodyUserId, updates } = req.body;
+  const userId = bodyUserId || (req.user && req.user.id);
 
   if (!userId) {
     return res.status(400).json({
@@ -698,17 +767,30 @@ app.get('/api/chapters', (req, res) => {
   });
 });
 
-// 文件上传接口
-app.post('/api/upload', (req, res) => {
-  // 注意：这是一个简单的文件上传实现
-  // 在实际项目中，您需要使用 multer 或类似的中间件来处理文件上传
-  res.json({
-    success: true,
-    message: '文件上传成功',
-    data: {
-      url: `/uploads/${Date.now()}-image.jpg` // 返回一个模拟的文件URL
+// 文件上传接口（需认证，使用 multer 处理）
+app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: '未接收到文件' });
     }
-  });
+
+    const relativeUrl = `/uploads/${req.file.filename}`;
+    const absoluteUrl = `${req.protocol}://${req.get('host')}${relativeUrl}`;
+    res.json({
+      success: true,
+      message: '文件上传成功',
+      data: {
+        url: absoluteUrl,
+        relativeUrl,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+      }
+    });
+  } catch (err) {
+    console.error('文件上传失败:', err);
+    res.status(500).json({ success: false, message: '文件上传失败' });
+  }
 });
 
 // 根路由

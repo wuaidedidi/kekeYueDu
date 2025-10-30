@@ -118,7 +118,6 @@ import { onMounted, reactive, ref } from 'vue'
 import Dialog from './components/dialog.vue'
 import type { Book } from '@/typings/book'
 import router from '@/router'
-import axios from 'axios'
 import http from '@/utils/http'
 
 const dialogFormVisible = ref(false)
