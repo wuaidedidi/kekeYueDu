@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CharactersPanel: typeof import('./src/components/RightToolbar/CharactersPanel.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElCarousel: typeof import('element-plus/es')['ElCarousel']
@@ -29,8 +30,14 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    OutlinePanel: typeof import('./src/components/RightToolbar/OutlinePanel.vue')['default']
+    PreviewPanel: typeof import('./src/components/RightToolbar/PreviewPanel.vue')['default']
+    ProofreadPanel: typeof import('./src/components/RightToolbar/ProofreadPanel.vue')['default']
+    RightToolbar: typeof import('./src/components/RightToolbar/RightToolbar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SettingsPanel: typeof import('./src/components/RightToolbar/SettingsPanel.vue')['default']
+    SpellCheckPanel: typeof import('./src/components/RightToolbar/SpellCheckPanel.vue')['default']
     UserInfo: typeof import('./src/components/UserInfo.vue')['default']
   }
 }

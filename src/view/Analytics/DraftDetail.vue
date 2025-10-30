@@ -355,208 +355,7 @@
             </div>
           </div>
         </div>
-        <div class="mainRight">
-          <el-tabs
-            tab-position="right"
-            style="height: 100%"
-            class="right-tabs"
-            @tab-click="rightTabClick"
-          >
-            <el-tab-pane label="纠错">
-              <template #label>
-                <div
-                  class="menuItem"
-                  :class="{ active: rightTab.JIUCUO === currentRightTab }"
-                >
-                  <div>
-                    <el-icon><CircleCheckFilled /></el-icon>
-                  </div>
-                  <div>纠错</div>
-                </div>
-              </template>
-              <div
-                class="rightTabContent"
-                v-show="rightTab.JIUCUO === currentRightTab"
-              >
-                <div class="panel-header">
-                  <span>纠错面板</span>
-                  <el-button
-                    @click="currentRightTab = rightTab.NOTAB"
-                    type="danger"
-                    size="small"
-                    circle
-                    class="close-btn"
-                  >
-                    <el-icon><Close /></el-icon>
-                  </el-button>
-                </div>
-                <div class="panel-content">
-                  <!-- 纠错面板内容 -->
-                  纠错功能区域
-                </div>
-              </div>
-            </el-tab-pane>
-            <el-tab-pane label="拼字">
-              <template #label>
-                <div
-                  class="menuItem"
-                  :class="{ active: rightTab.PINGZI === currentRightTab }"
-                >
-                  <el-icon><EditPen /></el-icon>
-                  <div>拼字</div>
-                </div></template
-              >
-              <div
-                class="rightTabContent"
-                v-show="rightTab.PINGZI === currentRightTab"
-              >
-                <div class="panel-header">
-                  <span>拼字面板</span>
-                  <el-button
-                    @click="currentRightTab = rightTab.NOTAB"
-                    type="danger"
-                    size="small"
-                    circle
-                    class="close-btn"
-                  >
-                    <el-icon><Close /></el-icon>
-                  </el-button>
-                </div>
-                <div class="panel-content">
-                  <!-- 拼字面板内容 -->
-                  拼字功能区域
-                </div>
-              </div></el-tab-pane
-            >
-            <el-tab-pane label="大纲">
-              <template #label>
-                <div
-                  class="menuItem"
-                  :class="{ active: rightTab.DAGANG === currentRightTab }"
-                >
-                  <el-icon><Comment /></el-icon>
-                  <div>大纲</div>
-                </div>
-              </template>
-              <div
-                class="rightTabContent"
-                v-show="rightTab.DAGANG === currentRightTab"
-              >
-                <div class="panel-header">
-                  <span>大纲面板</span>
-                  <el-button
-                    @click="currentRightTab = rightTab.NOTAB"
-                    type="danger"
-                    size="small"
-                    circle
-                    class="close-btn"
-                  >
-                    <el-icon><Close /></el-icon>
-                  </el-button>
-                </div>
-                <div class="panel-content">
-                  <!-- 大纲面板内容 -->
-                  大纲功能区域
-                </div>
-              </div></el-tab-pane
-            >
-            <el-tab-pane label="角色">
-              <template #label>
-                <div
-                  class="menuItem"
-                  :class="{ active: rightTab.JIAOSE === currentRightTab }"
-                >
-                  <el-icon><Avatar /></el-icon>
-                  <div>角色</div>
-                </div>
-              </template>
-              <div
-                class="rightTabContent"
-                v-show="rightTab.JIAOSE === currentRightTab"
-              >
-                <div class="panel-header">
-                  <span>角色面板</span>
-                  <el-button
-                    @click="currentRightTab = rightTab.NOTAB"
-                    type="danger"
-                    size="small"
-                    circle
-                    class="close-btn"
-                  >
-                    <el-icon><Close /></el-icon>
-                  </el-button>
-                </div>
-                <div class="panel-content">
-                  <!-- 角色面板内容 -->
-                  角色功能区域
-                </div>
-              </div>
-            </el-tab-pane>
-            <el-tab-pane label="设定">
-              <template #label>
-                <div
-                  class="menuItem"
-                  :class="{ active: rightTab.SHEDING === currentRightTab }"
-                >
-                  <el-icon><Tools /></el-icon>
-                  <div>设定</div>
-                </div>
-              </template>
-              <div
-                class="rightTabContent"
-                v-show="rightTab.SHEDING === currentRightTab"
-              >
-                <div class="panel-header">
-                  <span>设定面板</span>
-                  <el-button
-                    @click="currentRightTab = rightTab.NOTAB"
-                    type="danger"
-                    size="small"
-                    circle
-                    class="close-btn"
-                  >
-                    <el-icon><Close /></el-icon>
-                  </el-button>
-                </div>
-                <div class="panel-content">
-                  <!-- 设定面板内容 -->
-                  设定功能区域
-                </div>
-              </div></el-tab-pane
-            >
-            <el-tab-pane label="预览">
-              <template #label>
-                <div
-                  class="menuItem"
-                  :class="{ active: rightTab.PREVIEW === currentRightTab }"
-                >
-                  <div>
-                    <el-icon><Document /></el-icon>
-                  </div>
-                  <div>预览</div>
-                </div>
-              </template>
-              <div
-                class="rightTabContent markdown-preview"
-                v-show="rightTab.PREVIEW === currentRightTab"
-              >
-                <div class="panel-header">
-                  <span>预览内容</span>
-                  <el-button
-                    @click="currentRightTab = rightTab.NOTAB"
-                    type="danger"
-                    size="small"
-                    circle
-                    class="close-btn"
-                  >
-                    <el-icon><Close /></el-icon>
-                  </el-button>
-                </div>
-                <div class="panel-content" v-html="renderedMarkdown"></div>
-              </div>
-            </el-tab-pane>
-          </el-tabs>
-        </div>
+        <RightToolbar />
       </div>
     </div>
     <div class="save-status" :class="saveStatus">
@@ -755,6 +554,7 @@ import http from '@/utils/http'
 import { processText } from '@/utils/sensitiveWordUtils'
 import type { TreeNodeData as ElTreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { marked } from 'marked'
+import RightToolbar from '@/components/RightToolbar/RightToolbar.vue'
 
 // 删除重复的 Chapter 接口定义，使用下面的定义
 
@@ -826,16 +626,6 @@ const trixContent = ref('')
 const searchBook = ref('')
 const editContent = ref('')
 
-enum rightTab {
-  JIUCUO = 0,
-  PINGZI = 1,
-  DAGANG = 2,
-  JIAOSE = 3,
-  SHEDING = 4,
-  PREVIEW = 5,
-  NOTAB = 999,
-}
-const currentRightTab = ref<number>(rightTab.NOTAB)
 const currentVolumeId = ref(0)
 const treeData = ref<TreeNode[]>([])
 
@@ -877,7 +667,6 @@ onMounted(async () => {
 
     // 设置自动保存
     setupAutoSave()
-    setupMarkdownPreview()
 
     // 每30秒自动保存一次
     saveInterval.value = setInterval(async () => {
@@ -1039,33 +828,6 @@ const goToNext = () => {
 
 const replaceCurrent = () => {
   // 实现本章替换的逻辑
-}
-const rightTabClick = (element: TabsPaneContext) => {
-  console.log('标签点击:', element.index, '当前选中:', currentRightTab.value)
-
-  // 如果点击当前已经激活的标签，则关闭它
-  if (currentRightTab.value === Number(element.index)) {
-    currentRightTab.value = rightTab.NOTAB
-    console.log('关闭当前标签')
-    return
-  }
-
-  // 否则，激活点击的标签
-  currentRightTab.value = Number(element.index)
-  console.log('激活标签:', currentRightTab.value)
-
-  // 根据标签索引处理不同的功能
-  if (currentRightTab.value === rightTab.JIUCUO) {
-    console.log('处理纠错功能')
-    sensitiveWordHandler()
-  } else if (currentRightTab.value === rightTab.PREVIEW) {
-    console.log('处理预览功能')
-    // 确保DOM已更新后再获取trix-editor的内容
-    nextTick(() => {
-      console.log('立即更新预览...')
-      updateMarkdownPreview()
-    })
-  }
 }
 
 /**
@@ -1519,13 +1281,6 @@ const insertHeading = (level: number) => {
 
     // 插入HTML标题
     trixEditorInstance.insertHTML(`<h${level}>标题${level}</h${level}>`)
-
-    // 如果当前是预览模式，立即更新预览
-    if (currentRightTab.value === rightTab.PREVIEW) {
-      nextTick(() => {
-        updateMarkdownPreview()
-      })
-    }
   }
 }
 
@@ -1541,13 +1296,6 @@ const insertList = (type: 'ordered' | 'unordered') => {
     } else {
       trixEditorInstance.insertHTML('<ul><li>无序列表项</li></ul>')
     }
-
-    // 如果当前是预览模式，立即更新预览
-    if (currentRightTab.value === rightTab.PREVIEW) {
-      nextTick(() => {
-        updateMarkdownPreview()
-      })
-    }
   }
 }
 
@@ -1561,13 +1309,6 @@ const insertQuote = () => {
     trixEditorInstance.insertHTML(
       '<blockquote style="border-left: 4px solid #ddd; padding-left: 1em; color: #666;">引用内容</blockquote>'
     )
-
-    // 如果当前是预览模式，立即更新预览
-    if (currentRightTab.value === rightTab.PREVIEW) {
-      nextTick(() => {
-        updateMarkdownPreview()
-      })
-    }
   }
 }
 
@@ -1581,13 +1322,6 @@ const insertCodeBlock = () => {
     trixEditorInstance.insertHTML(
       '<pre style="background-color: #f6f8fa; padding: 1em; border-radius: 5px;"><code>// 这里是代码块</code></pre>'
     )
-
-    // 如果当前是预览模式，立即更新预览
-    if (currentRightTab.value === rightTab.PREVIEW) {
-      nextTick(() => {
-        updateMarkdownPreview()
-      })
-    }
   }
 }
 
@@ -1810,63 +1544,7 @@ const handleReplaceInBook = () => {
   }
 }
 
-// 添加Markdown预览功能
-const renderedMarkdown = ref('')
 
-const updateMarkdownPreview = () => {
-  try {
-    const trixEditor = document.querySelector('trix-editor') as HTMLElement
-    if (!trixEditor) {
-      renderedMarkdown.value = '<p>预览出错：找不到编辑器元素</p>'
-      return
-    }
-
-    // 直接使用trix-editor的innerHTML获取内容
-    renderedMarkdown.value = trixEditor.innerHTML
-
-    // 调试输出
-    console.log('预览内容已更新，长度:', trixEditor.innerHTML.length)
-  } catch (error) {
-    console.error('预览渲染错误:', error)
-    renderedMarkdown.value = '<p>预览出错</p>'
-  }
-}
-
-// 监听编辑器内容变化，更新预览
-const setupMarkdownPreview = () => {
-  const trixEditor = document.querySelector('trix-editor') as HTMLElement
-  if (trixEditor) {
-    // 监听trix-change事件，当编辑器内容变化时更新预览
-    trixEditor.addEventListener('trix-change', () => {
-      console.log('编辑器内容变化')
-      // 如果当前显示的是预览标签页，则更新预览内容
-      if (currentRightTab.value === rightTab.PREVIEW) {
-        updateMarkdownPreview()
-      }
-    })
-
-    // 初始加载后自动触发一次预览更新
-    nextTick(() => {
-      console.log('初始预览更新')
-      if (currentRightTab.value === rightTab.PREVIEW) {
-        updateMarkdownPreview()
-      }
-    })
-
-    // 创建一个定时检查器，确保预览面板在激活时能够显示内容
-    const previewInterval = setInterval(() => {
-      if (currentRightTab.value === rightTab.PREVIEW) {
-        updateMarkdownPreview()
-      }
-    }, 2000) // 每2秒检查一次
-
-    // 为定时器添加数据属性，以便在卸载时清理
-    const markerElement = document.createElement('div')
-    markerElement.style.display = 'none'
-    markerElement.dataset.previewInterval = previewInterval.toString()
-    document.body.appendChild(markerElement)
-  }
-}
 
 // 添加onUnmounted函数来清理资源
 onUnmounted(() => {
@@ -2229,10 +1907,14 @@ onUnmounted(() => {
           border-radius: clamp(4px, 0.5vw, 8px);
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           transition: all 0.3s ease;
+          word-wrap: break-word;
+          word-break: break-word;
+          overflow-wrap: break-word;
 
           // Trix编辑器样式优化
           :deep(trix-editor) {
             min-height: clamp(300px, 60vh, 800px);
+            max-height: 100%;
             padding: clamp(1rem, 2vh, 1.5rem);
             font-size: clamp(0.875rem, 1.2vw, 1rem);
             line-height: 1.7;
@@ -2243,6 +1925,12 @@ onUnmounted(() => {
             border-radius: 0;
             overflow-y: auto;
             overflow-x: hidden;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
 
             // 编辑器工具栏样式
             &::before {
@@ -2256,6 +1944,27 @@ onUnmounted(() => {
               font-size: inherit;
               line-height: inherit;
               color: inherit;
+              width: 100%;
+              max-width: 100%;
+              overflow-wrap: break-word;
+              word-wrap: break-word;
+              word-break: break-word;
+              hyphens: auto;
+              overflow-x: hidden;
+              box-sizing: border-box;
+
+              // 确保所有内联元素不会导致溢出
+              * {
+                max-width: 100%;
+                box-sizing: border-box;
+              }
+
+              // 处理长文本不换行的情况
+              span, strong, em, b, i, u, s {
+                word-wrap: break-word;
+                word-break: break-word;
+                overflow-wrap: break-word;
+              }
 
               // 标题样式
               h1, h2, h3, h4, h5, h6 {
@@ -2328,6 +2037,11 @@ onUnmounted(() => {
                 border-radius: 3px;
                 font-size: 85%;
                 font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                word-wrap: break-word;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
+                display: inline-block;
               }
 
               // 链接样式
@@ -2354,14 +2068,21 @@ onUnmounted(() => {
               // 表格样式
               table {
                 width: 100%;
+                max-width: 100%;
                 border-collapse: collapse;
                 margin: clamp(1rem, 2vh, 1.5rem) 0;
                 font-size: clamp(0.875rem, 1.2vw, 1rem);
+                overflow-x: auto;
+                display: block;
+                white-space: nowrap;
 
                 th, td {
                   border: 1px solid #e0e0e0;
                   padding: clamp(0.5rem, 1vh, 0.75rem) clamp(0.75rem, 1.5vw, 1rem);
                   text-align: left;
+                  word-wrap: break-word;
+                  max-width: 200px;
+                  white-space: normal;
                 }
 
                 th {
@@ -2491,29 +2212,54 @@ onUnmounted(() => {
 
 .markdown-tools {
   display: flex;
-  gap: clamp(4px, 1vw, 8px);
+  gap: clamp(6px, 1.2vw, 10px);
   margin-left: clamp(1rem, 2vw, 1.5rem);
   flex-wrap: wrap; // 允许换行
   align-items: center;
+  padding: clamp(4px, 0.5vh, 8px) 0;
 
   .el-button {
-    padding: clamp(4px, 0.8vh, 8px) clamp(6px, 1.2vw, 12px);
-    min-width: clamp(28px, 4vw, 40px);
-    height: clamp(28px, 4vh, 36px);
-    font-size: clamp(0.7rem, 1vw, 0.8rem);
-    border-radius: clamp(3px, 0.4vw, 5px);
-    transition: all 0.3s ease;
+    padding: clamp(6px, 1vh, 10px) clamp(8px, 1.5vw, 14px);
+    min-width: clamp(36px, 5vw, 48px); // 增加最小点击区域
+    min-height: clamp(36px, 5vh, 48px); // 确保足够的点击区域
+    height: auto; // 允许根据内容调整高度
+    font-size: clamp(0.75rem, 1.1vw, 0.9rem);
+    border-radius: clamp(4px, 0.5vw, 6px);
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    user-select: none; // 防止文字选择
+    -webkit-tap-highlight-color: transparent; // 移除移动端点击高亮
 
     &:hover {
       transform: translateY(-1px);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      background-color: #f0f7ff;
+      border-color: #409eff;
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      background-color: #e6f4ff;
+    }
+
+    &:focus {
+      outline: 2px solid #409eff;
+      outline-offset: 2px;
     }
 
     .el-icon {
-      font-size: clamp(0.8rem, 1.2vw, 1rem);
+      font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+    }
+
+    // 移动端触摸优化
+    @media (hover: none) and (pointer: coarse) {
+      min-width: clamp(44px, 6vw, 56px); // 移动端最小点击区域44px
+      min-height: clamp(44px, 6vw, 56px);
+      padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.8vw, 16px);
     }
   }
 
@@ -2524,6 +2270,8 @@ onUnmounted(() => {
       .el-button {
         height: inherit;
         font-size: inherit;
+        min-height: inherit;
+        min-width: inherit;
       }
     }
   }
@@ -2531,8 +2279,8 @@ onUnmounted(() => {
   // 工具组样式
   .tool-group {
     display: flex;
-    gap: clamp(2px, 0.5vw, 4px);
-    padding: 0 clamp(4px, 0.8vw, 8px);
+    gap: clamp(4px, 0.8vw, 6px);
+    padding: 0 clamp(6px, 1vw, 10px);
     border-right: 1px solid #e0e0e0;
     align-items: center;
 
@@ -2541,10 +2289,27 @@ onUnmounted(() => {
     }
 
     .el-button {
-      min-width: clamp(24px, 3vw, 32px);
-      height: clamp(24px, 3.5vh, 32px);
-      padding: 0;
+      min-width: clamp(32px, 4vw, 40px);
+      min-height: clamp(32px, 4.5vh, 40px);
+      height: auto;
+      padding: clamp(4px, 0.8vh, 8px);
       aspect-ratio: 1; // 保持正方形
+
+      &:hover {
+        background-color: #f0f7ff;
+        border-color: #409eff;
+      }
+
+      &:active {
+        background-color: #e6f4ff;
+        transform: scale(0.95);
+      }
+
+      // 移动端优化
+      @media (hover: none) and (pointer: coarse) {
+        min-width: clamp(40px, 5vw, 48px);
+        min-height: clamp(40px, 5.5vh, 48px);
+      }
     }
   }
 }

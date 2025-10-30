@@ -126,7 +126,7 @@
 
 <script lang="ts" setup>
 import router from '@/router'
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import http from '@/utils/http'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/userStore'
@@ -191,6 +191,8 @@ const login = async () => {
         type: 'success',
       })
 
+      // 使用 nextTick 确保状态更新完成后再跳转
+      await nextTick()
       router.push('/workspace/all-books')
     } else {
       ElMessage({
