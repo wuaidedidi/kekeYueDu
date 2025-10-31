@@ -166,43 +166,7 @@
         插入
       </div>
 
-      <!-- 添加Markdown格式按钮 -->
-      <div class="markdown-tools">
-        <el-tooltip content="标题1">
-          <el-button @click="insertHeading(1)">H1</el-button>
-        </el-tooltip>
-        <el-tooltip content="标题2">
-          <el-button @click="insertHeading(2)">H2</el-button>
-        </el-tooltip>
-        <el-tooltip content="标题3">
-          <el-button @click="insertHeading(3)">H3</el-button>
-        </el-tooltip>
-        <el-tooltip content="无序列表">
-          <el-button @click="insertList('unordered')">•</el-button>
-        </el-tooltip>
-        <el-tooltip content="有序列表">
-          <el-button @click="insertList('ordered')">1.</el-button>
-        </el-tooltip>
-        <el-tooltip content="引用">
-          <el-button @click="insertQuote">></el-button>
-        </el-tooltip>
-        <el-tooltip content="代码块">
-          <el-button @click="insertCodeBlock">```</el-button>
-        </el-tooltip>
-        <el-tooltip content="插入图片">
-          <el-upload
-            class="upload-demo"
-            :action="uploadAction"
-            :headers="uploadHeaders"
-            :show-file-list="false"
-            :on-success="handleImageUploadSuccess"
-            :before-upload="beforeImageUpload"
-          >
-            <el-button>图片</el-button>
-          </el-upload>
-        </el-tooltip>
-      </div>
-
+  
       <div class="rightHeader">
         <div>
           <el-popover trigger="click" placement="bottom-start" width="300px">
@@ -634,16 +598,6 @@ const treeData = ref<TreeNode[]>([])
 
 const appLoaded = ref(false)
 
-// 上传地址与鉴权头
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
-const API_ROOT = API_BASE.endsWith('/api')
-  ? API_BASE
-  : API_BASE.replace(/\/$/, '') + '/api'
-const uploadAction = computed(() => API_ROOT + '/upload')
-const uploadHeaders = computed(() => {
-  const token = localStorage.getItem('token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
-})
 
 onMounted(async () => {
   // 初始化数据
@@ -665,9 +619,7 @@ onMounted(async () => {
       console.warn('treeData 或子节点不存在，无法设置默认选中项')
     }
 
-    // 设置键盘事件监听
-    document.addEventListener('keydown', handleKeyDown)
-
+    
     // 设置自动保存
     setupAutoSave()
 
@@ -1264,69 +1216,6 @@ const countNodes = () => {
   return count
 }
 
-// 插入标题，并在预览模式下更新预览
-const insertHeading = (level: number) => {
-  const trixEditor = document.querySelector('trix-editor') as HTMLElement
-  if (trixEditor) {
-    const trixEditorInstance = (trixEditor as any).editor
-    if (!trixEditorInstance) return
-
-    // 获取当前选区位置
-    const currentPosition = trixEditorInstance.getSelectedRange()[0]
-
-    // 检查是否需要先插入新行
-    if (currentPosition > 0) {
-      const content = trixEditorInstance.getDocument().toString()
-      if (content[currentPosition - 1] !== '\n') {
-        trixEditorInstance.insertString('\n')
-      }
-    }
-
-    // 插入HTML标题
-    trixEditorInstance.insertHTML(`<h${level}>标题${level}</h${level}>`)
-  }
-}
-
-// 插入列表，使用HTML格式
-const insertList = (type: 'ordered' | 'unordered') => {
-  const trixEditor = document.querySelector('trix-editor') as HTMLElement
-  if (trixEditor) {
-    const trixEditorInstance = (trixEditor as any).editor
-    if (!trixEditorInstance) return
-
-    if (type === 'ordered') {
-      trixEditorInstance.insertHTML('<ol><li>有序列表项</li></ol>')
-    } else {
-      trixEditorInstance.insertHTML('<ul><li>无序列表项</li></ul>')
-    }
-  }
-}
-
-// 插入引用，使用HTML格式
-const insertQuote = () => {
-  const trixEditor = document.querySelector('trix-editor') as HTMLElement
-  if (trixEditor) {
-    const trixEditorInstance = (trixEditor as any).editor
-    if (!trixEditorInstance) return
-
-    trixEditorInstance.insertHTML(
-      '<blockquote style="border-left: 4px solid #ddd; padding-left: 1em; color: #666;">引用内容</blockquote>'
-    )
-  }
-}
-
-// 插入代码块，使用HTML格式
-const insertCodeBlock = () => {
-  const trixEditor = document.querySelector('trix-editor') as HTMLElement
-  if (trixEditor) {
-    const trixEditorInstance = (trixEditor as any).editor
-    if (!trixEditorInstance) return
-
-    trixEditorInstance.insertHTML(
-      '<pre style="background-color: #f6f8fa; padding: 1em; border-radius: 5px;"><code>// 这里是代码块</code></pre>'
-    )
-  }
-}
 
 // 处理图片插入
 const handleInsertImage = (html: string) => {
@@ -1350,42 +1239,6 @@ const handleInsertImage = (html: string) => {
   }
 }
 
-// 添加快捷键支持
-const handleKeyDown = (event: KeyboardEvent) => {
-  // 检查是否按下了Ctrl键
-  if (event.ctrlKey) {
-    switch (event.key) {
-      case '1':
-        event.preventDefault()
-        insertHeading(1)
-        break
-      case '2':
-        event.preventDefault()
-        insertHeading(2)
-        break
-      case '3':
-        event.preventDefault()
-        insertHeading(3)
-        break
-      case 'l':
-        event.preventDefault()
-        insertList('unordered')
-        break
-      case 'o':
-        event.preventDefault()
-        insertList('ordered')
-        break
-      case 'q':
-        event.preventDefault()
-        insertQuote()
-        break
-      case 'k':
-        event.preventDefault()
-        insertCodeBlock()
-        break
-    }
-  }
-}
 
 // 图片上传前的验证
 const beforeImageUpload = (file: File) => {
@@ -1403,16 +1256,6 @@ const beforeImageUpload = (file: File) => {
   return true
 }
 
-// 图片上传成功后的处理
-const handleImageUploadSuccess = (response: any) => {
-  const trixEditor = document.querySelector('trix-editor') as HTMLElement
-  if (trixEditor) {
-    const trixEditorInstance = (trixEditor as any).editor
-    const imageUrl = response.url // 假设服务器返回图片URL
-    const markdownImage = `![图片描述](${imageUrl})`
-    trixEditorInstance.insertString(markdownImage)
-  }
-}
 
 // 获取章节内容
 const getChapterContent = async (id: number): Promise<void> => {
@@ -1573,8 +1416,6 @@ const handleReplaceInBook = () => {
 
 // 添加onUnmounted函数来清理资源
 onUnmounted(() => {
-  // 清理键盘事件监听
-  document.removeEventListener('keydown', handleKeyDown)
 
   // 清理自动保存定时器
   if (saveInterval.value) {
@@ -2235,109 +2076,6 @@ onUnmounted(() => {
   margin-top: 20px;
 }
 
-.markdown-tools {
-  display: flex;
-  gap: clamp(6px, 1.2vw, 10px);
-  margin-left: clamp(1rem, 2vw, 1.5rem);
-  flex-wrap: wrap; // 允许换行
-  align-items: center;
-  padding: clamp(4px, 0.5vh, 8px) 0;
-
-  .el-button {
-    padding: clamp(6px, 1vh, 10px) clamp(8px, 1.5vw, 14px);
-    min-width: clamp(36px, 5vw, 48px); // 增加最小点击区域
-    min-height: clamp(36px, 5vh, 48px); // 确保足够的点击区域
-    height: auto; // 允许根据内容调整高度
-    font-size: clamp(0.75rem, 1.1vw, 0.9rem);
-    border-radius: clamp(4px, 0.5vw, 6px);
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    user-select: none; // 防止文字选择
-    -webkit-tap-highlight-color: transparent; // 移除移动端点击高亮
-
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      background-color: #f0f7ff;
-      border-color: #409eff;
-    }
-
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-      background-color: #e6f4ff;
-    }
-
-    &:focus {
-      outline: 2px solid #409eff;
-      outline-offset: 2px;
-    }
-
-    .el-icon {
-      font-size: clamp(0.9rem, 1.3vw, 1.1rem);
-    }
-
-    // 移动端触摸优化
-    @media (hover: none) and (pointer: coarse) {
-      min-width: clamp(44px, 6vw, 56px); // 移动端最小点击区域44px
-      min-height: clamp(44px, 6vw, 56px);
-      padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.8vw, 16px);
-    }
-  }
-
-  .upload-demo {
-    display: inline-block;
-
-    :deep(.el-upload) {
-      .el-button {
-        height: inherit;
-        font-size: inherit;
-        min-height: inherit;
-        min-width: inherit;
-      }
-    }
-  }
-
-  // 工具组样式
-  .tool-group {
-    display: flex;
-    gap: clamp(4px, 0.8vw, 6px);
-    padding: 0 clamp(6px, 1vw, 10px);
-    border-right: 1px solid #e0e0e0;
-    align-items: center;
-
-    &:last-child {
-      border-right: none;
-    }
-
-    .el-button {
-      min-width: clamp(32px, 4vw, 40px);
-      min-height: clamp(32px, 4.5vh, 40px);
-      height: auto;
-      padding: clamp(4px, 0.8vh, 8px);
-      aspect-ratio: 1; // 保持正方形
-
-      &:hover {
-        background-color: #f0f7ff;
-        border-color: #409eff;
-      }
-
-      &:active {
-        background-color: #e6f4ff;
-        transform: scale(0.95);
-      }
-
-      // 移动端优化
-      @media (hover: none) and (pointer: coarse) {
-        min-width: clamp(40px, 5vw, 48px);
-        min-height: clamp(40px, 5.5vh, 48px);
-      }
-    }
-  }
-}
 
 .save-status {
   position: fixed;
@@ -2714,15 +2452,7 @@ onUnmounted(() => {
     }
   }
 
-  .markdown-tools {
-    .tool-group {
-      .el-button {
-        min-width: clamp(20px, 2.5vw, 28px);
-        height: clamp(20px, 2.5vh, 28px);
-      }
-    }
   }
-}
 
 @media screen and (max-width: 1200px) {
   .main {
@@ -2802,26 +2532,7 @@ onUnmounted(() => {
     }
   }
 
-  .markdown-tools {
-    margin-left: clamp(0.75rem, 1.5vw, 1rem);
-    gap: clamp(3px, 0.6vw, 6px);
-
-    .el-button {
-      min-width: clamp(24px, 3vw, 32px);
-      height: clamp(24px, 3.5vh, 32px);
-      font-size: clamp(0.65rem, 0.9vw, 0.75rem);
-    }
-
-    .tool-group {
-      padding: 0 clamp(3px, 0.6vw, 6px);
-
-      .el-button {
-        min-width: clamp(20px, 2.5vw, 26px);
-        height: clamp(20px, 2.5vh, 26px);
-      }
-    }
-  }
-
+  
   .editor-toolbar {
     padding: clamp(0.4rem, 0.8vh, 0.6rem) clamp(0.75rem, 1.5vw, 1rem);
     gap: clamp(6px, 1vw, 12px);
@@ -2965,27 +2676,7 @@ onUnmounted(() => {
     }
   }
 
-  .markdown-tools {
-    margin-left: clamp(0.5rem, 1vw, 0.75rem);
-    gap: clamp(2px, 0.4vw, 4px);
-
-    .el-button {
-      min-width: clamp(20px, 2.5vw, 28px);
-      height: clamp(20px, 2.5vh, 28px);
-      font-size: clamp(0.6rem, 0.8vw, 0.7rem);
-      padding: 0 clamp(3px, 0.6vw, 5px);
-    }
-
-    .tool-group {
-      padding: 0 clamp(2px, 0.4vw, 4px);
-
-      .el-button {
-        min-width: clamp(16px, 2vw, 22px);
-        height: clamp(16px, 2vh, 22px);
-      }
-    }
-  }
-
+  
   .editor-toolbar {
     padding: clamp(0.3rem, 0.6vh, 0.4rem) clamp(0.5rem, 1vw, 0.75rem);
     gap: clamp(4px, 0.8vw, 8px);
@@ -3211,29 +2902,7 @@ onUnmounted(() => {
     }
   }
 
-  .markdown-tools {
-    margin-left: clamp(0.3rem, 0.7vw, 0.5rem);
-    gap: clamp(1px, 0.3vw, 2px);
-    flex-wrap: wrap;
-
-    .el-button {
-      min-width: clamp(16px, 2vw, 22px);
-      height: clamp(16px, 2vh, 22px);
-      font-size: clamp(0.5rem, 0.7vw, 0.6rem);
-      padding: 0 clamp(2px, 0.4vw, 3px);
-    }
-
-    .tool-group {
-      padding: 0 clamp(1px, 0.2vw, 2px);
-
-      .el-button {
-        min-width: clamp(12px, 1.5vw, 18px);
-        height: clamp(12px, 1.5vh, 18px);
-        border-radius: 2px;
-      }
-    }
-  }
-
+  
   .editor-toolbar {
     padding: clamp(0.2rem, 0.4vh, 0.3rem) clamp(0.3rem, 0.7vw, 0.4rem);
     gap: clamp(2px, 0.4vw, 4px);
