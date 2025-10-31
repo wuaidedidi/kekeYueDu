@@ -428,24 +428,22 @@
     class="naming-dialog"
   >
     <div class="dialog-content">
-      <!-- 左边分类标签 -->
-      <div class="dialog-left">
-        <el-tabs
-          v-model="activeTab"
-          tab-position="left"
-          @tab-click="handleTabClick"
-        >
-          <el-tab-pane label="人物" name="person"></el-tab-pane>
-          <el-tab-pane label="地点" name="place"></el-tab-pane>
-          <el-tab-pane label="招式" name="move"></el-tab-pane>
-          <el-tab-pane label="装备" name="equipment"></el-tab-pane>
-          <el-tab-pane label="怪物" name="monster"></el-tab-pane>
-          <el-tab-pane label="道具" name="item"></el-tab-pane>
-        </el-tabs>
-      </div>
+      <!-- 左侧分类栏移除，改为顶部分类切换 -->
+      <div class="dialog-left" style="display: none"></div>
 
       <!-- 中间部分条件选择与按钮 -->
       <div class="dialog-center">
+        <!-- 顶部分类切换 -->
+        <div class="category-switcher">
+          <el-radio-group v-model="activeTab" size="small">
+            <el-radio-button label="person">人物</el-radio-button>
+            <el-radio-button label="place">地点</el-radio-button>
+            <el-radio-button label="move">招式</el-radio-button>
+            <el-radio-button label="equipment">装备</el-radio-button>
+            <el-radio-button label="monster">怪物</el-radio-button>
+            <el-radio-button label="item">道具</el-radio-button>
+          </el-radio-group>
+        </div>
         <!-- 人物筛选条件 -->
         <div v-if="activeTab === 'person'">
           <h3>人物分类</h3>
@@ -482,8 +480,8 @@
           >
         </div>
 
-        <!-- 地点筛选条件 -->
-        <div v-if="getNameActiveTab === 'place'">
+      <!-- 地点筛选条件 -->
+        <div v-if="activeTab === 'place'">
           <h3>地点分类</h3>
           <el-tag
             :type="getNameform.placeType === 'city' ? 'primary' : ''"
@@ -508,19 +506,84 @@
         <div class="random-name-btn">
           <el-button type="primary" @click="generateName">随机取名</el-button>
         </div>
+
+        <!-- 批量生成与策略设置 -->
+        <div class="batch-and-strategy">
+          <div class="batch-controls">
+            <span class="label">批量数量</span>
+            <el-input-number v-model="batchCount" :min="1" :max="50" size="small" />
+            <el-button type="success" size="small" @click="generateBatchNames(batchCount)">批量生成</el-button>
+          </div>
+
+          <el-divider content-position="left">生成策略</el-divider>
+          <div class="strategy-controls">
+            <span class="label">复杂度</span>
+            <el-radio-group v-model="userPreferences.complexityPreference" size="small">
+              <el-radio-button label="simple">简单</el-radio-button>
+              <el-radio-button label="medium">平衡</el-radio-button>
+              <el-radio-button label="complex">复杂</el-radio-button>
+            </el-radio-group>
+          </div>
+        </div>
       </div>
 
       <!-- 右边展示生成的名字 -->
       <div class="dialog-right">
-        <h3>生成的名字</h3>
-        <div class="generated-names">
+        <h3>
+          <span>生成的名字</span>
+          <span class="name-count">{{ generatedNames.length }} 个</span>
+        </h3>
+
+        <!-- 空状态提示 -->
+        <div v-if="generatedNames.length === 0" class="empty-state">
+          <div class="empty-icon">✨</div>
+          <p>还没有生成名字</p>
+          <p class="empty-hint">选择条件后点击生成按钮开始</p>
+        </div>
+
+        <div v-else class="generated-names">
           <el-tag
             v-for="(name, index) in generatedNames"
             :key="index"
             type="success"
+            class="name-tag"
+            @click="insertNameToEditor(name)"
           >
-            {{ name }}
+            <span class="name-text">{{ name }}</span>
+            <div class="name-actions">
+              <el-tooltip content="复制" placement="top">
+                <el-button type="text" size="small" @click.stop="copyNameToClipboard(name)">
+                  <el-icon><DocumentCopy /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="收藏" placement="top">
+                <el-button type="text" size="small" @click.stop="addToFavorites(name)">
+                  <el-icon><Star /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="屏蔽" placement="top">
+                <el-button type="text" size="small" @click.stop="addToBlocked(name)">
+                  <el-icon><Close /></el-icon>
+                </el-button>
+              </el-tooltip>
+            </div>
           </el-tag>
+        </div>
+
+        <!-- 快捷操作栏 -->
+        <div v-if="generatedNames.length > 0" class="quick-actions">
+          <el-button size="small" @click="clearAllNames">
+            <el-icon><Delete /></el-icon>
+            清空
+          </el-button>
+          <el-button size="small" @click="batchCopyNames">
+            <el-icon><DocumentCopy /></el-icon>
+            批量复制
+          </el-button>
+          <el-button size="small" @click="regenerateNames">
+            <el-icon><Refresh /></el-icon>
+            重新生成
+          </el-button>
         </div>
       </div>
     </div>
@@ -577,6 +640,8 @@ import {
   Plus,
   Document,
   Close,
+  Delete,
+  Refresh,
 } from '@element-plus/icons-vue'
 import {
   ElButton,
@@ -591,7 +656,6 @@ import {
 } from 'element-plus'
 import {
   computed,
-  debounce,
   h,
   nextTick,
   onMounted,
@@ -603,12 +667,21 @@ import {
 import 'trix'
 import { useRoute } from 'vue-router'
 import http from '@/utils/http'
-import { processText } from '@/utils/sensitiveWordUtils'
+import { processText, loadSensitiveWords, detectAndReplaceSensitiveWords } from '@/utils/sensitiveWordUtils'
 import type { TreeNodeData as ElTreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { marked } from 'marked'
 import RightToolbar from '@/components/RightToolbar/RightToolbar.vue'
 import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
 import '@/assets/styles/editor-image.css'
+
+// 命名系统
+import {
+  IntelligentNamingEngine,
+  type NamingContext,
+  type UserPreferences,
+  type GeneratedName,
+  createNamingEngine
+} from '@/utils/naming'
 
 // Element Plus 图标
 import {
@@ -618,6 +691,7 @@ import {
   InfoFilled,
   Edit,
   DocumentCopy,
+  Star,
   FolderOpened,
   Warning
 } from '@element-plus/icons-vue'
@@ -677,6 +751,18 @@ interface NameForm {
 const SEARCH_HIGHLIGHT_DURATION = 1000 // 搜索高亮显示持续时间（毫秒）
 const SEARCH_DEBOUNCE_DELAY = 300 // 搜索输入防抖延迟（毫秒）
 
+// 本地防抖函数，避免错误从 vue 导入
+function debounce<T extends (...args: any[]) => void>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timer: any
+  return (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => fn(...args), delay)
+  }
+}
+
 const route = useRoute()
 const bookId = Number(route.params.id as string)
 
@@ -700,11 +786,20 @@ const currentVolumeId = ref(0)
 const treeData = ref<TreeNode[]>([])
 
 const appLoaded = ref(false)
+// 敏感词缓存
+const sensitiveWords = ref<string[]>([])
 
 
 onMounted(async () => {
   // 初始化数据
   await initTreeData()
+
+  // 预加载敏感词库
+  try {
+    sensitiveWords.value = await loadSensitiveWords()
+  } catch (e) {
+    console.warn('敏感词库加载失败，继续运行但不进行过滤')
+  }
 
   // 确保 DOM 完成更新后执行
   nextTick(() => {
@@ -1401,7 +1496,7 @@ const replaceInChapter = () => {
     matches.value = []
     currentMatchIndex.value = -1
 
-    ElMessage.success(`本章替换完成，共替换了 ${replacementCount} 处`)
+    ElMessage.success('本章替换完成，共替换了 ' + replacementCount + ' 处')
 
   } catch (error) {
     console.error('本章替换失败:', error)
@@ -1597,31 +1692,289 @@ const getNameform = ref<NameForm>({
 // 存放生成的名字
 const generatedNames = ref<string[]>([])
 
+// 命名系统相关变量
+const userPreferences = ref<UserPreferences>({
+  stylePreference: 'balanced',
+  complexityPreference: 'medium',
+  culturalPreference: ['chinese'],
+  favoriteElements: [],
+  avoidedElements: []
+})
+
+// 命名历史记录
+const namingHistory = ref<GeneratedName[]>([])
+const maxHistoryItems = 50
+
+// 选中的地点类型（用于批量生成）
+const selectedPlaceTypes = ref<string[]>(['city'])
+
+// 使用外部命名系统（保持单例与稳定种子）
+const namingEngineRef = ref<IntelligentNamingEngine | null>(null)
+const namingSeed = ref<number>(Date.now())
+const getNamingEngine = () => {
+  if (!namingEngineRef.value) {
+    namingEngineRef.value = createNamingEngine(userPreferences.value, namingSeed.value)
+  }
+  return namingEngineRef.value
+}
+
+// 批量生成数量
+const batchCount = ref<number>(10)
+
+// 更新用户偏好学习
+const updateUserPreferences = (generatedName: GeneratedName) => {
+  // 基于生成的名称学习用户偏好
+  const engine = getNamingEngine()
+  engine.updateUserPreferencesDirect({
+    favoriteElements: [...userPreferences.value.favoriteElements],
+    avoidedElements: [...userPreferences.value.avoidedElements]
+  })
+}
+
 // 设置选中的 tag
 const setTag = (key: keyof NameForm, value: string) => {
   getNameform.value[key] = value
 }
-// 生成随机名字
-const generateName = () => {
-  const namesPool: NamesPool = {
-    china: ['张三', '李四', '王五'],
-    japan: ['Sakura', 'Taro', 'Haruto'],
-    west: ['John', 'Mary', 'Tom'],
-    city: ['Gotham', 'Metropolis', 'Springfield'],
-    village: ['Konoha', 'Pallet', 'Whiterun'],
-    forest: ['Blackwood', 'Dark Forest', 'Enchanted'],
+// 生成名称 - 使用外部命名系统
+const generateName = async () => {
+  // 确定文化类型（根据选择的区域标签，而非 getNameActiveTab）
+  const region = getNameform.value.region || 'china'
+  const culture = region
+
+  // 确定生成类别
+  const category = activeTab.value === 'person' ? 'person' : 'place'
+
+  const context: NamingContext = {
+    category,
+    culture,
+    userPreferences: userPreferences.value,
+    complexity: userPreferences.value.complexityPreference,
+    count: 1
   }
 
-  let randomName = ''
-  if (activeTab.value === 'person') {
-    const regionNames = namesPool[getNameform.value.region] || []
-    randomName = regionNames[Math.floor(Math.random() * regionNames.length)]
-  } else if (activeTab.value === 'place') {
-    const placeNames = namesPool[getNameform.value.placeType] || []
-    randomName = placeNames[Math.floor(Math.random() * placeNames.length)]
+  // 如果是人物类型，需要包含性别偏好
+  if (category === 'person') {
+    userPreferences.value.stylePreference = getNameform.value.gender || 'balanced'
   }
 
-  generatedNames.value.push(randomName)
+  // 如果是地点类型，需要包含子类别
+  if (category === 'place') {
+    context.subcategory = getNameform.value.placeType || 'city'
+  }
+
+  try {
+    const engine = getNamingEngine()
+    await engine.ready()
+    const result = engine.generateBatch(context, 1)
+
+    if (result.names.length > 0) {
+      // 敏感词过滤
+      const nameText = result.names[0].text
+      const replaced = sensitiveWords.value.length > 0
+        ? detectAndReplaceSensitiveWords(nameText, sensitiveWords.value)
+        : nameText
+      if (replaced !== nameText && replaced.includes('*')) {
+        ElMessage.warning('生成结果包含敏感词，已过滤')
+        return
+      }
+      // 添加到显示列表
+      generatedNames.value.unshift(nameText)
+      if (generatedNames.value.length > 20) { // 限制显示列表长度
+        generatedNames.value = generatedNames.value.slice(0, 20)
+      }
+
+      // 添加到历史记录
+      namingHistory.value.unshift(result.names[0])
+      if (namingHistory.value.length > maxHistoryItems) {
+        namingHistory.value = namingHistory.value.slice(0, maxHistoryItems)
+      }
+
+      // 更新用户偏好学习
+      updateUserPreferences(result.names[0])
+
+      ElMessage.success('生成成功: ' + nameText)
+    } else {
+      ElMessage.warning('未能生成合适的名称，请重试')
+    }
+  } catch (error) {
+    console.error('命名生成错误:', error)
+    ElMessage.error('命名生成失败，请检查设置')
+  }
+}
+
+// 批量生成名称
+const generateBatchNames = async (count: number) => {
+  // 确定文化类型（根据选择的区域标签，而非 getNameActiveTab）
+  const region = getNameform.value.region || 'china'
+  const culture = region
+
+  // 确定生成类别
+  const category = activeTab.value === 'person' ? 'person' : 'place'
+
+  const context: NamingContext = {
+    category,
+    culture,
+    userPreferences: userPreferences.value,
+    complexity: userPreferences.value.complexityPreference,
+    count
+  }
+
+  // 如果是人物类型，需要包含性别偏好
+  if (category === 'person') {
+    userPreferences.value.stylePreference = getNameform.value.gender || 'balanced'
+  }
+
+  // 如果是地点类型，需要包含子类别
+  if (category === 'place') {
+    context.subcategory = getNameform.value.placeType || 'city'
+  }
+
+  try {
+    const engine = getNamingEngine()
+    await engine.ready()
+    const result = engine.generateBatch(context, count)
+
+    if (result.names.length > 0) {
+      // 添加到显示列表（敏感词过滤与去重）
+      const nameSet = new Set<string>()
+      result.names.forEach(name => {
+        const replaced = sensitiveWords.value.length > 0
+          ? detectAndReplaceSensitiveWords(name.text, sensitiveWords.value)
+          : name.text
+        if (replaced !== name.text && replaced.includes('*')) {
+          return
+        }
+        if (!nameSet.has(name.text)) {
+          nameSet.add(name.text)
+          generatedNames.value.unshift(name.text)
+        }
+      })
+      if (generatedNames.value.length > 50) { // 批量生成时增加显示限制
+        generatedNames.value = generatedNames.value.slice(0, 50)
+      }
+
+      // 添加到历史记录
+      namingHistory.value.unshift(...result.names)
+      if (namingHistory.value.length > maxHistoryItems) {
+        namingHistory.value = namingHistory.value.slice(0, maxHistoryItems)
+      }
+
+      ElMessage.success('批量生成成功，共生成 ' + result.names.length + ' 个名称')
+    } else {
+      ElMessage.warning('未能生成合适的名称，请重试')
+    }
+  } catch (error) {
+    console.error('批量命名生成错误:', error)
+    ElMessage.error('批量命名生成失败，请检查设置')
+  }
+}
+
+// 复制名称到剪贴板
+const copyNameToClipboard = async (name: string) => {
+  try {
+    await navigator.clipboard.writeText(name)
+    ElMessage.success('已复制到剪贴板')
+  } catch (error) {
+    console.error('复制失败:', error)
+    ElMessage.error('复制失败')
+  }
+}
+
+// 插入名称到编辑器
+const insertNameToEditor = (name: string) => {
+  try {
+    // 获取编辑器实例并插入文本
+    const editor = document.querySelector('trix-editor')
+    if (editor) {
+      const trixEditor = (editor as any)
+      trixEditor.insertString(name)
+      ElMessage.success('已插入到编辑器')
+    } else {
+      ElMessage.warning('未找到编辑器')
+    }
+  } catch (error) {
+    console.error('插入失败:', error)
+    ElMessage.error('插入失败')
+  }
+}
+
+// 收藏名称
+const addToFavorites = (name: string) => {
+  // 这里可以实现收藏功能，比如保存到本地存储或后端
+  const favorites = JSON.parse(localStorage.getItem('favoriteNames') || '[]')
+  if (!favorites.includes(name)) {
+    favorites.push(name)
+    localStorage.setItem('favoriteNames', JSON.stringify(favorites))
+    ElMessage.success('已添加到收藏')
+  } else {
+    ElMessage.info('该名称已在收藏中')
+  }
+}
+
+// 屏蔽名称（加入用户避免列表并从展示列表移除）
+const addToBlocked = (name: string) => {
+  if (!userPreferences.value.avoidedElements.includes(name)) {
+    userPreferences.value.avoidedElements.push(name)
+    generatedNames.value = generatedNames.value.filter(n => n !== name)
+    ElMessage.success('已屏蔽该名称')
+  } else {
+    ElMessage.info('该名称已在屏蔽列表中')
+  }
+}
+
+// 新增的快捷操作功能
+const clearAllNames = () => {
+  if (generatedNames.value.length === 0) {
+    ElMessage.info('当前没有名称需要清空')
+    return
+  }
+
+  ElMessageBox.confirm(
+    '确定要清空所有生成的名称吗？',
+    '清空确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    generatedNames.value = []
+    ElMessage.success('已清空所有名称')
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
+const batchCopyNames = () => {
+  if (generatedNames.value.length === 0) {
+    ElMessage.warning('没有可复制的名称')
+    return
+  }
+
+  const namesText = generatedNames.value.join('\n')
+  navigator.clipboard.writeText(namesText).then(() => {
+    ElMessage.success('已复制 ' + generatedNames.value.length + ' 个名称到剪贴板')
+  }).catch(() => {
+    // 降级方案
+    const textarea = document.createElement('textarea')
+    textarea.value = namesText
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    ElMessage.success('已复制 ' + generatedNames.value.length + ' 个名称到剪贴板')
+  })
+}
+
+const regenerateNames = async () => {
+  if (generatedNames.value.length === 0) {
+    ElMessage.warning('请先生成一些名称再重新生成')
+    return
+  }
+
+  const currentCount = generatedNames.value.length
+  await generateBatchNames(currentCount)
+  ElMessage.info('正在重新生成 ' + currentCount + ' 个名称...')
 }
 
 // 处理分类切换
@@ -2596,34 +2949,539 @@ onUnmounted(() => {
 .dialog-footer {
   text-align: right;
 }
+// 命名面板现代化样式
+.naming-dialog {
+  :deep(.el-dialog) {
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    overflow: hidden;
+  }
+
+  :deep(.el-dialog__header) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 24px;
+    margin: 0;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .el-dialog__headerbtn {
+      .el-dialog__close {
+        color: white;
+        font-size: 18px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          color: #f0f0f0;
+          transform: rotate(90deg);
+        }
+      }
+    }
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 0;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
 .dialog-content {
   display: flex;
+  min-height: 500px;
+  background: white;
 }
 
 .dialog-left {
-  width: 20%;
-  border-right: 1px solid #ebeef5;
+  display: none;
+
+  :deep(.el-tabs) {
+    height: 100%;
+
+    .el-tabs__header {
+      margin: 0;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+
+      .el-tabs__nav-wrap {
+        &::after {
+          display: none;
+        }
+      }
+
+      .el-tabs__item {
+        text-align: center;
+        width: 100%;
+        padding: 12px 4px;
+        border-bottom: 1px solid #f3f4f6;
+        transition: all 0.3s ease;
+        font-size: 12px;
+        font-weight: 500;
+        color: #6b7280;
+        line-height: 1.2;
+
+        &:hover {
+          color: #667eea;
+          background: #f3f4ff;
+        }
+
+        &.is-active {
+          color: #667eea;
+          background: linear-gradient(90deg, #f3f4ff 0%, #e8eaff 100%);
+          border-right: 3px solid #667eea;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .el-tabs__content {
+      display: none;
+    }
+  }
 }
 
 .dialog-center {
-  width: 50%;
-  padding: 0 20px;
+  flex: 1 1 auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  background: white;
+
+  .category-switcher {
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+
+    &::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 2px;
+      margin-right: 10px;
+    }
+  }
+
+  .el-tag {
+    margin: 6px 8px 6px 0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #6b7280;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: #667eea;
+      color: #667eea;
+      background: #f3f4ff;
+    }
+
+    &.el-tag--primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+  }
+
+  .naming-actions {
+    margin-top: auto;
+    padding-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .el-button {
+      height: 44px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      &.el-button--primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+      }
+
+      &.el-button--success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+      }
+    }
+  }
 }
 
 .dialog-right {
-  width: 30%;
-  padding-left: 20px;
+  flex: 1 1 0;
+  min-width: 320px;
+  padding: 20px 20px 20px 20px;
+  background: #f9fafb;
+  border-left: 1px solid #e5e7eb;
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 2px;
+      margin-right: 10px;
+    }
+
+    .name-count {
+      font-size: 12px;
+      color: #6b7280;
+      background: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+  }
 }
 
 .generated-names {
-  margin-top: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .name-tag {
+    margin: 0;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    color: #374151;
+    position: relative;
+    overflow: hidden;
+    min-height: 40px; // 保证垂直空间充足
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    // 修正 Element Plus 内部包裹导致的垂直不居中问题
+    :deep(.el-tag__content) {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    &:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-color: #10b981;
+      background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+    }
+
+    &.el-tag--success {
+      background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+      border-color: #10b981;
+      color: #065f46;
+
+      &:hover {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      }
+    }
+
+    .el-button {
+      position: relative;
+      z-index: 2;
+      margin-left: 8px;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    // 为名称添加渐变背景效果
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.6s ease;
+    }
+
+    &:hover::before {
+      left: 100%;
+    }
+  }
+
+  // 自定义滚动条
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 3px;
+
+    &:hover {
+      background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    }
+  }
 }
 
 .random-name-btn {
-  margin-top: 20px;
+  margin-top: 16px;
+
+  .el-button {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    }
+  }
+}
+
+.batch-and-strategy {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  row-gap: 10px;
+}
+
+.batch-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .label {
+    color: #6b7280;
+    font-size: 12px;
+  }
+}
+
+.strategy-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .label {
+    color: #6b7280;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+}
+
+// 响应式设计
+@media screen and (max-width: 768px) {
+  .dialog-content {
+    flex-direction: column;
+    min-height: auto;
+    max-height: 60vh;
+  }
+
+  .dialog-left,
+  .dialog-center,
+  .dialog-right {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .dialog-left {
+    :deep(.el-tabs__header) {
+      .el-tabs__nav {
+        display: flex;
+
+        .el-tabs__item {
+          width: auto;
+          flex: 1;
+          border-bottom: none;
+        }
+      }
+    }
+  }
+
+  .generated-names {
+    max-height: 200px;
+  }
+}
+
+// 新增UI元素样式
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  p {
+    margin: 8px 0;
+    color: #6b7280;
+    font-size: 14px;
+
+    &.empty-hint {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+  }
+}
+
+.name-text {
+  flex: 1;
+  margin-right: 8px;
+  font-weight: 500;
+  line-height: 1.4; // 提升可读性，避免被顶部裁切
+}
+
+.name-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  .el-button {
+    padding: 4px;
+    min-height: 24px;
+    width: 24px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.8);
+      transform: scale(1.1);
+    }
+  }
+}
+
+.name-tag:hover .name-actions {
+  opacity: 1;
+}
+
+.quick-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+
+  .el-button {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+// 动画效果
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.name-tag {
+  animation: slideInRight 0.3s ease-out;
+
+  &:nth-child(even) {
+    animation-delay: 0.05s;
+  }
+
+  &:nth-child(3n) {
+    animation-delay: 0.1s;
+  }
+}
+
+.empty-state {
+  animation: fadeIn 0.5s ease-out;
 }
 
 

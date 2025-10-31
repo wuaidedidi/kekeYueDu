@@ -24,6 +24,10 @@ export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
+// 开发服务器端口配置
+const DEV_PORT = process.env.DEV_PORT || 3000
+const DEV_SERVER_URL = `http://localhost:${DEV_PORT}`
+
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, 'public')
   : RENDERER_DIST
@@ -93,8 +97,8 @@ async function createWindow() {
 
   if (VITE_DEV_SERVER_URL) {
     // #298
-    win.loadURL('http://localhost:3000/login')
-    // win.loadURL('http://localhost:3000/workspace/all-books')
+    win.loadURL(`${DEV_SERVER_URL}/login`)
+    // win.loadURL(`${DEV_SERVER_URL}/workspace/all-books`)
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
   } else {
@@ -153,7 +157,7 @@ ipcMain.handle('open-win', (_, arg) => {
   })
 
   if (VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
+    childWindow.loadURL(`${DEV_SERVER_URL}#${arg}`)
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
