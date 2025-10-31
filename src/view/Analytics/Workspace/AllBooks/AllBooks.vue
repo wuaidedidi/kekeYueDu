@@ -18,11 +18,11 @@
         style="margin-left: 10px"
         type="primary"
         color="#626aef"
-        :icon="Plus"
+        :icon="Icons.Plus"
         @click="createNewBook"
         >新建作品</el-button
       >
-      <el-button :icon="Plus" color="#626aef" plain @click="CreateDraft"
+      <el-button :icon="Icons.Plus" color="#626aef" plain @click="CreateDraft"
         >新建草稿</el-button
       >
       <el-button
@@ -30,7 +30,7 @@
           margin-left: auto; /* 将元素推到最右 */
           margin-right: 10px; /* 离容器右边10px */
         "
-        :icon="Grid"
+        :icon="Icons.Grid"
         color="#626aef"
         plain
         >书籍管理</el-button
@@ -54,7 +54,7 @@
               trigger="click"
             >
               <template #reference>
-                <setting class="starIcon" />
+                <Icons.Setting class="starIcon" />
               </template>
               <div style="color: lightgray">
                 2024-09-26&nbsp;19:32更新魔女兵器爱好者，段落
@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { Grid, Plus, Setting } from '@element-plus/icons-vue'
+import * as Icons from '@element-plus/icons-vue'
 import { ElButton, ElImage, ElNotification, ElMessageBox, ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import Dialog from './components/dialog.vue'
@@ -126,10 +126,10 @@ const dialogAddFormVisible = ref(false)
 const dialogDeleteFormVisible = ref(false)
 
 const carouselPaths2 = [
-  './allBooks/banner/carousel1.png',
-  './allBooks/banner/carousel2.png',
-  './allBooks/banner/carousel3.png',
-  './allBooks/banner/carousel4.png',
+  '/allBooks/banner/carousel1.png',
+  '/allBooks/banner/carousel2.png',
+  '/allBooks/banner/carousel3.png',
+  '/allBooks/banner/carousel4.png',
 ]
 
 const bookTemplates = ref<Book[]>([])
@@ -141,6 +141,11 @@ const initAllDraft = async () => {
   try {
     const res = await http.get('/allDraft')
 
+    // 确保 bookTemplates 是数组
+    if (!Array.isArray(bookTemplates.value)) {
+      bookTemplates.value = []
+    }
+
     // 确保API响应数据正确
     const draftsData = res.data?.data || res.data || []
 
@@ -149,7 +154,7 @@ const initAllDraft = async () => {
       id: draft.id || index + 1,
       bookName: draft.bookName || '未命名草稿',
       fontCount: draft.fontCount || 0,
-      src: draft.src || `./allBooks/banner/carousel${(index % 4) + 1}.png`
+      src: draft.src || `/allBooks/bookList/bookTemplate${(index % 4) + 1}.png`
     }))
 
     bookTemplates.value = drafts
@@ -211,7 +216,7 @@ const createNewBook = async () => {
     const res = await http.post('/createBook', {
       bookName: '新作品',
       fontCount: 0,
-      src: './allBooks/bookList/bookTemplate1.png'
+      src: '/allBooks/bookList/bookTemplate1.png'
     })
 
     if (res.data.success) {
@@ -248,11 +253,18 @@ const handleConfirm = (formData: { name: string }) => {
 
 const handleAddConfirm = async (formData: Book) => {
   try {
+    console.log('创建草稿数据:', formData)
+
+    // 确保 bookTemplates 是数组
+    if (!Array.isArray(bookTemplates.value)) {
+      bookTemplates.value = []
+    }
+
     // 调用后端API创建草稿
     const res = await http.post('/createDraft', {
-      bookName: formData.bookName,
-      fontCount: formData.fontCount,
-      src: formData.src
+      bookName: formData.bookName || '未命名草稿',
+      fontCount: formData.fontCount || 0,
+      src: formData.src || '/allBooks/bookList/bookTemplate1.png'
     })
 
     if (res.data.success) {
@@ -260,6 +272,12 @@ const handleAddConfirm = async (formData: Book) => {
       await initAllDraft()
       dialogAddFormVisible.value = false
       ElMessage.success('草稿创建成功')
+
+      // 自动跳转到新创建的草稿详情页
+      const newDraftId = res.data.data.id
+      if (newDraftId) {
+        router.push({ name: 'draftDetail', params: { id: newDraftId.toString() } })
+      }
     } else {
       ElMessage.error(res.data.message || '创建草稿失败')
     }
@@ -269,16 +287,19 @@ const handleAddConfirm = async (formData: Book) => {
   }
 }
 
-const clickBookHandler = (id: number) => {
+const clickBookHandler = (id: number | string) => {
   console.log('点击书籍，ID:', id)
 
-  if (!id || isNaN(id) || id <= 0) {
+  // 处理不同类型的ID
+  const bookId = typeof id === 'string' ? parseInt(id, 10) : id
+
+  if (!bookId || isNaN(bookId) || bookId <= 0) {
     ElMessage.warning('无效的书籍ID')
     return
   }
 
   try {
-    router.push({ name: 'draftDetail', params: { id: id.toString() } })
+    router.push({ name: 'draftDetail', params: { id: bookId.toString() } })
   } catch (error) {
     console.error('路由跳转失败:', error)
     ElMessage.error('页面跳转失败，请重试')

@@ -52,7 +52,7 @@ const form = reactive<Book>({
   id: 0,
   bookName: '',
   fontCount: 0,
-  src: '/allBooks/bookList/bookTemplate4.png'
+  src: '/allBooks/bookList/bookTemplate1.png'
 })
 
 // 如果是编辑模式，初始化表单数据

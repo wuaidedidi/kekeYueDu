@@ -46,6 +46,10 @@ const uploadsDir = path.join(__dirname, 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
+// 静态资源：公共目录（用于提供 allBooks 图片等）
+const publicDir = path.join(__dirname, '..', 'public');
+app.use(express.static(publicDir));
+
 // multer 配置：保存到 uploads 目录
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -462,7 +466,7 @@ app.post('/api/createDraft', (req, res) => {
     [
       bookName,
       fontCount || 0,
-      src || './allBooks/bookList/bookTemplate1.png'
+      src || '/allBooks/bookList/bookTemplate1.png'
     ],
     function(err) {
       if (err) {
@@ -498,7 +502,7 @@ app.post('/api/createBook', (req, res) => {
     [
       bookName || '新作品',
       fontCount || 0,
-      src || './allBooks/bookList/bookTemplate1.png'
+      src || '/allBooks/bookList/bookTemplate1.png'
     ],
     function(err) {
       if (err) {

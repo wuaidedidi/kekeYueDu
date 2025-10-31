@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     CharactersPanel: typeof import('./src/components/RightToolbar/CharactersPanel.vue')['default']
+    EditorToolbar: typeof import('./src/components/Editor/EditorToolbar.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElCarousel: typeof import('element-plus/es')['ElCarousel']
@@ -30,6 +31,8 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    ImageInsert: typeof import('./src/components/Editor/ImageInsert.vue')['default']
+    ImageLibrary: typeof import('./src/components/Editor/ImageLibrary.vue')['default']
     OutlinePanel: typeof import('./src/components/RightToolbar/OutlinePanel.vue')['default']
     PreviewPanel: typeof import('./src/components/RightToolbar/PreviewPanel.vue')['default']
     ProofreadPanel: typeof import('./src/components/RightToolbar/ProofreadPanel.vue')['default']

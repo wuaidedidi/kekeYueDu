@@ -321,6 +321,7 @@
       </div>
       <div class="mainContent">
         <div class="mainLeft">
+          <EditorToolbar @insert-image="handleInsertImage" />
           <div
             class="contentDetail"
             :style="{
@@ -555,6 +556,8 @@ import { processText } from '@/utils/sensitiveWordUtils'
 import type { TreeNodeData as ElTreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { marked } from 'marked'
 import RightToolbar from '@/components/RightToolbar/RightToolbar.vue'
+import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
+import '@/assets/styles/editor-image.css'
 
 // 删除重复的 Chapter 接口定义，使用下面的定义
 
@@ -1322,6 +1325,28 @@ const insertCodeBlock = () => {
     trixEditorInstance.insertHTML(
       '<pre style="background-color: #f6f8fa; padding: 1em; border-radius: 5px;"><code>// 这里是代码块</code></pre>'
     )
+  }
+}
+
+// 处理图片插入
+const handleInsertImage = (html: string) => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (trixEditor) {
+    const trixEditorInstance = (trixEditor as any).editor
+    if (!trixEditorInstance) return
+
+    try {
+      // 插入图片HTML到编辑器
+      trixEditorInstance.insertHTML(html)
+
+      // 触发自动保存
+      trixEditorInstance.element.dispatchEvent(new Event('change'))
+
+      ElMessage.success('图片已成功插入到编辑器')
+    } catch (error) {
+      console.error('插入图片失败:', error)
+      ElMessage.error('插入图片失败，请重试')
+    }
   }
 }
 

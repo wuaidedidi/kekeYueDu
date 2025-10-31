@@ -7,7 +7,7 @@ import axios, {
 } from 'axios'
 
 // 创建 axios 实例（从环境变量读取 API 基址）
-const RAW_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080'
+const RAW_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8081'
 const BASE = RAW_BASE.endsWith('/api') ? RAW_BASE : RAW_BASE.replace(/\/$/, '') + '/api'
 const http: AxiosInstance = axios.create({
   baseURL: BASE,

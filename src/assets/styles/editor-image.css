@@ -1,0 +1,182 @@
+/* 编辑器图片样式 */
+
+/* 图片尺寸类 */
+.img-original {
+  max-width: 100%;
+  height: auto;
+}
+
+.img-large {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+}
+
+.img-medium {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+}
+
+.img-small {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
+/* 图片对齐类 */
+.img-left {
+  float: left;
+  margin: 0 16px 8px 0;
+}
+
+.img-right {
+  float: right;
+  margin: 0 0 8px 16px;
+}
+
+.img-center {
+  display: block;
+  margin: 16px auto;
+  text-align: center;
+  clear: both;
+}
+
+/* 图片响应式 */
+@media (max-width: 768px) {
+  .img-large,
+  .img-medium,
+  .img-small,
+  .img-original {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+  }
+
+  .img-left,
+  .img-right {
+    float: none;
+    display: block;
+    margin: 16px auto;
+    text-align: center;
+  }
+}
+
+/* 图片基础样式 */
+img {
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  max-width: 100%;
+  height: auto;
+}
+
+img:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 图片加载状态 */
+img.loading {
+  background: #f5f5f5;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+img.loading::before {
+  content: "加载中...";
+  font-size: 14px;
+}
+
+/* 图片错误状态 */
+img.error {
+  background: #fef2f2;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f56c6c;
+  border: 1px dashed #f56c6c;
+}
+
+img.error::before {
+  content: "图片加载失败";
+  font-size: 14px;
+}
+
+/* 图片容器 */
+.image-container {
+  position: relative;
+  display: inline-block;
+  margin: 16px 0;
+}
+
+.image-container .image-caption {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* 图片组 */
+.image-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 16px 0;
+  justify-content: center;
+}
+
+.image-group .image-item {
+  flex: 0 0 auto;
+  text-align: center;
+}
+
+.image-group img {
+  max-width: 200px;
+  height: auto;
+}
+
+/* 编辑器内图片特殊处理 */
+trix-editor img {
+  /* 确保编辑器内图片不会超出边界 */
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 16px 0;
+}
+
+/* Trix编辑器工具栏图片按钮样式 */
+.trix-button-row .trix-button.trix-active[data-trix-attribute="attachment"] {
+  background: #67c23a;
+  color: white;
+}
+
+/* 拖拽上传时的样式 */
+.drag-over {
+  border: 2px dashed #409eff;
+  background: rgba(64, 158, 255, 0.1);
+}
+
+/* 图片选择对话框 */
+.image-dialog {
+  .image-preview {
+    text-align: center;
+    margin: 16px 0;
+  }
+
+  .image-preview img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .image-settings {
+    margin-top: 16px;
+  }
+}
