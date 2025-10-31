@@ -3,37 +3,45 @@
     <div class="toolbar-group">
       <!-- 基础格式化 -->
       <el-button
-        :icon="Icons.Bold"
         size="small"
         text
         @click="execCommand('bold')"
         title="加粗 (Ctrl+B)"
         class="toolbar-btn"
-      />
+        aria-label="加粗"
+      >
+        B
+      </el-button>
       <el-button
-        :icon="Icons.Italic"
         size="small"
         text
         @click="execCommand('italic')"
         title="斜体 (Ctrl+I)"
         class="toolbar-btn"
-      />
+        aria-label="斜体"
+      >
+        I
+      </el-button>
       <el-button
-        :icon="Icons.Underline"
         size="small"
         text
         @click="execCommand('underline')"
         title="下划线 (Ctrl+U)"
         class="toolbar-btn"
-      />
+        aria-label="下划线"
+      >
+        U
+      </el-button>
       <el-button
-        :icon="Icons.Strikethrough"
         size="small"
         text
         @click="execCommand('strike')"
         title="删除线"
         class="toolbar-btn"
-      />
+        aria-label="删除线"
+      >
+        S
+      </el-button>
     </div>
 
     <div class="toolbar-divider" />
@@ -59,61 +67,73 @@
 
       <!-- 列表 -->
       <el-button
-        :icon="Icons.List"
         size="small"
         text
         @click="execCommand('bullet')"
         title="无序列表"
         class="toolbar-btn"
-      />
+        aria-label="无序列表"
+      >
+        •
+      </el-button>
       <el-button
-        :icon="Icons.Operation"
         size="small"
         text
         @click="execCommand('number')"
         title="有序列表"
         class="toolbar-btn"
-      />
+        aria-label="有序列表"
+      >
+        1.
+      </el-button>
 
       <!-- 引用 -->
       <el-button
-        :icon="Icons.Quote"
         size="small"
         text
         @click="execCommand('quote')"
         title="引用"
         class="toolbar-btn"
-      />
+        aria-label="引用"
+      >
+        "
+      </el-button>
     </div>
 
     <div class="toolbar-divider" />
 
     <div class="toolbar-group">
-      <!-- 对齐 -->
+      <!-- 对齐 - 暂时移除，Element Plus没有对应的对齐图标 -->
       <el-button
-        :icon="Icons.ArrowLeft"
         size="small"
         text
         @click="execCommand('justifyLeft')"
         title="左对齐"
         class="toolbar-btn"
-      />
+        aria-label="左对齐"
+      >
+        左
+      </el-button>
       <el-button
-        :icon="Icons.More"
         size="small"
         text
         @click="execCommand('justifyCenter')"
         title="居中对齐"
         class="toolbar-btn"
-      />
+        aria-label="居中对齐"
+      >
+        中
+      </el-button>
       <el-button
-        :icon="Icons.ArrowRight"
         size="small"
         text
         @click="execCommand('justifyRight')"
         title="右对齐"
         class="toolbar-btn"
-      />
+        aria-label="右对齐"
+      >
+        右
+      </el-button>
     </div>
 
     <div class="toolbar-divider" />
@@ -121,29 +141,35 @@
     <div class="toolbar-group">
       <!-- 媒体 -->
       <el-button
-        :icon="Icons.Picture"
         size="small"
         text
         @click="showImageDialog = true"
         title="插入图片"
         class="toolbar-btn image-btn"
-      />
+        aria-label="插入图片"
+      >
+        🖼️
+      </el-button>
       <el-button
-        :icon="Icons.Link"
         size="small"
         text
         @click="insertLink"
         title="插入链接"
         class="toolbar-btn"
-      />
+        aria-label="插入链接"
+      >
+        🔗
+      </el-button>
       <el-button
-        :icon="Icons.VideoCamera"
         size="small"
         text
         @click="insertVideo"
         title="插入视频"
-        class="toolbar-btn"
-      />
+        class="toolbar-btn video-btn"
+        aria-label="插入视频"
+      >
+        📹
+      </el-button>
     </div>
 
     <div class="toolbar-divider" />
@@ -151,29 +177,35 @@
     <div class="toolbar-group">
       <!-- 其他 -->
       <el-button
-        :icon="Icons.Grid"
         size="small"
         text
         @click="insertTable"
         title="插入表格"
         class="toolbar-btn"
-      />
+        aria-label="插入表格"
+      >
+        ⊞
+      </el-button>
       <el-button
-        :icon="Icons.Code"
         size="small"
         text
         @click="execCommand('code')"
         title="行内代码"
         class="toolbar-btn"
-      />
+        aria-label="行内代码"
+      >
+        &lt;/&gt;
+      </el-button>
       <el-button
-        :icon="Icons.DocumentCopy"
         size="small"
         text
         @click="execCommand('pre')"
         title="代码块"
-        class="toolbar-btn"
-      />
+        class="toolbar-btn code-block-btn"
+        aria-label="代码块"
+      >
+        {}
+      </el-button>
     </div>
 
     <!-- 图片插入对话框 -->
@@ -184,7 +216,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { ElButton, ElSelect, ElOption, ElMessage, ElMessageBox } from 'element-plus'
-import * as Icons from '@element-plus/icons-vue'
+// 暂时移除Element Plus图标导入，使用文本符号代替
 import ImageInsert from './ImageInsert.vue'
 
 const emit = defineEmits<{
@@ -476,6 +508,24 @@ onUnmounted(() => {
     &:hover {
       background: #f0f9ff;
       border-color: #67c23a;
+    }
+  }
+
+  .video-btn {
+    color: #e6a23c;
+
+    &:hover {
+      background: #fdf6ec;
+      border-color: #e6a23c;
+    }
+  }
+
+  .code-block-btn {
+    color: #909399;
+
+    &:hover {
+      background: #f4f4f5;
+      border-color: #909399;
     }
   }
 

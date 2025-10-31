@@ -169,54 +169,141 @@
   
       <div class="rightHeader">
         <div>
-          <el-popover trigger="click" placement="bottom-start" width="300px">
+          <el-popover
+            trigger="click"
+            placement="bottom-start"
+            width="320px"
+            :teleported="false"
+          >
             <template #reference>
-              <div @click="replaceOpenPop">
+              <div>
                 <el-tooltip content="查找替换CtrlF">
-                  <el-image src="./icon/chazhaotihuan.png" /> </el-tooltip
-                >查找替换
+                  <el-image src="./icon/chazhaotihuan.png" />
+                </el-tooltip>
+                查找替换
               </div>
             </template>
-            <div>
-              <h3>查找替换</h3>
+            <div class="find-replace-panel">
+              <div class="panel-header">
+                <h3>查找替换</h3>
+              </div>
 
-              <el-form>
-                <el-form-item>
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                    "
+              <div class="panel-content">
+                <!-- 查找输入框 -->
+                <div class="input-group">
+                  <label class="input-label">查找内容:</label>
+                  <el-input
+                    v-model="replaceForm.searchText"
+                    placeholder="请输入要查找的内容"
+                    class="search-input"
+                    @input="handleSearchInput"
+                    clearable
                   >
-                    <div style="width: 100px">查找:</div>
-                    <el-input
-                      v-model="replaceForm.searchText"
-                      placeholder="输入查找词"
-                      style="margin-left: 8px"
-                      @change="inputSearchTextHandler"
-                    ></el-input>
-                    <div class="mb-2">
-                      <el-input
-                        placeholder="替换为"
-                        v-model="replaceForm.replaceText"
-                      ></el-input>
-                      <el-button
-                        @click="handleReplaceInBook"
-                        style="margin-left: 8px"
-                        >全书替换</el-button
-                      >
-                    </div>
-                  </div>
-                </el-form-item>
+                    <template #suffix>
+                      <el-icon class="search-icon">
+                        <Search />
+                      </el-icon>
+                    </template>
+                  </el-input>
+                </div>
 
-                <el-form-item>
-                  <el-button @click="goToNextMatch">上一个</el-button>
-                  <el-button @click="goToPreviousMatch">下一个</el-button>
-                  <el-button @click="replace">替换</el-button>
-                  <el-button @click="replaceInChapter">本章替换</el-button>
-                </el-form-item>
-              </el-form>
+                <!-- 替换输入框 -->
+                <div class="input-group">
+                  <label class="input-label">替换为:</label>
+                  <el-input
+                    v-model="replaceForm.replaceText"
+                    placeholder="请输入替换内容（可选）"
+                    class="replace-input"
+                    clearable
+                  />
+                </div>
+
+                <!-- 查找统计信息 -->
+                <div v-if="matches.length > 0" class="search-info">
+                  <div class="info-item">
+                    <el-icon class="info-icon"><InfoFilled /></el-icon>
+                    <span class="info-text">
+                      找到 <strong>{{ matches.length }}</strong> 个匹配项
+                      <span v-if="matches.length > 0">，当前第 {{ currentMatchIndex + 1 }} 个</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 导航按钮组 - 始终显示 -->
+                <div class="navigation-section">
+                  <div class="nav-buttons">
+                    <el-button
+                      @click="goToPreviousMatch"
+                      size="small"
+                      :disabled="matches.length === 0"
+                      class="nav-btn"
+                    >
+                      <el-icon><ArrowLeft /></el-icon>
+                      上一个
+                    </el-button>
+                    <el-button
+                      @click="goToNextMatch"
+                      size="small"
+                      :disabled="matches.length === 0"
+                      class="nav-btn"
+                    >
+                      下一个
+                      <el-icon><ArrowRight /></el-icon>
+                    </el-button>
+                  </div>
+                </div>
+
+                <!-- 替换按钮组 - 始终显示 -->
+                <div class="action-section">
+                  <div class="action-buttons">
+                    <el-button
+                      @click="replace"
+                      type="primary"
+                      size="small"
+                      :disabled="matches.length === 0 || !replaceForm.searchText"
+                      class="action-btn"
+                    >
+                      <el-icon><Edit /></el-icon>
+                      替换当前
+                    </el-button>
+                    <el-button
+                      @click="replaceInChapter"
+                      type="warning"
+                      size="small"
+                      :disabled="matches.length === 0 || !replaceForm.searchText"
+                      class="action-btn"
+                    >
+                      <el-icon><DocumentCopy /></el-icon>
+                      本章替换
+                    </el-button>
+                  </div>
+
+                  <div class="book-replace-section">
+                    <el-button
+                      @click="handleReplaceInBook"
+                      type="danger"
+                      size="small"
+                      :disabled="!replaceForm.searchText || !replaceForm.replaceText"
+                      class="book-replace-btn"
+                    >
+                      <el-icon><FolderOpened /></el-icon>
+                      全书替换
+                    </el-button>
+                  </div>
+                </div>
+
+                <!-- 提示信息 -->
+                <div v-if="replaceForm.searchText && matches.length === 0" class="no-results">
+                  <el-icon><Warning /></el-icon>
+                  <span>未找到匹配项</span>
+                </div>
+
+                <!-- 空状态提示 -->
+                <div v-if="!replaceForm.searchText" class="empty-hint">
+                  <el-icon><InfoFilled /></el-icon>
+                  <span>请输入要查找的内容</span>
+                </div>
+              </div>
             </div>
           </el-popover>
         </div>
@@ -482,7 +569,6 @@
 
 <script setup lang="ts">
 import {
-  Search,
   CircleCheckFilled,
   EditPen,
   Comment,
@@ -505,6 +591,7 @@ import {
 } from 'element-plus'
 import {
   computed,
+  debounce,
   h,
   nextTick,
   onMounted,
@@ -522,6 +609,18 @@ import { marked } from 'marked'
 import RightToolbar from '@/components/RightToolbar/RightToolbar.vue'
 import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
 import '@/assets/styles/editor-image.css'
+
+// Element Plus 图标
+import {
+  Search,
+  ArrowLeft,
+  ArrowRight,
+  InfoFilled,
+  Edit,
+  DocumentCopy,
+  FolderOpened,
+  Warning
+} from '@element-plus/icons-vue'
 
 // 删除重复的 Chapter 接口定义，使用下面的定义
 
@@ -573,6 +672,10 @@ interface NameForm {
   placeType: string
   [key: string]: string
 }
+
+// 常量定义
+const SEARCH_HIGHLIGHT_DURATION = 1000 // 搜索高亮显示持续时间（毫秒）
+const SEARCH_DEBOUNCE_DELAY = 300 // 搜索输入防抖延迟（毫秒）
 
 const route = useRoute()
 const bookId = Number(route.params.id as string)
@@ -762,27 +865,70 @@ const replaceForm = ref({
 })
 
 const replaceOpenPop = () => {
+  // 同步搜索文本到替换表单
+  if (currentSearchValue.value) {
+    replaceForm.value.searchText = currentSearchValue.value
+  }
   replaceDialogVisible.value = true
 }
 
 const replaceSearchAll = () => {
-  // 实现搜索全书的逻辑
+  // 重新执行搜索以更新匹配项
+  if (currentSearchValue.value) {
+    // 延迟一下再搜索，确保DOM更新完成
+    setTimeout(() => {
+      inputSearchTextHandler(currentSearchValue.value)
+    }, 100)
+  }
 }
 
 const replace = () => {
-  // 实现替换的逻辑
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  const trixEditorInstance = (trixEditor as any).editor
+
+  if (!currentSearchValue.value) {
+    ElMessage.warning('请输入要查找的内容')
+    return
+  }
+
+  if (!replaceForm.value.replaceText) {
+    ElMessage.warning('请输入要替换的内容')
+    return
+  }
+
+  if (matches.value.length === 0) {
+    ElMessage.warning('没有找到匹配项')
+    return
+  }
+
+  if (currentMatchIndex.value >= 0 && currentMatchIndex.value < matches.value.length) {
+    try {
+      // 选中当前匹配项
+      const matchStartIndex = matches.value[currentMatchIndex.value]
+      const matchEndIndex = matchStartIndex + currentSearchValue.value.length
+
+      trixEditorInstance.setSelectedRange([matchStartIndex, matchEndIndex])
+
+      // 替换选中的文本
+      trixEditorInstance.insertString(replaceForm.value.replaceText)
+
+      // 重新查找更新后的匹配项
+      replaceSearchAll()
+
+      ElMessage.success('已替换当前匹配项')
+    } catch (error) {
+      console.error('替换失败:', error)
+      ElMessage.error('替换失败，请重试')
+    }
+  } else {
+    ElMessage.warning('请先选择要替换的匹配项')
+  }
 }
 
-const goToPrevious = () => {
-  // 实现上一个的逻辑
-}
-
-const goToNext = () => {
-  // 实现下一个的逻辑
-}
+// 删除空的占位函数，使用已经实现的 goToPreviousMatch 和 goToNextMatch
 
 const replaceCurrent = () => {
-  // 实现本章替换的逻辑
+  replaceInChapter()
 }
 
 /**
@@ -812,13 +958,13 @@ const lastSaveTime = ref<Date | null>(null)
 const saveInterval = ref<NodeJS.Timeout | null>(null)
 const autoSaveTimeout = ref<NodeJS.Timeout | null>(null)
 
-// 改进的保存章节内容函数
+// 改进的保存章节内容函数（仅用于当前章节）
 const saveChapterContent = async (
   id: number,
   updateContent?: string
 ): Promise<void> => {
   try {
-    // 验证章节ID有效性
+    // 验证章节ID有效性（仅限当前章节）
     if (!id || id <= 0 || !currentcheckNode.value || currentcheckNode.value.id !== id) {
       console.warn('保存章节时ID无效或不匹配，跳过保存:', {
         saveId: id,
@@ -853,6 +999,38 @@ const saveChapterContent = async (
     saveStatus.value = 'unsaved'
     ElMessage.error('保存失败，请检查网络连接')
     console.error('保存失败:', error)
+  }
+}
+
+// 批量保存专用函数（用于全书替换）- 绕过当前章节限制
+const saveChapterContentDirect = async (id: number, content: string): Promise<boolean> => {
+  try {
+    if (!id || id <= 0) {
+      console.warn('批量保存：章节ID无效', { id })
+      return false
+    }
+
+    console.log('批量保存章节:', {
+      id,
+      contentLength: content.length,
+      contentPreview: content.substring(0, 100) + '...'
+    })
+
+    const res = await http.post('/saveChapter', {
+      id,
+      content,
+    })
+
+    if (res.status === 200) {
+      console.log('批量保存成功:', id, '响应:', res.data)
+      return true
+    } else {
+      console.error('批量保存失败:', res.status, res.data)
+      return false
+    }
+  } catch (error) {
+    console.error('批量保存异常:', error)
+    return false
   }
 }
 
@@ -919,107 +1097,456 @@ const getFirstChapterContent = async (id: number): Promise<string> => {
   try {
     const url = '/getChapter/' + id
     const response = await http.get(url)
-    return response.data || ''
+    console.log('API返回的章节数据:', response.data)
+
+    // 处理不同的数据结构
+    let content = response.data
+
+    // 如果是对象，提取实际内容
+    if (content && typeof content === 'object') {
+      // 处理 {success: true, data: 章节对象} 格式
+      if (content.success && content.data) {
+        content = content.data
+      }
+
+      // 现在从章节对象中提取content字段
+      content = content.content || content.data || content.text || ''
+    }
+
+    // 确保返回字符串
+    if (typeof content !== 'string') {
+      console.warn('章节数据不是字符串格式:', content)
+      content = String(content || '')
+    }
+
+    console.log('提取的章节内容:', content.substring(0, 100) + '...')
+    return content
   } catch (error) {
     console.error('获取章节内容时出错:', error)
     return ''
   }
 }
 
+// 防抖处理的搜索输入处理函数
+const debouncedSearchHandler = debounce(async (searchText: string) => {
+  await inputSearchTextHandler(searchText)
+}, SEARCH_DEBOUNCE_DELAY)
+
+const handleSearchInput = () => {
+  debouncedSearchHandler(replaceForm.value.searchText)
+}
+
+// 统一的Trix编辑器工具函数
+const getTrixEditor = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  if (!trixEditor) {
+    console.warn('Trix editor element not found')
+    return null
+  }
+
+  const trixEditorInstance = (trixEditor as any).editor
+  if (!trixEditorInstance) {
+    console.warn('Trix editor instance not found')
+    return null
+  }
+
+  return {
+    element: trixEditor,
+    instance: trixEditorInstance,
+    // 便捷方法
+    getSelectedRange: () => trixEditorInstance.getSelectedRange(),
+    setSelectedRange: (range: [number, number]) => trixEditorInstance.setSelectedRange(range),
+    getDocument: () => trixEditorInstance.getDocument(),
+    activateAttribute: (attr: string) => trixEditorInstance.activateAttribute(attr),
+    deactivateAttribute: (attr: string) => trixEditorInstance.deactivateAttribute(attr),
+    insertString: (text: string) => trixEditorInstance.insertString(text),
+    insertHTML: (html: string) => trixEditorInstance.insertHTML(html),
+    deleteInDirection: (direction: string) => trixEditorInstance.deleteInDirection(direction)
+  }
+}
+
+// 正则表达式安全转义工具函数
+const escapeRegExp = (s: string): string => {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 const inputSearchTextHandler = async (currentValue: string) => {
   const chapterContent = getCurrentEditorContent() // 获取章节内容
   currentSearchValue.value = currentValue.trim() // 查找的词语
 
-  if (!currentSearchValue.value) return
+  console.log('搜索调试信息:', {
+    搜索内容: currentSearchValue.value,
+    章节内容长度: chapterContent.length,
+    章节内容预览: chapterContent.substring(0, 100) + '...'
+  })
 
-  // 正则表达式查找所有匹配项（忽略大小写）
-  const regex = new RegExp(currentSearchValue.value, 'gi')
+  if (!currentSearchValue.value) {
+    matches.value = []
+    currentMatchIndex.value = 0
+    clearHighlight()
+    return
+  }
+
+  // 使用安全转义的搜索词创建正则表达式（忽略大小写）
+  const safeSearch = escapeRegExp(currentSearchValue.value)
+  const regex = new RegExp(safeSearch, 'gi')
   matches.value = [] // 清空之前的匹配
   let match
 
   // 查找所有匹配项的起始位置
   while ((match = regex.exec(chapterContent)) !== null) {
     matches.value.push(match.index) // 存储匹配项的位置
+    console.log(`找到匹配项 at ${match.index}: "${match[0]}"`)
   }
 
+  // 重置当前匹配索引
+  currentMatchIndex.value = 0
+
+  console.log('搜索结果:', {
+    匹配项数量: matches.value.length,
+    匹配位置: matches.value,
+    当前匹配索引: currentMatchIndex.value
+  })
+
   // 高亮第一个匹配项
-  highlightCurrentMatch()
+  if (matches.value.length > 0) {
+    highlightCurrentMatch()
+  } else {
+    ElMessage.info('未找到匹配内容')
+  }
 }
 
-// 高亮当前匹配的词
+// 清除所有高亮 - 仅清除我们添加的高亮标记
+const clearHighlight = () => {
+  const trixEditor = document.querySelector('trix-editor') as HTMLElement
+  const trixEditorInstance = (trixEditor as any).editor
+
+  if (trixEditorInstance) {
+    // 移除所有高亮标记
+    const doc = trixEditorInstance.getDocument()
+    const currentHTML = doc.toString()
+
+    // 仅移除我们添加的高亮标记（使用唯一class标识）
+    const cleanHTML = currentHTML
+      // 移除带有 search-highlight class 的 mark 标签
+      .replace(/<mark[^>]*class="[^"]*?\bsearch-highlight\b[^"]*"[^>]*>/gi, '')
+      .replace(/<\/mark>/gi, '')
+      // 移除带有 search-highlight class 且有背景色样式的 strong 标签
+      .replace(/<strong[^>]*class="[^"]*?\bsearch-highlight\b[^"]*"[^>]*style="background-color:[^"]*"[^>]*>/gi, '')
+      .replace(/<\/strong>/gi, '')
+
+    // 如果内容有变化，则更新编辑器
+    if (cleanHTML !== currentHTML) {
+      trixEditorInstance.setSelectedRange([0, currentHTML.length])
+      trixEditorInstance.deleteInDirection('forward')
+      trixEditorInstance.insertHTML(cleanHTML)
+    }
+  }
+}
+
+// 高亮当前匹配的词 - 使用更安全的方式
 const highlightCurrentMatch = () => {
   const trixEditor = document.querySelector('trix-editor') as HTMLElement
-
   const trixEditorInstance = (trixEditor as any).editor
+
+  console.log('开始高亮匹配项:', {
+    编辑器实例: !!trixEditorInstance,
+    匹配项数量: matches.value.length,
+    当前索引: currentMatchIndex.value,
+    搜索内容: currentSearchValue.value
+  })
+
+  if (!trixEditorInstance || matches.value.length === 0) {
+    console.warn('无法高亮：编辑器不可用或没有匹配项')
+    return
+  }
+
   const currentPosition = matches.value[currentMatchIndex.value]
+  if (currentPosition === undefined) {
+    console.warn('无法高亮：当前位置未定义')
+    return
+  }
 
-  if (currentPosition !== undefined) {
-    const searchValue = currentSearchValue.value
-    const content = trixEditorInstance.getDocument().toString()
+  const searchValue = currentSearchValue.value
+  if (!searchValue) {
+    console.warn('无法高亮：搜索内容为空')
+    return
+  }
 
-    // 分割内容，将匹配到的部分用 <mark> 标签包裹
-    const highlightedContent =
-      content.slice(0, currentPosition) +
-      `<strong style="background-color: yellow;">` +
-      content.slice(currentPosition, currentPosition + searchValue.length) +
-      `</strong>` +
-      content.slice(currentPosition + searchValue.length)
+  try {
+    // 先清除之前的高亮
+    clearHighlight()
 
-    // 更新富文本内容
-    trixEditorInstance.setSelectedRange([0, content.length]) // 选中所有文本
-    trixEditorInstance.deleteInDirection('forward') // 删除所有文本
-    trixEditorInstance.insertHTML(highlightedContent) // 插入高亮后的文本
+    // 使用选择来高亮当前匹配项
+    const matchEnd = currentPosition + searchValue.length
+
+    console.log('高亮详情:', {
+      匹配位置: currentPosition,
+      结束位置: matchEnd,
+      匹配文本长度: searchValue.length,
+      总文本长度: trixEditorInstance.getDocument().toString().length
+    })
+
+    // 选中要高亮的文本
+    trixEditorInstance.setSelectedRange([currentPosition, matchEnd])
+
+    // 滚动到选中位置
+    trixEditor.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+    console.log('已设置选中区域并滚动到位置')
+
+    // 保持选中状态指定时间后取消选中，但保留用户可以清楚看到匹配位置
+    setTimeout(() => {
+      if (trixEditorInstance && trixEditorInstance.getSelectedRange()[0] !== trixEditorInstance.getSelectedRange()[1]) {
+        // 将光标移动到匹配项之后，而不是取消选中
+        trixEditorInstance.setSelectedRange([matchEnd, matchEnd])
+        console.log('已取消选中状态，光标移动到匹配项之后')
+      }
+    }, SEARCH_HIGHLIGHT_DURATION)
+
+  } catch (error) {
+    console.error('高亮匹配项时出错:', error)
   }
 }
 
 // 查找下一个匹配项
 const goToNextMatch = () => {
+  console.log('点击下一个匹配项:', {
+    当前索引: currentMatchIndex.value,
+    总匹配数: matches.value.length
+  })
+
   if (matches.value.length > 0) {
+    const oldIndex = currentMatchIndex.value
     currentMatchIndex.value =
       (currentMatchIndex.value + 1) % matches.value.length // 循环到下一个匹配项
+
+    console.log('切换到下一个匹配项:', {
+      旧索引: oldIndex,
+      新索引: currentMatchIndex.value,
+      匹配位置: matches.value[currentMatchIndex.value]
+    })
+
     highlightCurrentMatch() // 高亮显示
+  } else {
+    console.warn('没有可用的匹配项')
+    ElMessage.warning('没有找到匹配项')
   }
 }
 
 // 查找上一个匹配项
 const goToPreviousMatch = () => {
+  console.log('点击上一个匹配项:', {
+    当前索引: currentMatchIndex.value,
+    总匹配数: matches.value.length
+  })
+
   if (matches.value.length > 0) {
+    const oldIndex = currentMatchIndex.value
     currentMatchIndex.value =
       (currentMatchIndex.value - 1 + matches.value.length) %
       matches.value.length // 循环到上一个匹配项
+
+    console.log('切换到上一个匹配项:', {
+      旧索引: oldIndex,
+      新索引: currentMatchIndex.value,
+      匹配位置: matches.value[currentMatchIndex.value]
+    })
+
     highlightCurrentMatch() // 高亮显示
+  } else {
+    console.warn('没有可用的匹配项')
+    ElMessage.warning('没有找到匹配项')
   }
 }
 
 const replaceInChapter = () => {
   const trixEditor = document.querySelector('trix-editor') as HTMLElement
   const trixEditorInstance = (trixEditor as any).editor
-  const chapterContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
-  const searchValue = currentSearchValue.value
-  const regex = new RegExp(searchValue, 'gi')
-  // 替换所有匹配项
-  const updatedContent = chapterContent.replace(
-    regex,
-    replaceForm.value.replaceText
-  )
-  // 更新富文本内容
-  trixEditorInstance.setSelectedRange([0, chapterContent.length])
-  trixEditorInstance.deleteInDirection('forward')
-  trixEditorInstance.insertHTML(updatedContent)
+
+  if (!currentSearchValue.value) {
+    ElMessage.warning('请输入要查找的内容')
+    return
+  }
+
+  if (!replaceForm.value.replaceText) {
+    ElMessage.warning('请输入要替换的内容')
+    return
+  }
+
+  try {
+    const chapterContent = trixEditorInstance.getDocument().toString() // 获取当前章节内容
+    const searchValue = currentSearchValue.value
+    const regex = new RegExp(searchValue, 'gi')
+
+    // 统计替换数量
+    const matches = chapterContent.match(regex)
+    const replacementCount = matches ? matches.length : 0
+
+    if (replacementCount === 0) {
+      ElMessage.info('没有找到需要替换的内容')
+      return
+    }
+
+    // 执行替换
+    const updatedContent = chapterContent.replace(regex, replaceForm.value.replaceText)
+
+    // 更新富文本内容
+    trixEditorInstance.setSelectedRange([0, chapterContent.length])
+    trixEditorInstance.deleteInDirection('forward')
+    trixEditorInstance.insertHTML(updatedContent)
+
+    // 清除高亮并重新搜索
+    clearHighlight()
+    matches.value = []
+    currentMatchIndex.value = -1
+
+    ElMessage.success(`本章替换完成，共替换了 ${replacementCount} 处`)
+
+  } catch (error) {
+    console.error('本章替换失败:', error)
+    ElMessage.error('本章替换失败，请重试')
+  }
 }
 
 // 全书替换 - 使用现有章节保存API逐个替换
 const replaceInBook = async (oldName: string, newName: string) => {
   try {
+    if (!oldName || !newName) {
+      ElMessage.error('请输入查找内容和替换内容')
+      return
+    }
+
     console.log('全书替换功能：', oldName, '->', newName)
-    // TODO: 实现批量替换逻辑
-    // 1. 获取所有章节
-    // 2. 对每个章节内容进行替换
-    // 3. 逐个保存章节
-    ElMessage.info('全书替换功能待实现，请手动替换')
+
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      `确定要在全书中将"${oldName}"替换为"${newName}"吗？此操作将影响所有章节，且不可恢复。`,
+      '全书替换确认',
+      {
+        confirmButtonText: '确定替换',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    // 获取所有章节
+    const allChapters = await getAllChapters()
+    if (!allChapters || allChapters.length === 0) {
+      ElMessage.warning('没有找到章节')
+      return
+    }
+
+    // 统计信息
+    let totalReplacements = 0
+    let processedChapters = 0
+    const failedChapters: string[] = []
+
+    // 显示进度提示
+    let currentProgressMessage: any = null
+
+    const updateProgress = (message: string) => {
+      if (currentProgressMessage) {
+        currentProgressMessage.close()
+      }
+      currentProgressMessage = ElMessage({
+        message,
+        type: 'info',
+        duration: 0,
+        showClose: false,
+      })
+    }
+
+    updateProgress('正在替换中...')
+
+    try {
+      // 遍历所有章节进行替换
+      for (const chapter of allChapters) {
+        try {
+          console.log('处理章节:', chapter)
+
+          // 确保章节有有效的ID
+          const chapterId = chapter.id || chapter.chapter_id || chapter.chapterId
+          if (!chapterId) {
+            console.warn('章节没有有效的ID:', chapter)
+            failedChapters.push(chapter.title || chapter.name || '未知章节')
+            continue
+          }
+
+          // 获取章节内容
+          const chapterContent = await getFirstChapterContent(chapterId)
+
+          if (chapterContent) {
+            // 使用安全转义的搜索词创建正则表达式
+            const safeSearch = escapeRegExp(oldName)
+            const regex = new RegExp(safeSearch, 'gi')
+            const matches = chapterContent.match(regex)
+            const replacementCount = matches ? matches.length : 0
+
+            if (replacementCount > 0) {
+              const updatedContent = chapterContent.replace(regex, newName)
+
+              // 使用批量保存专用函数
+              const saveSuccess = await saveChapterContentDirect(chapterId, updatedContent)
+              if (saveSuccess) {
+                totalReplacements += replacementCount
+                console.log(`章节 ${chapter.title || chapterId} 替换了 ${replacementCount} 处`)
+              } else {
+                failedChapters.push(chapter.title || `章节 ${chapterId}`)
+                console.error(`章节 ${chapter.title || chapterId} 保存失败`)
+              }
+            }
+          } else {
+            console.warn('章节内容为空:', chapterId)
+          }
+
+          processedChapters++
+
+          // 更新进度信息
+          updateProgress(`正在替换中... ${processedChapters}/${allChapters.length} 章节`)
+
+        } catch (chapterError) {
+          console.error(`处理章节 ${chapter.title || chapter.id || '未知'} 时出错:`, chapterError)
+          failedChapters.push(chapter.title || chapter.name || `章节 ${chapter.id || chapter.chapter_id || '未知'}`)
+        }
+      }
+
+      // 关闭进度提示
+      if (currentProgressMessage) {
+        currentProgressMessage.close()
+      }
+
+      // 显示结果
+      if (totalReplacements > 0) {
+        let resultMessage = `全书替换完成！\n总共替换了 ${totalReplacements} 处\n处理了 ${processedChapters} 个章节`
+
+        if (failedChapters.length > 0) {
+          resultMessage += `\n${failedChapters.length} 个章节处理失败：\n${failedChapters.join(', ')}`
+        }
+
+        await ElMessageBox.alert(resultMessage, '替换完成', {
+          confirmButtonText: '确定',
+          type: totalReplacements > 0 ? 'success' : 'info'
+        })
+      } else {
+        ElMessage.info('没有找到需要替换的内容')
+      }
+
+      // 刷新当前章节内容（如果当前章节受影响）
+      if (currentcheckNode.value) {
+        await getChapterContent(currentcheckNode.value.id)
+      }
+
+    } catch (progressError) {
+      progressMessage.close()
+      throw progressError
+    }
+
   } catch (error) {
-    console.error('替换失败:', error)
-    ElMessage.error('替换失败')
+    if (error !== 'cancel') {
+      console.error('全书替换失败:', error)
+      ElMessage.error('全书替换失败：' + (error.message || '未知错误'))
+    }
   }
 }
 
@@ -1027,9 +1554,27 @@ const replaceInBook = async (oldName: string, newName: string) => {
 const getAllChapters = async () => {
   try {
     const response = await http.get('/chapters')
-    return response.data // 返回章节数据
+    console.log('API返回的章节数据:', response.data)
+
+    // 确保返回的是数组
+    let chapters = response.data
+
+    // 如果数据是对象，可能包含在某个属性中
+    if (chapters && typeof chapters === 'object' && !Array.isArray(chapters)) {
+      // 尝试常见的属性名
+      chapters = chapters.data || chapters.chapters || chapters.list || []
+    }
+
+    // 确保最终是数组
+    if (!Array.isArray(chapters)) {
+      console.warn('API返回的数据不是数组格式:', chapters)
+      return []
+    }
+
+    console.log('处理后的章节数组:', chapters)
+    return chapters
   } catch (error) {
-    console.error('Error fetching chapters:', error)
+    console.error('获取章节列表失败:', error)
     return []
   }
 }
@@ -1314,8 +1859,13 @@ const getChapterContent = async (id: number): Promise<void> => {
 const getCurrentEditorContent = (): string => {
   const trixEditor = document.querySelector('trix-editor') as HTMLElement
   if (trixEditor) {
-    // 使用trix编辑器的innerHTML获取HTML内容
-    return trixEditor.innerHTML
+    // 使用Trix编辑器的API获取纯文本内容
+    const trixEditorInstance = (trixEditor as any).editor
+    if (trixEditorInstance) {
+      return trixEditorInstance.getDocument().toString()
+    }
+    // 如果API不可用，使用textContent作为备选方案
+    return trixEditor.textContent || ''
   }
   return ''
 }
@@ -3035,6 +3585,247 @@ onUnmounted(() => {
       padding: clamp(0.5rem, 1vh, 0.6rem);
       font-size: clamp(0.6rem, 0.9vw, 0.7rem);
     }
+  }
+}
+
+// 查找替换相关样式
+.find-replace-panel {
+  width: 320px;
+  max-width: 90vw;
+
+  .panel-header {
+    padding: 16px 16px 8px 16px;
+    border-bottom: 1px solid #e4e7ed;
+    background: #f8f9fa;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+    }
+  }
+
+  .panel-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .input-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #606266;
+        margin-bottom: 2px;
+      }
+
+      .search-input,
+      .replace-input {
+        :deep(.el-input__wrapper) {
+          border-radius: 6px;
+          box-shadow: 0 0 0 1px #dcdfe6;
+          transition: all 0.2s ease;
+
+          &:hover {
+            border-color: #c0c4cc;
+          }
+
+          &:focus-within {
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+          }
+        }
+
+        .search-icon {
+          color: #c0c4cc;
+        }
+      }
+    }
+
+    .search-info {
+      background: #f0f9ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px;
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .info-icon {
+          color: #409eff;
+          font-size: 16px;
+        }
+
+        .info-text {
+          font-size: 13px;
+          color: #1e40af;
+
+          strong {
+            font-weight: 600;
+            color: #0052d9;
+          }
+        }
+      }
+    }
+
+    .navigation-section {
+      .nav-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+
+        .nav-btn {
+          flex: 1;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+
+          .el-icon {
+            font-size: 14px;
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+
+    .action-section {
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+
+        .action-btn {
+          flex: 1;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+
+          .el-icon {
+            font-size: 14px;
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+
+      .book-replace-section {
+        .book-replace-btn {
+          width: 100%;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+
+          .el-icon {
+            font-size: 14px;
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+
+    .no-results {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: #fef7e6;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      color: #d97706;
+      font-size: 13px;
+
+      .el-icon {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .find-replace-panel {
+    width: 280px;
+
+    .panel-content {
+      gap: 12px;
+      padding: 12px;
+
+      .input-group {
+        .input-label {
+          font-size: 12px;
+        }
+      }
+
+      .search-info {
+        padding: 10px;
+
+        .info-item {
+          gap: 6px;
+
+          .info-icon {
+            font-size: 14px;
+          }
+
+          .info-text {
+            font-size: 12px;
+          }
+        }
+      }
+
+      .nav-buttons,
+      .action-buttons {
+        gap: 6px;
+      }
+
+      .nav-btn,
+      .action-btn,
+      .book-replace-btn {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+// 空状态提示样式
+.empty-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #909399;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  font-size: 13px;
+
+  .el-icon {
+    font-size: 16px;
   }
 }
 </style>
