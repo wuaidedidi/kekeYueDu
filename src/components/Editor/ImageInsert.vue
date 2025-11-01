@@ -209,6 +209,7 @@ const previewImage = ref<{
   name: string
   size: number
   dimensions: string
+  serverUrl?: string
 } | null>(null)
 
 // 图片设置
@@ -310,22 +311,27 @@ const onUploadSuccess = (response: any) => {
   uploadProgress.value = 100
 
   if (response.success) {
-    previewImage.value = {
-      ...previewImage.value!,
-      url: `http://localhost:8081${response.data.url}`
+    // 保持本地预览URL，但存储服务器URL用于后续插入
+    if (previewImage.value) {
+      // 检查response.data.url是否已经是完整URL
+      if (response.data.url.startsWith('http')) {
+        previewImage.value.serverUrl = response.data.url
+      } else {
+        previewImage.value.serverUrl = `http://localhost:8081${response.data.url}`
+      }
     }
     ElMessage.success('图片上传成功')
   } else {
     ElMessage.error(response.message || '上传失败')
-    resetUpload()
+    // 上传失败时仍然保持本地预览，用户可以直接插入本地图片
   }
 }
 
 const onUploadError = (error: any) => {
   uploading.value = false
   console.error('Upload error:', error)
-  ElMessage.error('上传失败，请重试')
-  resetUpload()
+  ElMessage.error('上传失败，您可以直接插入本地图片')
+  // 不重置预览，让用户可以直接插入本地图片
 }
 
 const resetUpload = () => {
@@ -387,8 +393,11 @@ const clearUrlImage = () => {
 const insertImageToEditor = () => {
   if (!previewImage.value) return
 
+  // 优先使用服务器URL，如果没有则使用本地预览URL
+  const imageSrc = previewImage.value.serverUrl || previewImage.value.url
+
   const imageHtml = createImageHtml({
-    src: previewImage.value.url,
+    src: imageSrc,
     alt: imageSettings.alt || previewImage.value.name,
     title: imageSettings.title,
     align: imageSettings.align,

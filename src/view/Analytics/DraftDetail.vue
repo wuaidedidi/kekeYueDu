@@ -801,6 +801,12 @@ onMounted(async () => {
     console.warn('敏感词库加载失败，继续运行但不进行过滤')
   }
 
+  // 监听图片插入事件
+  const handleInsertImageEvent = (event: CustomEvent) => {
+    handleInsertImage(event.detail.html)
+  }
+  document.addEventListener('insertImage', handleInsertImageEvent as EventListener)
+
   // 确保 DOM 完成更新后执行
   nextTick(() => {
     // 检查 treeData 的存在性，确保有数据和子节点存在
@@ -2120,20 +2126,55 @@ const handleInsertImage = (html: string) => {
   const trixEditor = document.querySelector('trix-editor') as HTMLElement
   if (trixEditor) {
     const trixEditorInstance = (trixEditor as any).editor
-    if (!trixEditorInstance) return
+    if (!trixEditorInstance) {
+      console.error('Trix editor instance not found')
+      return
+    }
 
     try {
-      // 插入图片HTML到编辑器
-      trixEditorInstance.insertHTML(html)
+      console.log('准备插入的HTML:', html)
+
+      // 解析HTML获取图片信息
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = html
+      const img = tempDiv.querySelector('img')
+
+      if (img && img.src) {
+        console.log('检测到图片，src:', img.src)
+
+        // 简单直接的方法：直接插入HTML
+        trixEditorInstance.insertHTML(html)
+
+        // 验证插入是否成功
+        setTimeout(() => {
+          const editorContent = trixEditorInstance.getDocument().toString()
+          if (editorContent.includes(img.src) || editorContent.includes(img.alt)) {
+            console.log('图片插入成功')
+          } else {
+            console.warn('图片可能未正确插入，尝试备选方案')
+            // 备选方案：插入简化的HTML
+            const simpleHtml = `<img src="${img.src}" alt="${img.alt || ''}" style="max-width: 100%; height: auto; display: block; margin: 16px 0;">`
+            trixEditorInstance.insertHTML(simpleHtml)
+          }
+        }, 100)
+
+      } else {
+        console.log('未检测到图片，直接插入HTML')
+        trixEditorInstance.insertHTML(html)
+      }
 
       // 触发自动保存
-      trixEditorInstance.element.dispatchEvent(new Event('change'))
+      setTimeout(() => {
+        trixEditorInstance.element.dispatchEvent(new Event('change'))
+      }, 50)
 
-      ElMessage.success('图片已成功插入到编辑器')
+      ElMessage.success('图片已插入到编辑器')
     } catch (error) {
       console.error('插入图片失败:', error)
       ElMessage.error('插入图片失败，请重试')
     }
+  } else {
+    console.error('Trix editor element not found')
   }
 }
 
@@ -2319,6 +2360,8 @@ const handleReplaceInBook = () => {
 
 // 添加onUnmounted函数来清理资源
 onUnmounted(() => {
+  // 移除图片插入事件监听器
+  document.removeEventListener('insertImage', handleInsertImage as EventListener)
 
   // 清理自动保存定时器
   if (saveInterval.value) {
