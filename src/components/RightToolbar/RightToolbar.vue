@@ -116,6 +116,29 @@
           </el-tab-pane>
 
           <el-tab-pane
+            label="版本历史"
+            name="versions"
+          >
+            <template #label>
+              <div class="tab-label">
+                <el-icon><Clock /></el-icon>
+                <span>版本历史</span>
+                <el-badge
+                  v-if="versionCount > 0"
+                  :value="versionCount"
+                  type="info"
+                  class="tab-badge"
+                />
+              </div>
+            </template>
+            <VersionHistoryPanel
+              :current-chapter-id="props.currentChapterId"
+              :current-version-id="props.currentVersionId"
+              @version-reverted="handleVersionReverted"
+            />
+          </el-tab-pane>
+
+          <el-tab-pane
             label="预览"
             name="preview"
           >
@@ -148,7 +171,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElIcon, ElTabs, ElTabPane, ElBadge } from 'element-plus'
-import { ArrowRight, ArrowLeft, EditPen, View, List, User, Setting, Document } from '@element-plus/icons-vue'
+import { ArrowRight, ArrowLeft, EditPen, View, List, User, Setting, Document, Clock } from '@element-plus/icons-vue'
 import { useToolbarStore } from '@/store/toolbarStore'
 import { editorBridge } from '@/utils/editorBridge'
 
@@ -159,8 +182,25 @@ import OutlinePanel from './OutlinePanel.vue'
 import CharactersPanel from './CharactersPanel.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import PreviewPanel from './PreviewPanel.vue'
+import VersionHistoryPanel from '../VersionHistory/VersionHistoryPanel.vue'
 
 const toolbarStore = useToolbarStore()
+
+// Props
+interface Props {
+  currentChapterId?: number
+  currentVersionId?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  currentChapterId: undefined,
+  currentVersionId: undefined
+})
+
+// Emits
+const emit = defineEmits<{
+  versionReverted: [data: { chapterId: number; content: string }]
+}>()
 
 // 拖拽调整宽度相关
 const isResizing = ref(false)
@@ -179,6 +219,16 @@ const spellingErrorCount = computed(() => {
     issue => issue.status === 'pending' && issue.type === 'spelling'
   ).length
 })
+
+// 版本历史相关
+const versionCount = ref(0)
+
+// 处理版本回退
+const handleVersionReverted = (data: { chapterId: number; content: string }) => {
+  // 向上传递版本回退事件
+  emit('versionReverted', data)
+  console.log('版本已回退:', data)
+}
 
 // 方法
 const handleTabClick = (tab: any) => {

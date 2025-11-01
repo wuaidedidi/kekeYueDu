@@ -407,7 +407,11 @@
             </div>
           </div>
         </div>
-        <RightToolbar />
+        <RightToolbar
+          :current-chapter-id="currentcheckNode.value?.id"
+          :current-version-id="currentVersionId"
+          @version-reverted="handleVersionReverted"
+        />
       </div>
     </div>
     <div class="save-status" :class="saveStatus">
@@ -672,6 +676,7 @@ import type { TreeNodeData as ElTreeNodeData } from 'element-plus/es/components/
 import { marked } from 'marked'
 import RightToolbar from '@/components/RightToolbar/RightToolbar.vue'
 import EditorToolbar from '@/components/Editor/EditorToolbar.vue'
+import { VersionService } from '@/services/versionService'
 import '@/assets/styles/editor-image.css'
 
 // 命名系统
@@ -773,6 +778,7 @@ if (!bookId || isNaN(bookId)) {
 }
 
 const currentcheckNode = ref<TreeNode | null>(null)
+const currentVersionId = ref<number | undefined>()
 const matches = ref<number[]>([])
 const currentMatchIndex = ref(0)
 const currentSearchValue = ref('')
@@ -1079,7 +1085,7 @@ const saveChapterContent = async (
 
     console.log('开始保存章节:', {
       id,
-      title: currentcheckNode.value.title,
+      title: currentcheckNode.value?.title,
       contentLength: chapterContent.length
     })
 
@@ -1143,6 +1149,23 @@ const setupAutoSave = () => {
       console.log('编辑器内容变化，标记为未保存')
       saveStatus.value = 'unsaved'
 
+      // 获取当前编辑器内容并创建自动版本
+      if (currentcheckNode.value) {
+        // 获取Trix编辑器实例
+        const trixEditorInstance = (trixEditor as any).editor
+
+        // 使用getValue方法获取HTML内容，这是Trix的标准API
+        const editorContent = trixEditorInstance?.getValue?.() || trixEditorInstance?.value || ''
+
+        console.log('创建自动版本，内容长度:', editorContent.length)
+
+        // 使用VersionService调度自动版本创建（30秒后）
+        VersionService.scheduleAutoSave(currentcheckNode.value.id, {
+          content_html: editorContent,
+          source: 'auto'
+        }, 30000)
+      }
+
       // 清除之前的自动保存定时器
       if (autoSaveTimeout.value) {
         clearTimeout(autoSaveTimeout.value)
@@ -1176,6 +1199,13 @@ const nodeClickHandler = (data: ElTreeNodeData) => {
     clearTimeout(autoSaveTimeout.value)
     autoSaveTimeout.value = null
     console.log('切换章节，清除自动保存定时器')
+  }
+
+  // 立即保存之前的自动版本（如果有的话）
+  if (currentcheckNode.value) {
+    VersionService.flushAutoSave(currentcheckNode.value.id).catch(error => {
+      console.error('切换章节时保存自动版本失败:', error)
+    })
   }
 
   const node: TreeNode = {
@@ -2353,6 +2383,34 @@ const handleReplaceInBook = () => {
     replaceInBook(currentSearchValue.value, replaceForm.value.replaceText)
   } else {
     ElMessage.error('请输入查找内容和替换内容')
+  }
+}
+
+// 处理版本回退
+const handleVersionReverted = async (data: { chapterId: number; content: string }) => {
+  try {
+    console.log('处理版本回退:', data)
+
+    // 如果回退的是当前章节，更新编辑器内容
+    if (currentcheckNode.value && currentcheckNode.value.id === data.chapterId) {
+      const trixEditor = document.querySelector('trix-editor') as HTMLElement
+      if (trixEditor) {
+        const trixEditorInstance = (trixEditor as any).editor
+        if (trixEditorInstance) {
+          // 加载回退的版本内容
+          trixEditorInstance.loadHTML(data.content)
+
+          // 更新保存状态
+          trixContent.value = data.content
+          saveStatus.value = 'saved'
+
+          ElMessage.success('内容已回退到指定版本')
+        }
+      }
+    }
+  } catch (error) {
+    console.error('处理版本回退失败:', error)
+    ElMessage.error('版本回退失败')
   }
 }
 
