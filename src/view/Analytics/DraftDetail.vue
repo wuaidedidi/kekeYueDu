@@ -408,7 +408,7 @@
           </div>
         </div>
         <RightToolbar
-          :current-chapter-id="currentcheckNode.value?.id"
+          :current-chapter-id="currentcheckNode?.id ?? null"
           :current-version-id="currentVersionId"
           @version-reverted="handleVersionReverted"
         />
@@ -795,6 +795,14 @@ const appLoaded = ref(false)
 // 敏感词缓存
 const sensitiveWords = ref<string[]>([])
 
+// 监听自动保存创建版本事件处理函数，更新当前版本ID
+const handleVersionCreated = (e: Event) => {
+  const detail = (e as CustomEvent).detail as { chapterId?: number; newVersionId?: number }
+  if (detail?.chapterId && currentcheckNode.value?.id === detail.chapterId) {
+    currentVersionId.value = detail.newVersionId
+  }
+}
+
 
 onMounted(async () => {
   // 初始化数据
@@ -812,6 +820,9 @@ onMounted(async () => {
     handleInsertImage(event.detail.html)
   }
   document.addEventListener('insertImage', handleInsertImageEvent as EventListener)
+
+  // 监听自动保存创建版本事件，更新当前版本ID
+  window.addEventListener('versionCreated', handleVersionCreated as EventListener)
 
   // 确保 DOM 完成更新后执行
   nextTick(() => {
@@ -838,7 +849,7 @@ onMounted(async () => {
       if (saveStatus.value === 'unsaved' && currentcheckNode.value) {
         await saveChapterContent(
           currentcheckNode.value.id,
-          currentcheckNode.value.title
+          currentcheckNode.value.title || ''
         )
       }
     }, 30000)
@@ -1150,20 +1161,46 @@ const setupAutoSave = () => {
       saveStatus.value = 'unsaved'
 
       // 获取当前编辑器内容并创建自动版本
-      if (currentcheckNode.value) {
-        // 获取Trix编辑器实例
-        const trixEditorInstance = (trixEditor as any).editor
+      if (currentcheckNode.value && currentcheckNode.value.id) {
+        try {
+          // 获取Trix编辑器实例
+          const trixEditorElement = document.querySelector('trix-editor') as HTMLElement
+          const trixEditorInstance = (trixEditorElement as any)?.editor
 
-        // 使用getValue方法获取HTML内容，这是Trix的标准API
-        const editorContent = trixEditorInstance?.getValue?.() || trixEditorInstance?.value || ''
+          let editorContent = ''
 
-        console.log('创建自动版本，内容长度:', editorContent.length)
+          if (trixEditorInstance) {
+            // 使用Trix编辑器的标准API获取HTML内容
+            try {
+              editorContent = trixEditorInstance.getDocument()?.toString() || ''
+              // 尝试获取HTML格式的内容
+              if (!editorContent) {
+                editorContent = trixEditorInstance.value || ''
+              }
+            } catch (e) {
+              console.warn('Trix editor getDocument failed, trying fallback:', e)
+              editorContent = trixEditorInstance.value || ''
+            }
+          } else {
+            // 如果无法获取编辑器实例，直接从input元素获取
+            const trixInput = document.querySelector('input[id="trix-editor"]') as HTMLInputElement
+            editorContent = trixInput?.value || ''
+          }
 
-        // 使用VersionService调度自动版本创建（30秒后）
-        VersionService.scheduleAutoSave(currentcheckNode.value.id, {
-          content_html: editorContent,
-          source: 'auto'
-        }, 30000)
+          console.log('创建自动版本，章节ID:', currentcheckNode.value.id, '内容长度:', editorContent.length, '编辑器实例存在:', !!trixEditorInstance)
+
+          // 只有在有实际内容时才创建版本
+          if (editorContent && editorContent.trim().length > 0) {
+            VersionService.scheduleAutoSave(currentcheckNode.value.id, {
+              content_html: editorContent,
+              source: 'auto'
+            }, 30000)
+          } else {
+            console.log('编辑器内容为空，跳过版本创建')
+          }
+        } catch (error) {
+          console.error('创建自动版本时出错:', error)
+        }
       }
 
       // 清除之前的自动保存定时器
@@ -2420,6 +2457,9 @@ const handleVersionReverted = async (data: { chapterId: number; content: string 
 onUnmounted(() => {
   // 移除图片插入事件监听器
   document.removeEventListener('insertImage', handleInsertImage as EventListener)
+
+  // 移除版本创建事件监听器
+  window.removeEventListener('versionCreated', handleVersionCreated as EventListener)
 
   // 清理自动保存定时器
   if (saveInterval.value) {

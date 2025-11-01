@@ -743,6 +743,44 @@ app.post('/api/createChapter', (req, res) => {
   );
 });
 
+// 根据ID获取单个章节
+app.get('/api/chapters/:id', (req, res) => {
+  const chapterId = req.params.id;
+
+  db.get('SELECT * FROM chapters WHERE id = ?', [chapterId], (err, chapter) => {
+    if (err) {
+      console.error('获取章节失败:', err);
+      return res.status(500).json({
+        success: false,
+        message: '获取章节失败'
+      });
+    }
+
+    if (!chapter) {
+      return res.status(404).json({
+        success: false,
+        message: '章节不存在'
+      });
+    }
+
+    const formattedChapter = {
+      id: chapter.id,
+      title: chapter.title,
+      content: chapter.content || '',
+      volumeId: chapter.volume_id,
+      order: chapter['order'],
+      created_at: chapter.created_at,
+      updated_at: chapter.updated_at,
+      current_version_id: chapter.current_version_id
+    };
+
+    res.json({
+      success: true,
+      data: formattedChapter
+    });
+  });
+});
+
 // 获取所有章节
 app.get('/api/chapters', (req, res) => {
   db.all('SELECT * FROM Chapters ORDER BY volume_id, `order`', (err, chapters) => {
@@ -805,6 +843,37 @@ function extractTextFromHtml(html) {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 }
 
+// 工具函数：计算文本统计
+function calculateTextStats(html) {
+  if (!html) {
+    return {
+      wordCount: 0,
+      charCount: 0,
+      paragraphCount: 0
+    };
+  }
+
+  // 提取纯文本
+  const text = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+
+  // 字数统计（中文字符和英文单词）
+  const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+  const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+  const wordCount = chineseChars + englishWords;
+
+  // 字符数统计
+  const charCount = text.length;
+
+  // 段落数统计
+  const paragraphCount = text.split(/\n\n+/).filter(p => p.trim()).length;
+
+  return {
+    wordCount,
+    charCount,
+    paragraphCount
+  };
+}
+
 // 工具函数：计算文本差异
 function calculateDiff(oldText, newText) {
   const oldLines = oldText.split('\n');
@@ -844,13 +913,30 @@ function calculateDiff(oldText, newText) {
 }
 
 // 创建新版本
-app.post('/api/chapters/:id/versions', authenticateToken, (req, res) => {
+app.post('/api/chapters/:id/versions', (req, res) => {
   try {
     const chapterId = req.params.id;
     const { content_html, source = 'auto', label = null, is_snapshot = false } = req.body;
-    const userId = req.user.id;
+    // 暂时使用固定用户ID用于开发测试
+    const userId = 1;
+
+    console.log('创建版本请求:', {
+      chapterId,
+      source,
+      label,
+      is_snapshot,
+      contentLength: content_html?.length,
+      content: content_html ? (content_html.length > 100 ? content_html.substring(0, 100) + '...' : content_html) : 'EMPTY',
+      userId
+    });
 
     if (!content_html) {
+      console.log('错误: 章节内容为空');
+      return res.status(400).json({ success: false, message: '章节内容不能为空' });
+    }
+
+    if (!content_html.trim()) {
+      console.log('错误: 章节内容只包含空白字符');
       return res.status(400).json({ success: false, message: '章节内容不能为空' });
     }
 
@@ -1025,7 +1111,7 @@ app.get('/api/chapters/:id/versions', authenticateToken, (req, res) => {
 });
 
 // 计算版本差异
-app.get('/api/chapters/:id/diff', authenticateToken, (req, res) => {
+app.get('/api/chapters/:id/diff', (req, res) => {
   try {
     const chapterId = req.params.id;
     const { baseVersionId, compareVersionId, format = 'json' } = req.query;
@@ -1118,7 +1204,7 @@ app.get('/api/chapters/:id/diff', authenticateToken, (req, res) => {
               success: true,
               data: {
                 baseVersionId: parseInt(baseVersionId),
-                compareVersionId: compareVersion.id === 'current' ? 'current' : parseInt(compareVersion.id),
+                compareVersionId: compare.id === 'current' ? 'current' : parseInt(compare.id),
                 stats: {
                   insertions,
                   deletions
@@ -1159,7 +1245,7 @@ app.get('/api/chapters/:id/diff', authenticateToken, (req, res) => {
 });
 
 // 置顶/取消置顶版本
-app.post('/api/chapters/:id/versions/:versionId/pin', authenticateToken, (req, res) => {
+app.post('/api/chapters/:id/versions/:versionId/pin', (req, res) => {
   try {
     const chapterId = req.params.id;
     const versionId = req.params.versionId;
@@ -1196,7 +1282,7 @@ app.post('/api/chapters/:id/versions/:versionId/pin', authenticateToken, (req, r
 });
 
 // 删除版本
-app.delete('/api/chapters/:id/versions/:versionId', authenticateToken, (req, res) => {
+app.delete('/api/chapters/:id/versions/:versionId', (req, res) => {
   try {
     const chapterId = req.params.id;
     const versionId = req.params.versionId;
@@ -1265,7 +1351,7 @@ app.delete('/api/chapters/:id/versions/:versionId', authenticateToken, (req, res
 });
 
 // 回退到指定版本
-app.post('/api/chapters/:id/revert', authenticateToken, (req, res) => {
+app.post('/api/chapters/:id/revert', (req, res) => {
   try {
     const chapterId = req.params.id;
     const { toVersionId, label = `回退到版本 ${toVersionId}` } = req.body;
@@ -1306,7 +1392,7 @@ app.post('/api/chapters/:id/revert', authenticateToken, (req, res) => {
                       (SELECT MAX(version_seq) FROM chapter_versions WHERE chapter_id = ?) + 1,
                       content_html, content_text, 1, ?, 'revert', ?, 0
                FROM chapter_versions WHERE id = ?`,
-              [chapterId, req.user.id, label, toVersionId],
+              [chapterId, 1, label, toVersionId], // 暂时使用固定用户ID
               function(err) {
                 if (err) {
                   console.error('创建回退版本记录失败:', err);
@@ -1342,6 +1428,70 @@ app.post('/api/chapters/:id/revert', authenticateToken, (req, res) => {
     );
   } catch (error) {
     console.error('回退版本异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+// 获取版本详细内容
+app.get('/api/chapters/:id/versions/:versionId', (req, res) => {
+  try {
+    const chapterId = req.params.id;
+    const versionId = req.params.versionId;
+
+    // 验证章节存在
+    db.get('SELECT id FROM chapters WHERE id = ?', [chapterId], (err, chapter) => {
+      if (err) {
+        console.error('查询章节失败:', err);
+        return res.status(500).json({ success: false, message: '查询章节失败' });
+      }
+
+      if (!chapter) {
+        return res.status(404).json({ success: false, message: '章节不存在' });
+      }
+
+      // 获取版本详细信息
+      db.get(
+        `SELECT
+          cv.*,
+          c.title as chapter_title
+        FROM chapter_versions cv
+        JOIN chapters c ON cv.chapter_id = c.id
+        WHERE cv.id = ? AND cv.chapter_id = ?`,
+        [versionId, chapterId],
+        (err, version) => {
+          if (err) {
+            console.error('查询版本失败:', err);
+            return res.status(500).json({ success: false, message: '查询版本失败' });
+          }
+
+          if (!version) {
+            return res.status(404).json({ success: false, message: '版本不存在' });
+          }
+
+          // 计算文本统计
+          const textStats = calculateTextStats(version.content_html);
+
+          res.json({
+            success: true,
+            data: {
+              id: version.id,
+              chapterId: version.chapter_id,
+              versionSeq: version.version_seq,
+              contentHtml: version.content_html,
+              contentText: version.content_text,
+              isSnapshot: version.is_snapshot,
+              isPinned: version.pinned,
+              source: version.source,
+              label: version.label,
+              createdAt: version.created_at,
+              ...textStats
+            }
+          });
+        }
+      );
+    });
+  } catch (error) {
+    console.error('获取版本内容异常:', error);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 });

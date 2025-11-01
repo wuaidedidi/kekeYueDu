@@ -286,7 +286,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import '@/assets/styles/version-history.css'
 import {
@@ -310,6 +310,7 @@ const props = withDefaults(defineProps<Props>(), {
 // Emits
 const emit = defineEmits<{
   versionReverted: [data: { chapterId: number; content: string }]
+  requestClose: []
 }>()
 
 // 响应式数据
@@ -401,10 +402,26 @@ const createManualVersion = async () => {
     })
 
     // 获取当前章节内容
+    console.log('正在获取章节内容，ID:', props.currentChapterId)
     const chapterResponse = await http.get(`/chapters/${props.currentChapterId}`)
+
+    console.log('章节API响应:', chapterResponse.data)
 
     if (chapterResponse.data.success) {
       const content = chapterResponse.data.data.content
+      console.log('章节内容长度:', content?.length, '内容预览:', content?.substring(0, 100))
+
+      if (!content || content.trim().length === 0) {
+        ElMessage.warning('章节内容为空，无法创建版本')
+        return
+      }
+
+      console.log('准备创建版本，数据:', {
+        contentLength: content.length,
+        source: 'manual',
+        label: label || undefined,
+        is_snapshot: true
+      })
 
       const response = await http.post(`/chapters/${props.currentChapterId}/versions`, {
         content_html: content,
@@ -412,6 +429,8 @@ const createManualVersion = async () => {
         label: label || undefined,
         is_snapshot: true
       })
+
+      console.log('创建版本响应:', response.data)
 
       if (response.data.success) {
         ElMessage.success('版本创建成功')
@@ -455,29 +474,54 @@ const compareWithCurrent = async (version: ChapterVersion) => {
 }
 
 const viewVersion = async (version: ChapterVersion) => {
+  if (!props.currentChapterId) return
+
   viewDialog.visible = true
   viewDialog.title = `查看版本 v${version.versionSeq}`
   viewDialog.loading = true
   viewDialog.version = version
 
   try {
-    // 这里需要后端提供获取版本详细内容的接口
-    // 暂时使用版本列表中的信息
+    // 获取版本详细内容
+    const response = await http.get(`/chapters/${props.currentChapterId}/versions/${version.id}`)
+
+    if (response.data.success) {
+      const versionData = response.data.data
+
+      viewDialog.content = `
+        <div class="version-info">
+          <p><strong>版本号:</strong> v${versionData.versionSeq}</p>
+          <p><strong>创建时间:</strong> ${formatTime(versionData.createdAt)}</p>
+          <p><strong>字数:</strong> ${versionData.wordCount || version.wordCount}</p>
+          <p><strong>字符数:</strong> ${versionData.charCount || 0}</p>
+          <p><strong>段落数:</strong> ${versionData.paragraphCount || 0}</p>
+          <p><strong>来源:</strong> ${getSourceLabel(versionData.source)}</p>
+          <p><strong>类型:</strong> ${versionData.isSnapshot ? '快照版本' : '增量版本'}</p>
+          ${versionData.label ? `<p><strong>标签:</strong> ${versionData.label}</p>` : ''}
+          ${versionData.isPinned ? '<p><strong>状态:</strong> <el-tag size="small" type="success">已置顶</el-tag></p>' : ''}
+        </div>
+        <div class="content-preview">
+          <h4>内容预览：</h4>
+          <div class="content-body">${versionData.contentHtml}</div>
+        </div>
+      `
+    } else {
+      throw new Error(response.data.message || '获取版本内容失败')
+    }
+  } catch (error) {
+    console.error('获取版本内容失败:', error)
+    ElMessage.error('获取版本内容失败')
     viewDialog.content = `
       <div class="version-info">
         <p><strong>版本号:</strong> v${version.versionSeq}</p>
         <p><strong>创建时间:</strong> ${formatTime(version.createdAt)}</p>
-        <p><strong>字数:</strong> ${version.wordCount}</p>
         <p><strong>来源:</strong> ${getSourceLabel(version.source)}</p>
         ${version.label ? `<p><strong>标签:</strong> ${version.label}</p>` : ''}
       </div>
       <div class="content-preview">
-        <p>内容预览功能待实现...</p>
+        <p style="color: #f56c6c;">获取版本详细内容失败，请稍后重试</p>
       </div>
     `
-  } catch (error) {
-    console.error('获取版本内容失败:', error)
-    ElMessage.error('获取版本内容失败')
   } finally {
     viewDialog.loading = false
   }
@@ -508,7 +552,14 @@ const revertToVersion = async (version: ChapterVersion) => {
         chapterId: props.currentChapterId,
         content: response.data.data.content
       })
+
+      // 延迟一点刷新版本列表，然后请求关闭面板
       await loadVersions()
+
+      // 延迟请求关闭面板，让用户看到成功提示
+      setTimeout(() => {
+        emit('requestClose')
+      }, 1000)
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -646,10 +697,19 @@ const getSourceTagType = (source: string) => {
 }
 
 // 生命周期
+const handleVersionCreated = (e: Event) => {
+  const detail = (e as CustomEvent).detail as { chapterId?: number }
+  if (detail?.chapterId && detail.chapterId === props.currentChapterId) {
+    currentPage.value = 1
+    loadVersions()
+  }
+}
+
 onMounted(() => {
   if (props.currentChapterId) {
     loadVersions()
   }
+  window.addEventListener('versionCreated', handleVersionCreated as EventListener)
 })
 
 watch(() => props.currentChapterId, (newId) => {
@@ -657,6 +717,10 @@ watch(() => props.currentChapterId, (newId) => {
     currentPage.value = 1
     loadVersions()
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('versionCreated', handleVersionCreated as EventListener)
 })
 </script>
 
@@ -890,6 +954,67 @@ watch(() => props.currentChapterId, (newId) => {
     padding: 16px;
     min-height: 200px;
     background: #ffffff;
+  }
+}
+
+.content-preview {
+  h4 {
+    margin: 16px 0 12px 0;
+    color: #303133;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .content-body {
+    border: 1px solid #e4e7ed;
+    border-radius: 6px;
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: #ffffff;
+    line-height: 1.6;
+
+    :deep(p) {
+      margin-bottom: 12px;
+      text-align: justify;
+    }
+
+    :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+      margin: 16px 0 8px 0;
+      color: #2c3e50;
+    }
+
+    :deep(ul), :deep(ol) {
+      margin: 12px 0;
+      padding-left: 24px;
+    }
+
+    :deep(li) {
+      margin-bottom: 4px;
+    }
+
+    :deep(blockquote) {
+      margin: 12px 0;
+      padding: 8px 16px;
+      border-left: 4px solid #e4e7ed;
+      background: #f8f9fa;
+      color: #666;
+    }
+
+    :deep(code) {
+      background: #f1f3f4;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+
+    :deep(pre) {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
   }
 }
 

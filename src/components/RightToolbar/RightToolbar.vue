@@ -135,6 +135,7 @@
               :current-chapter-id="props.currentChapterId"
               :current-version-id="props.currentVersionId"
               @version-reverted="handleVersionReverted"
+              @request-close="handleVersionHistoryClose"
             />
           </el-tab-pane>
 
@@ -228,6 +229,15 @@ const handleVersionReverted = (data: { chapterId: number; content: string }) => 
   // 向上传递版本回退事件
   emit('versionReverted', data)
   console.log('版本已回退:', data)
+}
+
+// 处理版本历史面板关闭请求
+const handleVersionHistoryClose = () => {
+  // 切换到预览标签页，或者直接隐藏面板
+  toolbarStore.setActiveTab('preview')
+
+  // 也可以选择完全隐藏面板
+  // toolbarStore.togglePanel()
 }
 
 // 方法

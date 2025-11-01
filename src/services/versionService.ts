@@ -107,9 +107,24 @@ export class VersionService {
       const pendingData = this.pendingAutoSave.get(chapterId)
       if (pendingData) {
         try {
-          await this.createVersion(chapterId, pendingData)
+          const resp = await this.createVersion(chapterId, pendingData)
           console.log(`自动保存版本成功，章节ID: ${chapterId}`)
           this.pendingAutoSave.delete(chapterId)
+
+          // 广播版本创建事件，便于界面刷新与状态更新
+          try {
+            const eventDetail = {
+              chapterId,
+              newVersionId: resp?.data?.id,
+              versionSeq: resp?.data?.versionSeq,
+              createdAt: resp?.data?.createdAt,
+              source: resp?.data?.source,
+            }
+            window.dispatchEvent(new CustomEvent('versionCreated', { detail: eventDetail }))
+          } catch (e) {
+            // 事件派发失败不影响正常流程
+            console.warn('派发版本创建事件失败:', e)
+          }
         } catch (error) {
           console.error('自动保存版本失败:', error)
         }
@@ -127,10 +142,24 @@ export class VersionService {
     }
 
     const pendingData = this.pendingAutoSave.get(chapterId)
-    if (pendingData) {
+    if (pendingData && pendingData.content_html && pendingData.content_html.trim()) {
       try {
-        await this.createVersion(chapterId, pendingData)
+        const resp = await this.createVersion(chapterId, pendingData)
         this.pendingAutoSave.delete(chapterId)
+
+        // 同步广播版本创建事件
+        try {
+          const eventDetail = {
+            chapterId,
+            newVersionId: resp?.data?.id,
+            versionSeq: resp?.data?.versionSeq,
+            createdAt: resp?.data?.createdAt,
+            source: resp?.data?.source,
+          }
+          window.dispatchEvent(new CustomEvent('versionCreated', { detail: eventDetail }))
+        } catch (e) {
+          console.warn('派发版本创建事件失败:', e)
+        }
       } catch (error) {
         console.error('立即保存版本失败:', error)
         throw error
