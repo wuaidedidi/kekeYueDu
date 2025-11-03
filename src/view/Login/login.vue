@@ -325,21 +325,21 @@ const handleTabClick = (tab) => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  min-height: 500px; // 最小高度
+  min-height: 500px; /* 最小高度 */
   background-image: url('/login_assets/loginBackground.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  padding: 1rem; // 添加内边距防止贴边
+  padding: 1rem; /* 添加内边距防止贴边 */
 }
 
 .login-box {
-  width: clamp(320px, 40vw, 480px); // 响应式宽度
-  max-width: 90vw; // 最大宽度不超过视窗90%
-  padding: clamp(1.5rem, 4vw, 2.5rem); // 响应式内边距
-  background-color: rgba(255, 255, 255, 0.95); // 添加透明度
-  backdrop-filter: blur(10px); // 背景模糊效果
-  border-radius: clamp(8px, 2vw, 16px); // 响应式圆角
+  width: clamp(320px, 40vw, 480px); /* 响应式宽度 */
+  max-width: 90vw; /* 最大宽度不超过视窗90% */
+  padding: clamp(1.5rem, 4vw, 2.5rem); /* 响应式内边距 */
+  background-color: rgba(255, 255, 255, 0.95); /* 添加透明度 */
+  backdrop-filter: blur(10px); /* 背景模糊效果 */
+  border-radius: clamp(8px, 2vw, 16px); /* 响应式圆角 */
   box-shadow: 0 clamp(2px, 0.5vw, 12px) rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -371,10 +371,10 @@ const handleTabClick = (tab) => {
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: clamp(1.25rem, 3vh, 1.75rem); // 响应式间距
+  gap: clamp(1.25rem, 3vh, 1.75rem); /* 响应式间距 */
 
   .el-form-item {
-    margin-bottom: 0; // 移除默认的margin，使用gap控制间距
+    margin-bottom: 0; /* 移除默认的margin，使用gap控制间距 */
 
     :deep(.el-form-item__label) {
       font-size: clamp(0.875rem, 1.1vw, 1rem);
@@ -453,7 +453,7 @@ const handleTabClick = (tab) => {
 
 @media screen and (max-width: 480px) {
   .login-container {
-    align-items: flex-start; // 小屏幕从顶部开始
+    align-items: flex-start; /* 小屏幕从顶部开始 */
     padding-top: 2rem;
   }
 

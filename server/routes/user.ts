@@ -20,8 +20,33 @@ import {
   createChapter,
 } from '../models/Chapter'
 import connectDB from '../config/db'
+import jwt from 'jsonwebtoken'
 
 const router = express.Router()
+
+// JWT认证中间件
+export const authenticateToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: '访问令牌缺失'
+    })
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        message: '令牌无效或已过期'
+      })
+    }
+    req.user = user
+    next()
+  })
+}
 
 // 数据验证中间件
 const validateRegistration = (req: Request, res: Response, next: Function) => {

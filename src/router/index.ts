@@ -14,6 +14,7 @@ import WritingStats from '@/view/Analytics/Workspace/WritingStats/WritingStats.v
 import HelpCenter from '@/view/Analytics/HelpCenter.vue'
 import AllBooks from '@/view/Analytics/Workspace/AllBooks/AllBooks.vue'
 import Store from '@/view/Analytics/Workspace/Store/Store.vue'
+import InkShop from '@/view/Analytics/Workspace/InkShop/InkShop.vue'
 import CommitManage from '@/view/Analytics/CommitManage.vue'
 import DraftDetail from '@/view/Analytics/DraftDetail.vue'
 const Login = () => import('@/view/Login/login.vue')
@@ -47,6 +48,13 @@ const routes: Array<RouteRecordRaw> = [
           {
             path: 'store',
             component: Store,
+            meta: {
+              requireAuth: true,
+            },
+          },
+          {
+            path: 'ink-shop',
+            component: InkShop,
             meta: {
               requireAuth: true,
             },

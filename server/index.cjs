@@ -9,7 +9,7 @@ require('dotenv').config();
 const multer = require('multer');
 
 const app = express();
-const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8082;
 const JWT_SECRET = process.env.JWT_SECRET || 'keke-dev-secret';
 const CLIENT_ORIGIN = (process.env.VITE_DEV_SERVER_HOST && process.env.VITE_DEV_SERVER_PORT)
   ? `http://${process.env.VITE_DEV_SERVER_HOST}:${process.env.VITE_DEV_SERVER_PORT}`
@@ -137,6 +137,206 @@ function initDatabase() {
         FOREIGN KEY (volume_id) REFERENCES volumes (id)
       )
     `);
+
+    // 商品表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        subtitle TEXT,
+        description TEXT,
+        type TEXT NOT NULL,
+        price INTEGER NOT NULL,
+        charge_mode TEXT NOT NULL,
+        duration_days INTEGER,
+        times INTEGER,
+        activation_required INTEGER DEFAULT 0,
+        icon_url TEXT,
+        status TEXT DEFAULT 'active',
+        stock INTEGER DEFAULT -1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 用户余额表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS user_balance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        ink_points INTEGER DEFAULT 100,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        UNIQUE(user_id)
+      )
+    `);
+
+    // 商店订单表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS shop_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        total_points INTEGER NOT NULL,
+        status TEXT DEFAULT 'completed',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (product_id) REFERENCES products (id)
+      )
+    `);
+
+    // 等待一下再检查和添加缺失的列（向后兼容）
+    setTimeout(() => {
+      console.log('检查数据库表结构兼容性...');
+      db.run(`PRAGMA table_info(shop_orders)`, (err, columns) => {
+        if (!err && columns) {
+          const columnNames = columns.map(col => col.name);
+          console.log('当前 shop_orders 表列:', columnNames);
+
+          // 如果 total_points 列不存在，添加它
+          if (!columnNames.includes('total_points')) {
+            db.run(`ALTER TABLE shop_orders ADD COLUMN total_points INTEGER`, (alterErr) => {
+              if (alterErr) {
+                console.error('添加 total_points 列失败:', alterErr);
+              } else {
+                console.log('成功添加 total_points 列');
+              }
+            });
+          } else {
+            console.log('total_points 列已存在');
+          }
+
+          // 如果 quantity 列不存在，添加它
+          if (!columnNames.includes('quantity')) {
+            db.run(`ALTER TABLE shop_orders ADD COLUMN quantity INTEGER DEFAULT 1`, (alterErr) => {
+              if (alterErr) {
+                console.error('添加 quantity 列失败:', alterErr);
+              } else {
+                console.log('成功添加 quantity 列');
+              }
+            });
+          } else {
+            console.log('quantity 列已存在');
+          }
+        } else {
+          console.error('获取表结构失败:', err);
+        }
+      });
+    }, 1000);
+
+    // 用户权益表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS user_rights (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        status TEXT DEFAULT 'active',
+        expires_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (product_id) REFERENCES products (id)
+      )
+    `);
+
+    // 插入示例商品数据
+    db.get('SELECT COUNT(*) as count FROM products', (err, result) => {
+      if (!err && result.count === 0) {
+        const sampleProducts = [
+          {
+            title: '7天会员体验',
+            subtitle: '全部功能免费使用',
+            description: '享受7天完整会员权益，解锁所有高级功能',
+            type: 'vip',
+            price: 99,
+            charge_mode: 'duration',
+            duration_days: 7,
+            times: null,
+            icon_url: '/api/placeholder/64/64'
+          },
+          {
+            title: '月度会员',
+            subtitle: '30天完整会员',
+            description: '30天完整会员体验，所有功能开放',
+            type: 'vip',
+            price: 299,
+            charge_mode: 'duration',
+            duration_days: 30,
+            times: null,
+            icon_url: '/api/placeholder/64/64'
+          },
+          {
+            title: '高级编辑功能券',
+            subtitle: '单次使用',
+            description: '解锁高级编辑功能一次，包含AI辅助、模板等',
+            type: 'coupon',
+            price: 50,
+            charge_mode: 'times',
+            duration_days: null,
+            times: 1,
+            icon_url: '/api/placeholder/64/64'
+          },
+          {
+            title: '精美皮肤套装',
+            subtitle: '永久使用',
+            description: '个性化界面，让你的编辑器更美观，多款主题可选',
+            type: 'skin',
+            price: 199,
+            charge_mode: 'points',
+            duration_days: null,
+            times: null,
+            icon_url: '/api/placeholder/64/64'
+          },
+          {
+            title: 'AI写作助手',
+            subtitle: '月度订阅',
+            description: 'AI智能写作助手，提供创意灵感和内容优化',
+            type: 'ai_tool',
+            price: 199,
+            charge_mode: 'duration',
+            duration_days: 30,
+            times: null,
+            icon_url: '/api/placeholder/64/64'
+          },
+          {
+            title: '数据导出功能',
+            subtitle: '永久授权',
+            description: '支持导出多种格式，包括PDF、Word、EPUB等',
+            type: 'tool',
+            price: 149,
+            charge_mode: 'points',
+            duration_days: null,
+            times: null,
+            icon_url: '/api/placeholder/64/64'
+          }
+        ];
+
+        const insertProduct = db.prepare(`
+          INSERT INTO products (title, subtitle, description, type, price, charge_mode, duration_days, times, icon_url)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        sampleProducts.forEach(product => {
+          insertProduct.run(
+            product.title,
+            product.subtitle,
+            product.description,
+            product.type,
+            product.price,
+            product.charge_mode,
+            product.duration_days,
+            product.times,
+            product.icon_url
+          );
+        });
+
+        insertProduct.finalize();
+        console.log('示例商品数据已插入');
+      }
+    });
 
     console.log('数据库表初始化完成');
   });
@@ -1495,6 +1695,457 @@ app.get('/api/chapters/:id/versions/:versionId', (req, res) => {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 });
+
+// === 墨水商店 API 路由 ===
+
+// 占位图片API
+app.get('/api/placeholder/:width/:height', (req, res) => {
+  const { width, height } = req.params
+  const w = parseInt(width) || 200
+  const h = parseInt(height) || 150
+
+  // 创建SVG占位图片
+  const svg = `
+    <svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#f0f2f5"/>
+      <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="Arial, sans-serif" font-size="14" fill="#999">
+        ${w}x${h}
+      </text>
+    </svg>
+  `
+
+  res.setHeader('Content-Type', 'image/svg+xml')
+  res.send(svg.trim())
+})
+
+// 获取用户余额
+app.get('/api/shop/balance', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId
+
+    // 查询用户余额
+    db.get(
+      'SELECT ink_points FROM user_balance WHERE user_id = ?',
+      [userId],
+      (err, balance) => {
+        if (err) {
+          console.error('获取余额失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '获取余额失败'
+          });
+        }
+
+        let points = 100; // 默认余额
+
+        if (balance) {
+          points = balance.ink_points;
+        } else {
+          // 创建默认余额
+          db.run(
+            'INSERT INTO user_balance (user_id, ink_points) VALUES (?, ?)',
+            [userId, points],
+            (err) => {
+              if (err) {
+                console.error('创建余额失败:', err);
+              }
+            }
+          );
+        }
+
+        res.json({
+          success: true,
+          data: {
+            points: points
+          }
+        });
+      }
+    );
+  } catch (error) {
+    console.error('Get balance error:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取余额失败'
+    })
+  }
+})
+
+// 获取商品列表
+app.get('/api/shop/products', async (req, res) => {
+  try {
+    const {
+      type = 'all',
+      status = 'active',
+      page = 1,
+      pageSize = 20
+    } = req.query
+
+    const pageNum = parseInt(page)
+    const pageSizeNum = parseInt(pageSize)
+    const offset = (pageNum - 1) * pageSizeNum
+
+    // 构建查询条件
+    let whereClause = 'WHERE 1=1'
+    let params = []
+
+    if (type !== 'all') {
+      whereClause += ' AND type = ?'
+      params.push(type)
+    }
+
+    if (status !== 'all') {
+      whereClause += ' AND status = ?'
+      params.push(status)
+    }
+
+    // 查询商品列表
+    const query = `
+      SELECT
+        id, title, subtitle, description, type, price, charge_mode,
+        duration_days, times, activation_required, icon_url, status,
+        stock, created_at, updated_at
+      FROM products
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `
+
+    params.push(pageSizeNum, offset)
+
+    db.all(query, params, (err, products) => {
+      if (err) {
+        console.error('获取商品列表失败:', err);
+        return res.status(500).json({
+          success: false,
+          message: '获取商品列表失败'
+        });
+      }
+
+      // 查询总数
+      const countQuery = `SELECT COUNT(*) as total FROM products ${whereClause}`
+      const countParams = params.slice(0, -2) // 移除 LIMIT 和 OFFSET 参数
+
+      db.get(countQuery, countParams, (err, countResult) => {
+        if (err) {
+          console.error('获取商品总数失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '获取商品总数失败'
+          });
+        }
+
+        res.json({
+          success: true,
+          data: products || [],
+          page: pageNum,
+          pageSize: pageSizeNum,
+          total: countResult.total || 0
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Get products error:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取商品列表失败'
+    })
+  }
+})
+
+// 兑换商品
+app.post('/api/shop/redeem', authenticateToken, async (req, res) => {
+  try {
+    const { productId, quantity = 1 } = req.body
+    const userId = req.user.id || req.user.userId
+
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: '商品ID不能为空'
+      });
+    }
+
+    // 获取商品信息
+    db.get(
+      'SELECT * FROM products WHERE id = ? AND status = ?',
+      [productId, 'active'],
+      (err, product) => {
+        if (err) {
+          console.error('获取商品信息失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '获取商品信息失败'
+          });
+        }
+
+        if (!product) {
+          return res.status(404).json({
+            success: false,
+            message: '商品不存在或已下架'
+          });
+        }
+
+        // 检查库存
+        if (product.stock !== -1 && product.stock < quantity) {
+          return res.status(400).json({
+            success: false,
+            message: '库存不足'
+          });
+        }
+
+        // 计算总价格
+        const totalPrice = product.price * quantity
+
+        // 获取用户余额
+        db.get(
+          'SELECT ink_points FROM user_balance WHERE user_id = ?',
+          [userId],
+          (err, balance) => {
+            if (err) {
+              console.error('获取用户余额失败:', err);
+              return res.status(500).json({
+                success: false,
+                message: '获取用户余额失败'
+              });
+            }
+
+            const currentBalance = balance ? balance.ink_points : 0
+
+            if (currentBalance < totalPrice) {
+              return res.status(400).json({
+                success: false,
+                message: '余额不足'
+              });
+            }
+
+            // 开始事务
+            db.serialize(() => {
+              db.run('BEGIN TRANSACTION');
+
+              // 扣除余额
+              db.run(
+                'UPDATE user_balance SET ink_points = ink_points - ? WHERE user_id = ?',
+                [totalPrice, userId],
+                function(err) {
+                  if (err) {
+                    console.error('扣除余额失败:', err);
+                    db.run('ROLLBACK');
+                    return res.status(500).json({
+                      success: false,
+                      message: '扣除余额失败'
+                    });
+                  }
+
+                  // 更新库存
+                  if (product.stock !== -1) {
+                    db.run(
+                      'UPDATE products SET stock = stock - ? WHERE id = ?',
+                      [quantity, productId],
+                      function(err) {
+                        if (err) {
+                          console.error('更新库存失败:', err);
+                          db.run('ROLLBACK');
+                          return res.status(500).json({
+                            success: false,
+                            message: '更新库存失败'
+                          });
+                        }
+
+                        // 创建订单记录
+                        createOrder();
+                      }
+                    );
+                  } else {
+                    // 无需更新库存，直接创建订单
+                    createOrder();
+                  }
+                }
+              );
+
+              function createOrder() {
+                const orderData = {
+                  user_id: userId,
+                  product_id: productId,
+                  quantity: quantity,
+                  points_cost: totalPrice,
+                  status: 'success',
+                  created_at: new Date().toISOString()
+                };
+
+                db.run(
+                  `INSERT INTO shop_orders (user_id, product_id, quantity, points_cost, status, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)`,
+                  [orderData.user_id, orderData.product_id, orderData.quantity,
+                   orderData.points_cost, orderData.status, orderData.created_at],
+                  function(err) {
+                    if (err) {
+                      console.error('创建订单失败:', err);
+                      db.run('ROLLBACK');
+                      return res.status(500).json({
+                        success: false,
+                        message: '创建订单失败'
+                      });
+                    }
+
+                    db.run('COMMIT');
+
+                    // 获取更新后的余额
+                    db.get(
+                      'SELECT ink_points FROM user_balance WHERE user_id = ?',
+                      [userId],
+                      (err, newBalance) => {
+                        res.json({
+                          success: true,
+                          message: '兑换成功',
+                          data: {
+                            orderId: this.lastID,
+                            newBalance: newBalance ? newBalance.ink_points : 0
+                          }
+                        });
+                      }
+                    );
+                  }
+                );
+              }
+            });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    console.error('Redeem product error:', error)
+    res.status(500).json({
+      success: false,
+      message: '兑换商品失败'
+    })
+  }
+})
+
+// 获取用户权益
+app.get('/api/shop/user-rights', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId
+
+    // 查询用户有效权益
+    db.all(
+      `SELECT ur.*, p.title as product_title, p.type as product_type, p.duration_days
+       FROM user_rights ur
+       JOIN products p ON ur.product_id = p.id
+       WHERE ur.user_id = ? AND ur.status = 'active'
+       AND (ur.expires_at IS NULL OR ur.expires_at > datetime('now'))
+       ORDER BY ur.created_at DESC`,
+      [userId],
+      (err, rights) => {
+        if (err) {
+          console.error('获取用户权益失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '获取用户权益失败'
+          });
+        }
+
+        res.json({
+          success: true,
+          data: rights || []
+        });
+      }
+    );
+  } catch (error) {
+    console.error('Get user rights error:', error)
+    res.status(500).json({
+      success: false,
+      message: '获取用户权益失败'
+    })
+  }
+})
+
+// 充值墨水
+app.post('/api/shop/recharge', authenticateToken, async (req, res) => {
+  try {
+    const { amount } = req.body
+    const userId = req.user.id || req.user.userId
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: '充值金额必须大于0'
+      });
+    }
+
+    // 开始事务
+    db.serialize(() => {
+      db.run('BEGIN TRANSACTION');
+
+      // 更新用户余额
+      db.run(
+        'UPDATE user_balance SET ink_points = ink_points + ? WHERE user_id = ?',
+        [amount, userId],
+        function(err) {
+          if (err) {
+            console.error('充值失败:', err);
+            db.run('ROLLBACK');
+            return res.status(500).json({
+              success: false,
+              message: '充值失败'
+            });
+          }
+
+          // 创建充值记录
+          const rechargeData = {
+            user_id: userId,
+            product_id: 0, // 充值记录使用0作为特殊标识
+            quantity: 1,
+            points_cost: amount,
+            status: 'success',
+            created_at: new Date().toISOString()
+          };
+
+          db.run(
+            `INSERT INTO shop_orders (user_id, product_id, quantity, points_cost, status, created_at)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [rechargeData.user_id, rechargeData.product_id, rechargeData.quantity,
+             rechargeData.points_cost, rechargeData.status, rechargeData.created_at],
+            function(err) {
+              if (err) {
+                console.error('创建充值记录失败:', err);
+                db.run('ROLLBACK');
+                return res.status(500).json({
+                  success: false,
+                  message: '创建充值记录失败'
+                });
+              }
+
+              db.run('COMMIT');
+
+              // 获取更新后的余额
+              db.get(
+                'SELECT ink_points FROM user_balance WHERE user_id = ?',
+                [userId],
+                (err, newBalance) => {
+                  res.json({
+                    success: true,
+                    message: '充值成功',
+                    data: {
+                      orderId: this.lastID,
+                      newBalance: newBalance ? newBalance.ink_points : 0,
+                      amount: amount
+                    }
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    });
+  } catch (error) {
+    console.error('Recharge error:', error)
+    res.status(500).json({
+      success: false,
+      message: '充值失败'
+    })
+  }
+})
 
 // 根路由
 app.get('/', (req, res) => {

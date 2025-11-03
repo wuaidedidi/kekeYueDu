@@ -72,7 +72,7 @@ let menus = [
     preIcon: Shop,
     fixIcon: null,
     isEject: false,
-    routePath: '/workspace/store',
+    routePath: '/workspace/ink-shop',
   },
   {
     name: '订阅统计',
