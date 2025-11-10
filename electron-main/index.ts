@@ -1,9 +1,11 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
+const customRequire = createRequire(import.meta.url);
+customRequire('../../server/index.cjs');
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
-import '../server/server' //刚才的 server.ts
+
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

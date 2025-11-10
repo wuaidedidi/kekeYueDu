@@ -4,7 +4,7 @@ import cors from 'cors'
 import useRouter from './routes/user' // 导入用户路由
 import shopRouter from './routes/shop' // 导入商店路由
 const server = express()
-const PORT = 8080
+const PORT = Number(process.env.PORT) || 9999
 
 server.use(cors())
 // 中间件示例

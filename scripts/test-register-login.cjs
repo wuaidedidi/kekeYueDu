@@ -1,7 +1,9 @@
 const axios = require('axios');
+require('dotenv').config();
 
 (async () => {
-  const base = 'http://localhost:8081/api';
+  const raw = process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:9999'
+  const base = raw.endsWith('/api') ? raw : raw.replace(/\/$/, '') + '/api'
   const username = 'cliuser_' + Math.floor(Math.random()*100000);
   const password = 'Pass1234';
   try {

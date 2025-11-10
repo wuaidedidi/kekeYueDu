@@ -181,7 +181,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElButton, ElIcon, ElUpload, ElProgress, ElForm, ElFormItem, ElInput, ElRadioGroup, ElRadioButton, ElTabs, ElTabPane } from 'element-plus'
 import { Picture, Close, UploadFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/userStore'
-import http from '@/utils/http'
+import http, { buildApiUrl, buildServerUrl } from '@/utils/http'
 import ImageLibrary from './ImageLibrary.vue'
 
 const userStore = useUserStore()
@@ -197,7 +197,7 @@ const uploadProgress = ref(0)
 const panelPosition = ref({ top: '40px', left: '0px' })
 
 // 上传相关
-const uploadUrl = computed(() => `http://localhost:8081/api/upload`)
+const uploadUrl = computed(() => buildApiUrl('/upload'))
 const uploadHeaders = computed(() => ({
   'Authorization': `Bearer ${userStore.token}`
 }))
@@ -317,7 +317,7 @@ const onUploadSuccess = (response: any) => {
       if (response.data.url.startsWith('http')) {
         previewImage.value.serverUrl = response.data.url
       } else {
-        previewImage.value.serverUrl = `http://localhost:8081${response.data.url}`
+        previewImage.value.serverUrl = buildServerUrl(response.data.url)
       }
     }
     ElMessage.success('图片上传成功')

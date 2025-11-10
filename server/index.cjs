@@ -9,8 +9,18 @@ require('dotenv').config();
 const multer = require('multer');
 
 const app = express();
-const PORT = process.env.PORT ? Number(process.env.PORT) : 8082;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 9999;
 const JWT_SECRET = process.env.JWT_SECRET || 'keke-dev-secret';
+const JWT_EXPIRES = process.env.JWT_EXPIRES || '30d';
+// 管理员ID白名单（通过环境变量配置，逗号分隔）
+const ADMIN_USER_IDS = new Set(
+  (process.env.ADMIN_USER_IDS || '')
+    .split(',')
+    .map(x => x.trim())
+    .filter(Boolean)
+    .map(x => Number(x))
+    .filter(n => !isNaN(n))
+);
 const CLIENT_ORIGIN = (process.env.VITE_DEV_SERVER_HOST && process.env.VITE_DEV_SERVER_PORT)
   ? `http://${process.env.VITE_DEV_SERVER_HOST}:${process.env.VITE_DEV_SERVER_PORT}`
   : undefined;
@@ -21,7 +31,12 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
     console.error('数据库连接失败:', err.message);
   } else {
     console.log('SQLite数据库连接成功');
-    initDatabase();
+    initDatabase(() => {
+      app.listen(PORT, () => {
+        console.log(`🚀 kekeYueDu 服务器运行在 http://localhost:${PORT}`);
+        console.log('📚 API 端点已就绪');
+      });
+    });
   }
 });
 
@@ -85,8 +100,120 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
+// 管理员权限验证中间件
+const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: '未认证用户' });
+  }
+  // 环境变量白名单优先
+  if (ADMIN_USER_IDS.has(Number(req.user.id))) {
+    return next();
+  }
+  // 兼容旧逻辑：ID为1或12默认为管理员
+  if (req.user.id === 1 || req.user.id === 12) {
+    return next();
+  }
+  // 从数据库检查角色
+  db.get(`SELECT role FROM users WHERE id = ?`, [req.user.id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: '权限校验失败' });
+    }
+    if (row && String(row.role).toLowerCase() === 'admin') {
+      return next();
+    }
+    return res.status(403).json({ success: false, message: '需要管理员权限' });
+  });
+};
+
+// 允许从查询参数读取token（用于 SSE 等场景）
+const authenticateTokenAllowQuery = (req, res, next) => {
+  let token;
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (typeof req.query.token === 'string' && req.query.token) {
+    token = req.query.token;
+  } else if (typeof req.query.jwt === 'string' && req.query.jwt) {
+    token = req.query.jwt;
+  }
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: '未提供认证令牌' });
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    next();
+  } catch (err) {
+    return res.status(403).json({ success: false, message: '令牌无效或已过期' });
+  }
+};
+
+// HTML内容清理工具函数
+const sanitizeHtml = (html) => {
+  if (!html) return '';
+
+  // 简单的HTML清理，只保留基本标签
+  // 在生产环境中建议使用专门的库如DOMPurify
+  const allowedTags = ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'a', 'ul', 'ol', 'li', 'blockquote'];
+  const cleanHtml = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // 移除script标签
+    .replace(/<[^>]*>/g, (match) => {
+      const tagName = match.match(/<\/?([a-zA-Z]+)/);
+      if (tagName && allowedTags.includes(tagName[1].toLowerCase())) {
+        return match;
+      }
+      return '';
+    });
+
+  return cleanHtml;
+};
+
+// 从HTML提取纯文本
+const extractTextFromHtml = (html) => {
+  if (!html) return '';
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .trim();
+};
+
+// 计算热度分数
+const calculateHeatScore = (comment) => {
+  const baseScore = 100;
+  const timeWeight = Math.max(0, 100 - Math.floor((Date.now() - new Date(comment.created_at).getTime()) / (1000 * 60 * 60 * 24))); // 天数衰减
+  const likeWeight = (comment.like_count || 0) * 10;
+  const replyWeight = (comment.reply_count || 0) * 20;
+  const readPenalty = comment.is_read ? -50 : 0;
+  const statusWeight = comment.status === 'new' ? 100 : (comment.status === 'read' ? 50 : 0);
+
+  return baseScore + timeWeight + likeWeight + replyWeight + readPenalty + statusWeight;
+};
+
+// 记录管理操作日志
+const logAdminAction = (userId, action, targetType, targetId, details, req) => {
+  const logData = {
+    user_id: userId,
+    action,
+    target_type: targetType,
+    target_id: targetId,
+    details: JSON.stringify(details),
+    ip_address: req.ip || req.connection.remoteAddress,
+    user_agent: req.get('User-Agent')
+  };
+
+  db.run(`
+    INSERT INTO admin_logs (user_id, action, target_type, target_id, details, ip_address, user_agent)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `, [logData.user_id, logData.action, logData.target_type, logData.target_id, logData.details, logData.ip_address, logData.user_agent]);
+};
+
 // 初始化数据库表
-function initDatabase() {
+function initDatabase(callback) {
   db.serialize(() => {
     // 用户表
     db.run(`
@@ -99,6 +226,18 @@ function initDatabase() {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // 为用户表增加 role 列（如不存在），默认 'user'
+    db.all(`PRAGMA table_info(users)`, (err, columns) => {
+      if (!err) {
+        const hasRole = Array.isArray(columns) && columns.some(col => col.name === 'role');
+        if (!hasRole) {
+          db.run(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'`);
+          // 将常用演示账号设为管理员（如存在）
+          db.run(`UPDATE users SET role = 'admin' WHERE id IN (1, 12)`);
+        }
+      }
+    });
 
     // 草稿表
     db.run(`
@@ -188,8 +327,6 @@ function initDatabase() {
       )
     `);
 
-    // 等待一下再检查和添加缺失的列（向后兼容）
-    setTimeout(() => {
       console.log('检查数据库表结构兼容性...');
       db.run(`PRAGMA table_info(shop_orders)`, (err, columns) => {
         if (!err && columns) {
@@ -225,7 +362,6 @@ function initDatabase() {
           console.error('获取表结构失败:', err);
         }
       });
-    }, 1000);
 
     // 用户权益表
     db.run(`
@@ -240,6 +376,107 @@ function initDatabase() {
         FOREIGN KEY (user_id) REFERENCES users (id),
         FOREIGN KEY (product_id) REFERENCES products (id)
       )
+    `);
+
+    // 评论表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        book_id INTEGER,
+        chapter_id INTEGER,
+        user_id INTEGER,
+        nickname TEXT,
+        avatar_url TEXT,
+        content_html TEXT,
+        content_text TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        is_read INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'new',
+        like_count INTEGER DEFAULT 0,
+        reply_count INTEGER DEFAULT 0,
+        heat_score INTEGER DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `);
+
+    // 评论回复表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS comment_replies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        comment_id INTEGER NOT NULL,
+        user_id INTEGER,
+        content_html TEXT,
+        content_text TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        is_admin_reply INTEGER DEFAULT 0,
+        FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `);
+
+    // 管理操作日志表
+    db.run(`
+      CREATE TABLE IF NOT EXISTS admin_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        target_type TEXT,
+        target_id INTEGER,
+        details TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `);
+
+    // 创建索引以提高查询性能
+    // 评论表索引
+    db.run(`CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments(created_at)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_comments_status ON comments(status)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_comments_is_read ON comments(is_read)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_comments_heat_score ON comments(heat_score)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_comments_book_chapter ON comments(book_id, chapter_id)`);
+
+    // 回复表索引
+    db.run(`CREATE INDEX IF NOT EXISTS idx_comment_replies_comment_id ON comment_replies(comment_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_comment_replies_created_at ON comment_replies(created_at)`);
+
+    // 日志表索引
+    db.run(`CREATE INDEX IF NOT EXISTS idx_admin_logs_user_id ON admin_logs(user_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_admin_logs_created_at ON admin_logs(created_at)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_admin_logs_action ON admin_logs(action)`);
+
+    // 创建全文搜索虚拟表（可选）
+    db.run(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS comments_fts USING fts5(
+        content_text,
+        nickname,
+        content='comments',
+        content_rowid='id'
+      )
+    `);
+
+    // 创建触发器以保持全文搜索表同步
+    db.run(`
+      CREATE TRIGGER IF NOT EXISTS comments_fts_insert AFTER INSERT ON comments BEGIN
+        INSERT INTO comments_fts(rowid, content_text, nickname) VALUES (new.id, new.content_text, new.nickname);
+      END
+    `);
+
+    db.run(`
+      CREATE TRIGGER IF NOT EXISTS comments_fts_delete AFTER DELETE ON comments BEGIN
+        INSERT INTO comments_fts(comments_fts, rowid, content_text, nickname) VALUES('delete', old.id, old.content_text, old.nickname);
+      END
+    `);
+
+    db.run(`
+      CREATE TRIGGER IF NOT EXISTS comments_fts_update AFTER UPDATE ON comments BEGIN
+        INSERT INTO comments_fts(comments_fts, rowid, content_text, nickname) VALUES('delete', old.id, old.content_text, old.nickname);
+        INSERT INTO comments_fts(rowid, content_text, nickname) VALUES (new.id, new.content_text, new.nickname);
+      END
     `);
 
     // 插入示例商品数据
@@ -339,6 +576,7 @@ function initDatabase() {
     });
 
     console.log('数据库表初始化完成');
+    if (callback) callback();
   });
 }
 
@@ -433,7 +671,7 @@ app.post('/api/register', async (req, res) => {
           const token = jwt.sign(
             { id: minimalUser.id, username: minimalUser.username },
             JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: JWT_EXPIRES }
           );
 
           // 直接返回最小用户信息，避免因旧表缺少列导致查询失败
@@ -503,7 +741,7 @@ app.post('/api/login', async (req, res) => {
         const token = jwt.sign(
           { id: userInfo.id, username: userInfo.username },
           JWT_SECRET,
-          { expiresIn: '7d' }
+          { expiresIn: JWT_EXPIRES }
         );
         res.json({
           success: true,
@@ -1036,12 +1274,6 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
 });
 
 // ===== 历史版本管理 API =====
-
-// 工具函数：从HTML提取纯文本
-function extractTextFromHtml(html) {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-}
 
 // 工具函数：计算文本统计
 function calculateTextStats(html) {
@@ -2146,6 +2378,626 @@ app.post('/api/shop/recharge', authenticateToken, async (req, res) => {
     })
   }
 })
+
+// ===== 评论管理 API =====
+
+// SSE连接用于实时推送新评论
+app.get('/api/comments/stream', authenticateTokenAllowQuery, requireAdmin, (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': CLIENT_ORIGIN || '*',
+    'Access-Control-Allow-Headers': 'Cache-Control, Authorization'
+  });
+
+  // 发送连接确认
+  res.write('event: connected\ndata: {"status":"connected"}\n\n');
+
+  // 定期检查新评论
+  const checkInterval = setInterval(() => {
+    const since = req.query.since || new Date(Date.now() - 30000).toISOString(); // 默认检查30秒内的新评论
+
+    db.all(`
+      SELECT * FROM comments
+      WHERE created_at > ?
+      ORDER BY created_at DESC
+      LIMIT 10
+    `, [since], (err, comments) => {
+      if (!err && comments.length > 0) {
+        comments.forEach(comment => {
+          res.write(`event: new_comment\ndata: ${JSON.stringify(comment)}\n\n`);
+        });
+      }
+    });
+  }, 5000); // 每5秒检查一次
+
+  // 处理客户端断开连接
+  req.on('close', () => {
+    clearInterval(checkInterval);
+  });
+});
+
+// 获取评论列表（分页、筛选、搜索）
+app.get('/api/comments', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const {
+      page = 1,
+      pageSize = 20,
+      status,
+      isRead,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      search,
+      bookId,
+      chapterId,
+      after // 用于轮询降级
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const pageSizeNum = parseInt(pageSize);
+    const offset = (pageNum - 1) * pageSizeNum;
+
+    // 构建查询条件
+    let whereClause = 'WHERE 1=1';
+    let params = [];
+
+    if (status) {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+
+    if (isRead !== undefined) {
+      whereClause += ' AND is_read = ?';
+      params.push(isRead === 'true' ? 1 : 0);
+    }
+
+    if (search) {
+      // 使用全文搜索
+      whereClause += ` AND id IN (
+        SELECT rowid FROM comments_fts
+        WHERE comments_fts MATCH ?
+      )`;
+      params.push(search);
+    }
+
+    if (bookId) {
+      whereClause += ' AND book_id = ?';
+      params.push(bookId);
+    }
+
+    if (chapterId) {
+      whereClause += ' AND chapter_id = ?';
+      params.push(chapterId);
+    }
+
+    if (after) {
+      whereClause += ' AND created_at > ?';
+      params.push(after);
+    }
+
+    // 验证排序字段
+    const allowedSortFields = ['created_at', 'heat_score', 'like_count', 'reply_count'];
+    const actualSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+    const actualSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    // 查询评论列表
+    const query = `
+      SELECT
+        c.*,
+        u.username as user_name
+      FROM comments c
+      LEFT JOIN users u ON c.user_id = u.id
+      ${whereClause}
+      ORDER BY c.${actualSortBy} ${actualSortOrder}
+      LIMIT ? OFFSET ?
+    `;
+
+    params.push(pageSizeNum, offset);
+
+    db.all(query, params, (err, comments) => {
+      if (err) {
+        console.error('获取评论列表失败:', err);
+        return res.status(500).json({
+          success: false,
+          message: '获取评论列表失败'
+        });
+      }
+
+      // 查询总数
+      const countQuery = `SELECT COUNT(*) as total FROM comments ${whereClause}`;
+      const countParams = params.slice(0, -2); // 移除 LIMIT 和 OFFSET 参数
+
+      db.get(countQuery, countParams, (err, countResult) => {
+        if (err) {
+          console.error('获取评论总数失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '获取评论总数失败'
+          });
+        }
+
+        // 获取统计信息
+        db.get(`
+          SELECT
+            COUNT(*) as total,
+            COUNT(CASE WHEN is_read = 0 THEN 1 END) as unread,
+            COUNT(CASE WHEN status = 'new' THEN 1 END) as new,
+            COUNT(CASE WHEN status = 'handled' THEN 1 END) as handled
+          FROM comments
+        `, (err, stats) => {
+          res.json({
+            success: true,
+            data: {
+              comments: comments.map(comment => ({
+                ...comment,
+                is_read: Boolean(comment.is_read)
+              })),
+              pagination: {
+                page: pageNum,
+                pageSize: pageSizeNum,
+                total: countResult.total,
+                totalPages: Math.ceil(countResult.total / pageSizeNum)
+              },
+              stats: stats || {
+                total: 0,
+                unread: 0,
+                new: 0,
+                handled: 0
+              }
+            }
+          });
+        });
+      });
+    });
+  } catch (error) {
+    console.error('获取评论列表异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+// 更新评论已读状态
+app.patch('/api/comments/:id/read', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const commentId = req.params.id;
+    const { isRead } = req.body;
+
+    if (typeof isRead !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'isRead 必须是布尔值'
+      });
+    }
+
+    db.run(
+      'UPDATE comments SET is_read = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [isRead ? 1 : 0, commentId],
+      function(err) {
+        if (err) {
+          console.error('更新评论已读状态失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '更新评论已读状态失败'
+          });
+        }
+
+        if (this.changes === 0) {
+          return res.status(404).json({
+            success: false,
+            message: '评论不存在'
+          });
+        }
+
+        // 记录操作日志
+        logAdminAction(req.user.id, isRead ? 'mark_read' : 'mark_unread', 'comment', commentId, { isRead }, req);
+
+        res.json({
+          success: true,
+          message: isRead ? '已标记为已读' : '已标记为未读',
+          data: {
+            id: parseInt(commentId),
+            isRead
+          }
+        });
+      }
+    );
+  } catch (error) {
+    console.error('更新评论已读状态异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+// 更新评论状态
+app.patch('/api/comments/:id/status', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const commentId = req.params.id;
+    const { status } = req.body;
+
+    if (!['new', 'read', 'handled'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的状态值'
+      });
+    }
+
+    db.run(
+      'UPDATE comments SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [status, commentId],
+      function(err) {
+        if (err) {
+          console.error('更新评论状态失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '更新评论状态失败'
+          });
+        }
+
+        if (this.changes === 0) {
+          return res.status(404).json({
+            success: false,
+            message: '评论不存在'
+          });
+        }
+
+        // 记录操作日志
+        logAdminAction(req.user.id, 'update_status', 'comment', commentId, { status }, req);
+
+        res.json({
+          success: true,
+          message: '状态更新成功',
+          data: {
+            id: parseInt(commentId),
+            status
+          }
+        });
+      }
+    );
+  } catch (error) {
+    console.error('更新评论状态异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+// 回复评论
+app.post('/api/comments/:id/replies', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const commentId = req.params.id;
+    const { contentHtml } = req.body;
+
+    if (!contentHtml || !contentHtml.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: '回复内容不能为空'
+      });
+    }
+
+    // 清理HTML内容
+    const cleanContentHtml = sanitizeHtml(contentHtml);
+    const contentText = extractTextFromHtml(cleanContentHtml);
+
+    // 检查评论是否存在
+    db.get('SELECT * FROM comments WHERE id = ?', [commentId], (err, comment) => {
+      if (err) {
+        console.error('查询评论失败:', err);
+        return res.status(500).json({
+          success: false,
+          message: '查询评论失败'
+        });
+      }
+
+      if (!comment) {
+        return res.status(404).json({
+          success: false,
+          message: '评论不存在'
+        });
+      }
+
+      // 开始事务
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+
+        // 添加管理员回复前缀
+        const finalContentHtml = `<p><strong>管理员回复：</strong></p>${cleanContentHtml}`;
+
+        // 插入回复记录
+        db.run(
+          `INSERT INTO comment_replies (comment_id, user_id, content_html, content_text, is_admin_reply)
+           VALUES (?, ?, ?, ?, 1)`,
+          [commentId, req.user.id, finalContentHtml, contentText],
+          function(err) {
+            if (err) {
+              console.error('创建回复失败:', err);
+              db.run('ROLLBACK');
+              return res.status(500).json({
+                success: false,
+                message: '创建回复失败'
+              });
+            }
+
+            const replyId = this.lastID;
+
+            // 更新评论状态
+            db.run(
+              `UPDATE comments
+               SET status = 'handled', is_read = 1, reply_count = reply_count + 1, updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?`,
+              [commentId],
+              function(err) {
+                if (err) {
+                  console.error('更新评论状态失败:', err);
+                  db.run('ROLLBACK');
+                  return res.status(500).json({
+                    success: false,
+                    message: '更新评论状态失败'
+                  });
+                }
+
+                // 重新计算热度分数
+                const updatedComment = { ...comment, reply_count: comment.reply_count + 1, status: 'handled', is_read: 1 };
+                const newHeatScore = calculateHeatScore(updatedComment);
+
+                db.run(
+                  'UPDATE comments SET heat_score = ? WHERE id = ?',
+                  [newHeatScore, commentId],
+                  (err) => {
+                    if (err) {
+                      console.error('更新热度分数失败:', err);
+                    }
+
+                    db.run('COMMIT');
+
+                    // 记录操作日志
+                    logAdminAction(req.user.id, 'reply_comment', 'comment', commentId, {
+                      replyId,
+                      contentLength: contentText.length
+                    }, req);
+
+                    res.json({
+                      success: true,
+                      message: '回复成功',
+                      data: {
+                        replyId,
+                        commentId: parseInt(commentId),
+                        contentHtml: finalContentHtml,
+                        contentText,
+                        createdAt: new Date().toISOString()
+                      }
+                    });
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
+    });
+  } catch (error) {
+    console.error('回复评论异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+// 搜索评论
+app.post('/api/comments/search', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { q, page = 1, pageSize = 20 } = req.body;
+
+    if (!q || !q.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: '搜索关键词不能为空'
+      });
+    }
+
+    const pageNum = parseInt(page);
+    const pageSizeNum = parseInt(pageSize);
+    const offset = (pageNum - 1) * pageSizeNum;
+
+    // 使用全文搜索
+    const searchQuery = `
+      SELECT
+        c.*,
+        u.username as user_name
+      FROM comments c
+      LEFT JOIN users u ON c.user_id = u.id
+      WHERE c.id IN (
+        SELECT rowid FROM comments_fts
+        WHERE comments_fts MATCH ?
+      )
+      ORDER BY c.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    db.all(searchQuery, [q.trim(), pageSizeNum, offset], (err, comments) => {
+      if (err) {
+        console.error('搜索评论失败:', err);
+        return res.status(500).json({
+          success: false,
+          message: '搜索评论失败'
+        });
+      }
+
+      // 查询总数
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM comments c
+        WHERE c.id IN (
+          SELECT rowid FROM comments_fts
+          WHERE comments_fts MATCH ?
+        )
+      `;
+
+      db.get(countQuery, [q.trim()], (err, countResult) => {
+        if (err) {
+          console.error('获取搜索结果总数失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '获取搜索结果总数失败'
+          });
+        }
+
+        res.json({
+          success: true,
+          data: {
+            comments: comments.map(comment => ({
+              ...comment,
+              is_read: Boolean(comment.is_read)
+            })),
+            pagination: {
+              page: pageNum,
+              pageSize: pageSizeNum,
+              total: countResult.total,
+              totalPages: Math.ceil(countResult.total / pageSizeNum)
+            },
+            searchQuery: q.trim()
+          }
+        });
+      });
+    });
+  } catch (error) {
+    console.error('搜索评论异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+// 获取管理操作日志
+app.get('/api/admin/logs', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const {
+      page = 1,
+      pageSize = 50,
+      action,
+      targetType,
+      userId
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const pageSizeNum = parseInt(pageSize);
+    const offset = (pageNum - 1) * pageSizeNum;
+
+    // 构建查询条件
+    let whereClause = 'WHERE 1=1';
+    let params = [];
+
+    if (action) {
+      whereClause += ' AND action = ?';
+      params.push(action);
+    }
+
+    if (targetType) {
+      whereClause += ' AND target_type = ?';
+      params.push(targetType);
+    }
+
+    if (userId) {
+      whereClause += ' AND user_id = ?';
+      params.push(userId);
+    }
+
+    const query = `
+      SELECT
+        al.*,
+        u.username
+      FROM admin_logs al
+      LEFT JOIN users u ON al.user_id = u.id
+      ${whereClause}
+      ORDER BY al.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    params.push(pageSizeNum, offset);
+
+    db.all(query, params, (err, logs) => {
+      if (err) {
+        console.error('获取操作日志失败:', err);
+        return res.status(500).json({
+          success: false,
+          message: '获取操作日志失败'
+        });
+      }
+
+      // 查询总数
+      const countQuery = `SELECT COUNT(*) as total FROM admin_logs ${whereClause}`;
+      const countParams = params.slice(0, -2);
+
+      db.get(countQuery, countParams, (err, countResult) => {
+        if (err) {
+          console.error('获取日志总数失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '获取日志总数失败'
+          });
+        }
+
+        res.json({
+          success: true,
+          data: {
+            logs: logs.map(log => ({
+              ...log,
+              details: log.details ? JSON.parse(log.details) : null
+            })),
+            pagination: {
+              page: pageNum,
+              pageSize: pageSizeNum,
+              total: countResult.total,
+              totalPages: Math.ceil(countResult.total / pageSizeNum)
+            }
+          }
+        });
+      });
+    });
+  } catch (error) {
+    console.error('获取操作日志异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+// 创建测试评论（用于开发测试）
+app.post('/api/comments/test', (req, res) => {
+  try {
+    const { bookId = 1, chapterId = 1, nickname = '测试用户', content } = req.body;
+
+    if (!content) {
+      return res.status(400).json({
+        success: false,
+        message: '评论内容不能为空'
+      });
+    }
+
+    const contentHtml = `<p>${content}</p>`;
+    const contentText = content;
+
+    db.run(
+      `INSERT INTO comments (book_id, chapter_id, nickname, content_html, content_text, heat_score)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [bookId, chapterId, nickname, contentHtml, contentText, 100],
+      function(err) {
+        if (err) {
+          console.error('创建测试评论失败:', err);
+          return res.status(500).json({
+            success: false,
+            message: '创建测试评论失败'
+          });
+        }
+
+        res.json({
+          success: true,
+          message: '测试评论创建成功',
+          data: {
+            id: this.lastID,
+            bookId,
+            chapterId,
+            nickname,
+            content: contentText
+          }
+        });
+      }
+    );
+  } catch (error) {
+    console.error('创建测试评论异常:', error);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
 
 // 根路由
 app.get('/', (req, res) => {

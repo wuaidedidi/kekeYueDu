@@ -1,6 +1,5 @@
 // src/routes/user.ts
 import express, { Request, Response } from 'express'
-import bcrypt from 'bcryptjs'
 import {
   createUserTable,
   registerUser,
@@ -168,11 +167,8 @@ router.post('/register', validateRegistration, async (req: Request, res: Respons
       }
     }
 
-    // 密码加密
-    const hashedPassword = await bcrypt.hash(password, 12)
-
     // 注册用户
-    const userId = await registerUser(username.trim(), hashedPassword, email?.trim())
+    const userId = await registerUser(username.trim(), password, email?.trim())
 
     // 获取新注册的用户信息
     const newUser = await findUserById(userId)
