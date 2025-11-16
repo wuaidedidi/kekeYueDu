@@ -15,7 +15,9 @@
         </div>
         <div class="nav-right">
           <div class="balance-display">
-            <span class="balance-amount">{{ userBalance.points }} 积分/墨水</span>
+            <span class="balance-amount"
+              >{{ userBalance.points }} 积分/墨水</span
+            >
           </div>
           <el-button type="primary" size="small" class="upload-btn">
             抽题壳上传
@@ -66,7 +68,10 @@
             tabindex="0"
             @keydown.enter="handleProductClick(product)"
           >
-            <div class="product-icon" :style="{ background: getProductBgColor(product) }">
+            <div
+              class="product-icon"
+              :style="{ background: getProductBgColor(product) }"
+            >
               <span class="product-emoji">{{ getProductIcon(product) }}</span>
             </div>
             <div class="product-info">
@@ -135,8 +140,13 @@
     >
       <div class="redeem-dialog-content" v-if="selectedProduct">
         <div class="redeem-product-info">
-          <div class="redeem-product-icon" :style="{ background: getProductBgColor(selectedProduct) }">
-            <span class="product-emoji">{{ getProductIcon(selectedProduct) }}</span>
+          <div
+            class="redeem-product-icon"
+            :style="{ background: getProductBgColor(selectedProduct) }"
+          >
+            <span class="product-emoji">{{
+              getProductIcon(selectedProduct)
+            }}</span>
           </div>
           <div class="redeem-product-details">
             <h4>{{ selectedProduct.title }}</h4>
@@ -155,7 +165,9 @@
           </div>
           <div class="balance-item">
             <span class="label">兑换后余额：</span>
-            <span class="value">{{ userBalance.points - selectedProduct.price }} 墨水</span>
+            <span class="value"
+              >{{ userBalance.points - selectedProduct.price }} 墨水</span
+            >
           </div>
         </div>
 
@@ -217,7 +229,7 @@ interface UserBalance {
 const navTabs = [
   { key: 'task', label: '任务中心' },
   { key: 'shop', label: '墨水商店' },
-  { key: 'invite', label: '邀请卡' }
+  { key: 'invite', label: '邀请卡' },
 ]
 
 // 筛选标签
@@ -226,7 +238,7 @@ const filterTabs = [
   { key: 'vip', label: '会员' },
   { key: 'coupon', label: '券类' },
   { key: 'tool', label: '工具' },
-  { key: 'skin', label: '皮肤' }
+  { key: 'skin', label: '皮肤' },
 ]
 
 // 响应式数据
@@ -262,8 +274,8 @@ const loadProducts = async () => {
     const response = await http.get('/shop/products', {
       params: {
         type: currentFilter.value === 'all' ? undefined : currentFilter.value,
-        status: 'active'
-      }
+        status: 'active',
+      },
     })
 
     if (response.data.success) {
@@ -334,7 +346,7 @@ const confirmRedeem = async () => {
 
     const response = await http.post('/shop/redeem', {
       productId: selectedProduct.value.id,
-      quantity: 1
+      quantity: 1,
     })
 
     if (response.data.success) {
@@ -342,7 +354,9 @@ const confirmRedeem = async () => {
       userBalance.value.points = response.data.data.newBalance
 
       // 更新商品状态
-      const product = products.value.find(p => p.id === selectedProduct.value!.id)
+      const product = products.value.find(
+        (p) => p.id === selectedProduct.value!.id
+      )
       if (product) {
         product.owned = true
       }
@@ -357,11 +371,13 @@ const confirmRedeem = async () => {
           {
             confirmButtonText: '去任务中心',
             cancelButtonText: '取消',
-            type: 'warning'
+            type: 'warning',
           }
-        ).then(() => {
-          switchTab('task')
-        }).catch(() => {})
+        )
+          .then(() => {
+            switchTab('task')
+          })
+          .catch(() => {})
       } else {
         ElMessage.error(response.data.message || '兑换失败')
       }
@@ -375,11 +391,13 @@ const confirmRedeem = async () => {
         {
           confirmButtonText: '去任务中心',
           cancelButtonText: '取消',
-          type: 'warning'
+          type: 'warning',
         }
-      ).then(() => {
-        switchTab('task')
-      }).catch(() => {})
+      )
+        .then(() => {
+          switchTab('task')
+        })
+        .catch(() => {})
     } else {
       ElMessage.error('兑换失败，请重试')
     }
@@ -396,11 +414,11 @@ const handleCloseRedeemDialog = () => {
 // 获取商品图标（根据商品类型返回对应的emoji）
 const getProductIcon = (product: ShopProduct) => {
   const iconMap: Record<string, string> = {
-    vip: '👑',        // VIP会员
-    coupon: '🎫',     // 券类
-    skin: '🎨',       // 皮肤
-    tool: '🔧',       // 工具
-    ai_tool: '🤖'     // AI工具
+    vip: '👑', // VIP会员
+    coupon: '🎫', // 券类
+    skin: '🎨', // 皮肤
+    tool: '🔧', // 工具
+    ai_tool: '🤖', // AI工具
   }
   return iconMap[product.type] || '📦'
 }
@@ -412,9 +430,12 @@ const getProductBgColor = (product: ShopProduct) => {
     coupon: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
     skin: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
     tool: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    ai_tool: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+    ai_tool: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
   }
-  return colorMap[product.type] || 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+  return (
+    colorMap[product.type] ||
+    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+  )
 }
 
 // 生命周期

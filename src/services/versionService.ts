@@ -7,7 +7,7 @@ import type {
   RevertVersionRequest,
   RevertVersionResponse,
   PinVersionResponse,
-  VersionListResponse
+  VersionListResponse,
 } from '@/components/VersionHistory/types'
 
 /**
@@ -17,7 +17,10 @@ export class VersionService {
   /**
    * 创建新版本
    */
-  static async createVersion(chapterId: number, data: CreateVersionRequest): Promise<CreateVersionResponse> {
+  static async createVersion(
+    chapterId: number,
+    data: CreateVersionRequest
+  ): Promise<CreateVersionResponse> {
     const response = await http.post(`/chapters/${chapterId}/versions`, data)
     return response.data
   }
@@ -33,7 +36,9 @@ export class VersionService {
       source?: string
     } = {}
   ): Promise<VersionListResponse> {
-    const response = await http.get(`/chapters/${chapterId}/versions`, { params })
+    const response = await http.get(`/chapters/${chapterId}/versions`, {
+      params,
+    })
     return response.data
   }
 
@@ -71,15 +76,23 @@ export class VersionService {
     versionId: number,
     pinned: boolean
   ): Promise<PinVersionResponse> {
-    const response = await http.post(`/chapters/${chapterId}/versions/${versionId}/pin`, { pinned })
+    const response = await http.post(
+      `/chapters/${chapterId}/versions/${versionId}/pin`,
+      { pinned }
+    )
     return response.data
   }
 
   /**
    * 删除版本
    */
-  static async deleteVersion(chapterId: number, versionId: number): Promise<{ success: boolean; message: string }> {
-    const response = await http.delete(`/chapters/${chapterId}/versions/${versionId}`)
+  static async deleteVersion(
+    chapterId: number,
+    versionId: number
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await http.delete(
+      `/chapters/${chapterId}/versions/${versionId}`
+    )
     return response.data
   }
 
@@ -89,7 +102,11 @@ export class VersionService {
   private static autoSaveTimeout: NodeJS.Timeout | null = null
   private static pendingAutoSave: Map<number, CreateVersionRequest> = new Map()
 
-  static scheduleAutoSave(chapterId: number, data: CreateVersionRequest, delay = 30000): void {
+  static scheduleAutoSave(
+    chapterId: number,
+    data: CreateVersionRequest,
+    delay = 30000
+  ): void {
     // 清除之前的定时器
     if (this.autoSaveTimeout) {
       clearTimeout(this.autoSaveTimeout)
@@ -99,7 +116,7 @@ export class VersionService {
     this.pendingAutoSave.set(chapterId, {
       ...data,
       source: 'auto',
-      is_snapshot: false
+      is_snapshot: false,
     })
 
     // 设置新的定时器
@@ -120,7 +137,9 @@ export class VersionService {
               createdAt: resp?.data?.createdAt,
               source: resp?.data?.source,
             }
-            window.dispatchEvent(new CustomEvent('versionCreated', { detail: eventDetail }))
+            window.dispatchEvent(
+              new CustomEvent('versionCreated', { detail: eventDetail })
+            )
           } catch (e) {
             // 事件派发失败不影响正常流程
             console.warn('派发版本创建事件失败:', e)
@@ -142,7 +161,11 @@ export class VersionService {
     }
 
     const pendingData = this.pendingAutoSave.get(chapterId)
-    if (pendingData && pendingData.content_html && pendingData.content_html.trim()) {
+    if (
+      pendingData &&
+      pendingData.content_html &&
+      pendingData.content_html.trim()
+    ) {
       try {
         const resp = await this.createVersion(chapterId, pendingData)
         this.pendingAutoSave.delete(chapterId)
@@ -156,7 +179,9 @@ export class VersionService {
             createdAt: resp?.data?.createdAt,
             source: resp?.data?.source,
           }
-          window.dispatchEvent(new CustomEvent('versionCreated', { detail: eventDetail }))
+          window.dispatchEvent(
+            new CustomEvent('versionCreated', { detail: eventDetail })
+          )
         } catch (e) {
           console.warn('派发版本创建事件失败:', e)
         }
@@ -195,16 +220,22 @@ export class VersionDiffUtils {
    */
   static formatDiffForDisplay(diff: VersionDiff): string {
     const { diffs } = diff
-    return diffs.map(item => {
-      const prefix = item.type === 'insert' ? '+' : item.type === 'delete' ? '-' : ' '
-      return `${prefix}${item.value}`
-    }).join('\n')
+    return diffs
+      .map((item) => {
+        const prefix =
+          item.type === 'insert' ? '+' : item.type === 'delete' ? '-' : ' '
+        return `${prefix}${item.value}`
+      })
+      .join('\n')
   }
 
   /**
    * 获取差异统计摘要
    */
-  static getDiffSummary(stats: { insertions: number; deletions: number }): string {
+  static getDiffSummary(stats: {
+    insertions: number
+    deletions: number
+  }): string {
     const { insertions, deletions } = stats
     const net = insertions - deletions
 
@@ -219,7 +250,10 @@ export class VersionDiffUtils {
   /**
    * 判断差异是否显著
    */
-  static isSignificantChange(stats: { insertions: number; deletions: number }, threshold = 50): boolean {
+  static isSignificantChange(
+    stats: { insertions: number; deletions: number },
+    threshold = 50
+  ): boolean {
     return stats.insertions > threshold || stats.deletions > threshold
   }
 }
@@ -237,7 +271,7 @@ export class VersionUtils {
     const labels: Record<string, string> = {
       auto: '自动保存',
       manual: '手动创建',
-      revert: '回退版本'
+      revert: '回退版本',
     }
 
     return labels[source] || '版本更新'
@@ -260,9 +294,16 @@ export class VersionUtils {
   /**
    * 计算文本统计信息
    */
-  static calculateTextStats(html: string): { wordCount: number; charCount: number; paragraphCount: number } {
+  static calculateTextStats(html: string): {
+    wordCount: number
+    charCount: number
+    paragraphCount: number
+  } {
     // 提取纯文本
-    const text = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
+    const text = html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim()
 
     // 字数统计（中文字符和英文单词）
     const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length
@@ -273,12 +314,12 @@ export class VersionUtils {
     const charCount = text.length
 
     // 段落数统计
-    const paragraphCount = text.split(/\n\n+/).filter(p => p.trim()).length
+    const paragraphCount = text.split(/\n\n+/).filter((p) => p.trim()).length
 
     return {
       wordCount,
       charCount,
-      paragraphCount
+      paragraphCount,
     }
   }
 }

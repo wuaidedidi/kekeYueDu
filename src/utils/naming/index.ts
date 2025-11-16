@@ -1,8 +1,16 @@
 // 命名系统主入口文件
 
-import { IntelligentNamingEngine, CulturalAdapter, NamingStrategy } from './engine'
+import {
+  IntelligentNamingEngine,
+  CulturalAdapter,
+  NamingStrategy,
+} from './engine'
 export { IntelligentNamingEngine, CulturalAdapter, NamingStrategy }
-export { ChineseCulturalAdapter, JapaneseCulturalAdapter, WesternCulturalAdapter } from './adapters'
+export {
+  ChineseCulturalAdapter,
+  JapaneseCulturalAdapter,
+  WesternCulturalAdapter,
+} from './adapters'
 export {
   PersonNamingStrategy,
   PlaceNamingStrategy,
@@ -10,7 +18,7 @@ export {
   EquipmentNamingStrategy,
   MonsterNamingStrategy,
   ItemNamingStrategy,
-  DefaultNamingStrategy
+  DefaultNamingStrategy,
 } from './strategies'
 
 export type {
@@ -21,7 +29,7 @@ export type {
   GeneratedName,
   NameBatch,
   CulturalAdapterType,
-  NamingCategory
+  NamingCategory,
 } from './types'
 
 // 便捷的工厂函数
@@ -30,12 +38,20 @@ export function createNamingEngine(preferences?: any, seed?: number) {
 }
 
 // 便捷的批量生成函数
-export function generateNames(category: string, count: number, culture = 'china', subcategory?: string) {
+export function generateNames(
+  category: string,
+  count: number,
+  culture = 'china',
+  subcategory?: string
+) {
   const engine = new IntelligentNamingEngine()
-  return engine.generateBatch({
-    category,
-    subcategory,
-    culture,
+  return engine.generateBatch(
+    {
+      category,
+      subcategory,
+      culture,
+      count,
+    },
     count
-  }, count)
+  )
 }

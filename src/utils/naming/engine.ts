@@ -1,4 +1,12 @@
-import { NamingContext, UserPreferences, WeightedWord, NamingRule, GeneratedName, NameBatch, CulturalAdapterType } from './types'
+import {
+  NamingContext,
+  UserPreferences,
+  WeightedWord,
+  NamingRule,
+  GeneratedName,
+  NameBatch,
+  CulturalAdapterType,
+} from './types'
 
 // 文化适配器基类
 export abstract class CulturalAdapter {
@@ -54,10 +62,12 @@ export class IntelligentNamingEngine {
     this.initializeSemanticNetwork()
     this.initPromise = Promise.all([
       this.initializeCulturalAdapters(),
-      this.initializeStrategies()
-    ]).then(() => void 0).catch(error => {
-      console.error('Naming engine initialization failed:', error)
-    })
+      this.initializeStrategies(),
+    ])
+      .then(() => void 0)
+      .catch((error) => {
+        console.error('Naming engine initialization failed:', error)
+      })
   }
 
   // 获取默认用户偏好
@@ -67,7 +77,7 @@ export class IntelligentNamingEngine {
       complexityPreference: 'medium',
       culturalPreference: ['chinese'],
       favoriteElements: [],
-      avoidedElements: []
+      avoidedElements: [],
     }
   }
 
@@ -83,8 +93,13 @@ export class IntelligentNamingEngine {
   }
 
   // 生成唯一随机数组索引
-  private getUniqueRandomIndex<T>(array: T[], usedIndices: Set<number>): number {
-    const available = array.map((_, index) => index).filter(index => !usedIndices.has(index))
+  private getUniqueRandomIndex<T>(
+    array: T[],
+    usedIndices: Set<number>
+  ): number {
+    const available = array
+      .map((_, index) => index)
+      .filter((index) => !usedIndices.has(index))
     if (available.length === 0) return Math.floor(Math.random() * array.length)
     return available[this.seededRandomInt(available.length)]
   }
@@ -100,7 +115,7 @@ export class IntelligentNamingEngine {
       category: context.category,
       subcategory: context.subcategory,
       culture: context.culture,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
     this.updateUserPreferences(name)
 
@@ -130,7 +145,7 @@ export class IntelligentNamingEngine {
           category: context.category,
           subcategory: context.subcategory,
           culture: context.culture,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         })
       }
     }
@@ -138,14 +153,17 @@ export class IntelligentNamingEngine {
     return {
       names,
       seed: originalSeed,
-      context
+      context,
     }
   }
 
   // 选择生成策略
   private selectStrategy(context: NamingContext): NamingStrategy {
     const strategyKey = `${context.category}_${context.subcategory || 'default'}`
-    const selected = this.strategies.get(strategyKey) || this.strategies.get(context.category) || this.strategies.get('default')
+    const selected =
+      this.strategies.get(strategyKey) ||
+      this.strategies.get(context.category) ||
+      this.strategies.get('default')
     if (!selected) {
       throw new Error('Naming strategies not initialized')
     }
@@ -204,7 +222,8 @@ export class IntelligentNamingEngine {
           if (!this.userPreferences.favoriteElements.includes(concept)) {
             // 如果用户频繁使用包含某字符的名称，学习偏好相关概念
             const usageCount = this.getConceptUsage(concept)
-            if (usageCount > 3) { // 使用阈值
+            if (usageCount > 3) {
+              // 使用阈值
               this.userPreferences.favoriteElements.push(concept)
             }
           }
@@ -320,10 +339,13 @@ export class IntelligentNamingEngine {
     // 基于用户偏好推荐
     for (const favorite of this.userPreferences.favoriteElements) {
       const relatedConcepts = this.getSemanticSuggestions(favorite)
-      recommendations.push(...relatedConcepts.filter(concept =>
-        !this.userPreferences.favoriteElements.includes(concept) &&
-        !this.userPreferences.avoidedElements.includes(concept)
-      ))
+      recommendations.push(
+        ...relatedConcepts.filter(
+          (concept) =>
+            !this.userPreferences.favoriteElements.includes(concept) &&
+            !this.userPreferences.avoidedElements.includes(concept)
+        )
+      )
     }
 
     // 去重并限制数量
@@ -343,7 +365,14 @@ export class IntelligentNamingEngine {
   // 初始化语义网络
   private initializeSemanticNetwork(): void {
     // 自然元素
-    this.semanticNetwork.set('龙', ['力量', '威严', '神话', '东方', '皇权', '守护'])
+    this.semanticNetwork.set('龙', [
+      '力量',
+      '威严',
+      '神话',
+      '东方',
+      '皇权',
+      '守护',
+    ])
     this.semanticNetwork.set('凤', ['美丽', '重生', '高贵', '吉祥', '火焰'])
     this.semanticNetwork.set('虎', ['勇猛', '力量', '山林', '威严', '保护'])
     this.semanticNetwork.set('鹤', ['长寿', '高雅', '仙气', '纯洁', '飞翔'])
@@ -367,7 +396,14 @@ export class IntelligentNamingEngine {
     this.semanticNetwork.set('天', ['广阔', '崇高', '命运', '无限', '神圣'])
     this.semanticNetwork.set('地', ['厚重', '包容', '生长', '母亲', '根基'])
     this.semanticNetwork.set('月', ['阴柔', '变化', '神秘', '清冷', '圆满'])
-    this.semanticNetwork.set('日', ['阳刚', '光明', '温暖', '生命', '希望', '力量'])
+    this.semanticNetwork.set('日', [
+      '阳刚',
+      '光明',
+      '温暖',
+      '生命',
+      '希望',
+      '力量',
+    ])
     this.semanticNetwork.set('星', ['希望', '指引', '永恒', '璀璨', '梦想'])
     this.semanticNetwork.set('云', ['变化', '自由', '飘逸', '神秘', '柔软'])
 
@@ -392,37 +428,52 @@ export class IntelligentNamingEngine {
   // 初始化文化适配器
   private initializeCulturalAdapters(): Promise<void> {
     // 使用延迟导入以避免循环依赖
-    return import('./adapters').then(({ ChineseCulturalAdapter, JapaneseCulturalAdapter, WesternCulturalAdapter }) => {
-      this.culturalAdapters.set('chinese', new ChineseCulturalAdapter(this))
-      this.culturalAdapters.set('japanese', new JapaneseCulturalAdapter(this))
-      this.culturalAdapters.set('western', new WesternCulturalAdapter(this))
-    }).catch(error => {
-      console.error('Failed to load cultural adapters:', error)
-    })
+    return import('./adapters')
+      .then(
+        ({
+          ChineseCulturalAdapter,
+          JapaneseCulturalAdapter,
+          WesternCulturalAdapter,
+        }) => {
+          this.culturalAdapters.set('chinese', new ChineseCulturalAdapter(this))
+          this.culturalAdapters.set(
+            'japanese',
+            new JapaneseCulturalAdapter(this)
+          )
+          this.culturalAdapters.set('western', new WesternCulturalAdapter(this))
+        }
+      )
+      .catch((error) => {
+        console.error('Failed to load cultural adapters:', error)
+      })
   }
 
   // 初始化策略
   private initializeStrategies(): Promise<void> {
     // 使用延迟导入以避免循环依赖
-    return import('./strategies').then(({
-      PersonNamingStrategy,
-      PlaceNamingStrategy,
-      MoveNamingStrategy,
-      EquipmentNamingStrategy,
-      MonsterNamingStrategy,
-      ItemNamingStrategy,
-      DefaultNamingStrategy
-    }) => {
-      this.strategies.set('person', new PersonNamingStrategy(this))
-      this.strategies.set('place', new PlaceNamingStrategy(this))
-      this.strategies.set('move', new MoveNamingStrategy(this))
-      this.strategies.set('equipment', new EquipmentNamingStrategy(this))
-      this.strategies.set('monster', new MonsterNamingStrategy(this))
-      this.strategies.set('item', new ItemNamingStrategy(this))
-      this.strategies.set('default', new DefaultNamingStrategy(this))
-    }).catch(error => {
-      console.error('Failed to load naming strategies:', error)
-    })
+    return import('./strategies')
+      .then(
+        ({
+          PersonNamingStrategy,
+          PlaceNamingStrategy,
+          MoveNamingStrategy,
+          EquipmentNamingStrategy,
+          MonsterNamingStrategy,
+          ItemNamingStrategy,
+          DefaultNamingStrategy,
+        }) => {
+          this.strategies.set('person', new PersonNamingStrategy(this))
+          this.strategies.set('place', new PlaceNamingStrategy(this))
+          this.strategies.set('move', new MoveNamingStrategy(this))
+          this.strategies.set('equipment', new EquipmentNamingStrategy(this))
+          this.strategies.set('monster', new MonsterNamingStrategy(this))
+          this.strategies.set('item', new ItemNamingStrategy(this))
+          this.strategies.set('default', new DefaultNamingStrategy(this))
+        }
+      )
+      .catch((error) => {
+        console.error('Failed to load naming strategies:', error)
+      })
   }
 
   // 等待引擎初始化完成
@@ -431,12 +482,16 @@ export class IntelligentNamingEngine {
   }
 
   // 获取文化适配器
-  public getCulturalAdapter(type: CulturalAdapterType): CulturalAdapter | undefined {
+  public getCulturalAdapter(
+    type: CulturalAdapterType
+  ): CulturalAdapter | undefined {
     return this.culturalAdapters.get(type)
   }
 
   // 更新用户偏好
-  public updateUserPreferencesDirect(preferences: Partial<UserPreferences>): void {
+  public updateUserPreferencesDirect(
+    preferences: Partial<UserPreferences>
+  ): void {
     this.userPreferences = { ...this.userPreferences, ...preferences }
   }
 

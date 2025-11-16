@@ -1,6 +1,6 @@
 // src/models/User.ts
-import connectDB from '../config/db'
-import sqlite3 from 'sqlite3'
+import connectDB from '../config/db.js'
+import type { Database } from 'sqlite'
 // const createUserTable = async () => {
 //   const db = await connectDB()
 //   await db.exec(`
@@ -55,7 +55,7 @@ const bookTemplates = [
 ]
 
 // 初始化草稿表
-const initDraftTable = async (db: sqlite3.Database) => {
+const initDraftTable = async (db: Database) => {
   await db.exec(`
       CREATE TABLE IF NOT EXISTS drafts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,6 +72,17 @@ const initDraftTable = async (db: sqlite3.Database) => {
       [template.bookName, template.fontCount, template.src]
     )
   }
+}
+
+// 创建新草稿
+const createDraft = async (bookName: string, fontCount: number, src: string) => {
+  const db = await connectDB()
+  const result = await db.run(
+    'INSERT INTO drafts (bookName, fontCount, src) VALUES (?, ?, ?)',
+    [bookName, fontCount, src]
+  )
+  await db.close()
+  return result
 }
 
 // 查询所有草稿数据
@@ -101,4 +112,4 @@ const createDraftTable = async () => {
   await db.close()
 }
 
-export { createDraftTable, getAllDrafts }
+export { createDraftTable, getAllDrafts, createDraft }

@@ -21,13 +21,10 @@
       </div>
     </div>
 
-    <div class="preview-content" :class="{ 'fullscreen': isFullscreen }">
+    <div class="preview-content" :class="{ fullscreen: isFullscreen }">
       <!-- 预览模式切换 -->
       <div class="preview-modes" v-if="!isFullscreen">
-        <el-radio-group
-          v-model="previewMode"
-          size="small"
-        >
+        <el-radio-group v-model="previewMode" size="small">
           <el-radio-button label="raw">原始</el-radio-button>
           <el-radio-button label="formatted">格式化</el-radio-button>
           <el-radio-button label="export">导出预览</el-radio-button>
@@ -35,7 +32,10 @@
       </div>
 
       <!-- 导出格式选择 -->
-      <div class="export-format" v-if="!isFullscreen && previewMode === 'export'">
+      <div
+        class="export-format"
+        v-if="!isFullscreen && previewMode === 'export'"
+      >
         <el-select
           v-model="exportFormat"
           size="small"
@@ -81,7 +81,10 @@
             :show-text="false"
           />
           <div class="progress-info">
-            <span>{{ stats.wordCount }} / {{ toolbarStore.toolbarSettings.targetWords }} 字</span>
+            <span
+              >{{ stats.wordCount }} /
+              {{ toolbarStore.toolbarSettings.targetWords }} 字</span
+            >
           </div>
         </div>
       </div>
@@ -103,23 +106,35 @@
           <div class="export-header">
             <h3>{{ documentTitle || '未命名文档' }}</h3>
             <p class="export-meta">
-              创建时间：{{ formatDate(new Date()) }} |
-              字数：{{ stats.wordCount }} |
-              预计阅读时间：{{ readingTime }}分钟 |
-              格式：{{ exportFormat.toUpperCase() }}
+              创建时间：{{ formatDate(new Date()) }} | 字数：{{
+                stats.wordCount
+              }}
+              | 预计阅读时间：{{ readingTime }}分钟 | 格式：{{
+                exportFormat.toUpperCase()
+              }}
             </p>
           </div>
 
           <!-- HTML格式预览 -->
-          <div v-if="exportFormat === 'html'" class="export-content" v-html="exportContent"></div>
+          <div
+            v-if="exportFormat === 'html'"
+            class="export-content"
+            v-html="exportContent"
+          ></div>
 
           <!-- TXT格式预览 -->
-          <div v-else-if="exportFormat === 'txt'" class="export-content export-text">
+          <div
+            v-else-if="exportFormat === 'txt'"
+            class="export-content export-text"
+          >
             <pre>{{ exportContent }}</pre>
           </div>
 
           <!-- Markdown格式预览 -->
-          <div v-else-if="exportFormat === 'md'" class="export-content export-markdown">
+          <div
+            v-else-if="exportFormat === 'md'"
+            class="export-content export-markdown"
+          >
             <pre>{{ exportContent }}</pre>
           </div>
         </div>
@@ -133,40 +148,27 @@
 
       <!-- 工具栏 -->
       <div class="preview-toolbar" v-if="!isFullscreen && textContent">
-        <el-button
-          :icon="Download"
-          size="small"
-          @click="exportDocument"
-        >
+        <el-button :icon="Download" size="small" @click="exportDocument">
           导出
         </el-button>
-        <el-button
-          :icon="Printer"
-          size="small"
-          @click="printDocument"
-        >
+        <el-button :icon="Printer" size="small" @click="printDocument">
           打印
         </el-button>
-        <el-button
-          :icon="CopyDocument"
-          size="small"
-          @click="copyContent"
-        >
+        <el-button :icon="CopyDocument" size="small" @click="copyContent">
           复制
         </el-button>
       </div>
     </div>
 
     <!-- 设置对话框 -->
-    <el-dialog
-      v-model="showSettingsDialog"
-      title="预览设置"
-      width="500px"
-    >
+    <el-dialog v-model="showSettingsDialog" title="预览设置" width="500px">
       <div class="settings-content">
         <el-form label-width="120px">
           <el-form-item label="默认预览模式">
-            <el-select v-model="previewSettings.defaultMode" style="width: 100%">
+            <el-select
+              v-model="previewSettings.defaultMode"
+              style="width: 100%"
+            >
               <el-option label="原始" value="raw" />
               <el-option label="格式化" value="formatted" />
               <el-option label="导出预览" value="export" />
@@ -240,8 +242,29 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ElIcon, ElButton, ElRadioGroup, ElRadioButton, ElProgress, ElDialog, ElForm, ElFormItem, ElSelect, ElOption, ElSlider, ElSwitch } from 'element-plus'
-import { View, FullScreen, Setting, Document, Download, Printer, CopyDocument } from '@element-plus/icons-vue'
+import {
+  ElIcon,
+  ElButton,
+  ElRadioGroup,
+  ElRadioButton,
+  ElProgress,
+  ElDialog,
+  ElForm,
+  ElFormItem,
+  ElSelect,
+  ElOption,
+  ElSlider,
+  ElSwitch,
+} from 'element-plus'
+import {
+  View,
+  FullScreen,
+  Setting,
+  Document,
+  Download,
+  Printer,
+  CopyDocument,
+} from '@element-plus/icons-vue'
 import { useToolbarStore } from '@/store/toolbarStore'
 import { editorBridge } from '@/utils/editorBridge'
 import { sanitizeHtml, validateHtmlSafety } from '@/utils/sanitizer'
@@ -268,7 +291,7 @@ const previewSettings = reactive({
   pageWidth: 'auto',
   showStats: true,
   showProgress: true,
-  syntaxHighlight: true
+  syntaxHighlight: true,
 })
 
 // 计算属性
@@ -278,7 +301,7 @@ const stats = computed(() => {
       characterCount: 0,
       wordCount: 0,
       paragraphCount: 0,
-      lineCount: 0
+      lineCount: 0,
     }
   }
   return editorBridge.getTextStats()
@@ -286,7 +309,12 @@ const stats = computed(() => {
 
 const completedProgress = computed(() => {
   if (toolbarStore.toolbarSettings.targetWords <= 0) return 0
-  return Math.min(100, Math.round((stats.value.wordCount / toolbarStore.toolbarSettings.targetWords) * 100))
+  return Math.min(
+    100,
+    Math.round(
+      (stats.value.wordCount / toolbarStore.toolbarSettings.targetWords) * 100
+    )
+  )
 })
 
 const progressColor = computed(() => {
@@ -299,23 +327,53 @@ const progressColor = computed(() => {
 // 安全配置
 const previewConfig = {
   ALLOWED_TAGS: [
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'p', 'br', 'strong', 'em', 'u', 's', 'del', 'ins',
-    'ul', 'ol', 'li',
-    'blockquote', 'pre', 'code',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'p',
+    'br',
+    'strong',
+    'em',
+    'u',
+    's',
+    'del',
+    'ins',
+    'ul',
+    'ol',
+    'li',
+    'blockquote',
+    'pre',
+    'code',
     'a',
     'img',
-    'div', 'span',
+    'div',
+    'span',
     'hr',
-    'mark', 'kbd', 'samp', 'var'
+    'mark',
+    'kbd',
+    'samp',
+    'var',
   ],
   ALLOWED_ATTR: [
-    'href', 'title', 'alt', 'src', 'width', 'height',
-    'class', 'id', 'style',
-    'target', 'rel',
-    'data-line-number', 'data-word-count'
+    'href',
+    'title',
+    'alt',
+    'src',
+    'width',
+    'height',
+    'class',
+    'id',
+    'style',
+    'target',
+    'rel',
+    'data-line-number',
+    'data-word-count',
   ],
-  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+  ALLOWED_URI_REGEXP:
+    /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
 }
 
 const formattedContent = computed(() => {
@@ -324,32 +382,62 @@ const formattedContent = computed(() => {
   let content = htmlContent.value
 
   // 处理标题
-  content = content.replace(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (match, level, text) => {
-    return `<h${level} class="preview-heading preview-heading-${level}">${text}</h${level}>`
-  })
+  content = content.replace(
+    /<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi,
+    (match, level, text) => {
+      return `<h${level} class="preview-heading preview-heading-${level}">${text}</h${level}>`
+    }
+  )
 
   // 处理段落
-  content = content.replace(/<p[^>]*>(.*?)<\/p>/gi, '<p class="preview-paragraph">$1</p>')
+  content = content.replace(
+    /<p[^>]*>(.*?)<\/p>/gi,
+    '<p class="preview-paragraph">$1</p>'
+  )
 
   // 处理列表
-  content = content.replace(/<ul[^>]*>(.*?)<\/ul>/gi, '<ul class="preview-list">$1</ul>')
-  content = content.replace(/<ol[^>]*>(.*?)<\/ol>/gi, '<ol class="preview-list-numbered">$1</ol>')
-  content = content.replace(/<li[^>]*>(.*?)<\/li>/gi, '<li class="preview-list-item">$1</li>')
+  content = content.replace(
+    /<ul[^>]*>(.*?)<\/ul>/gi,
+    '<ul class="preview-list">$1</ul>'
+  )
+  content = content.replace(
+    /<ol[^>]*>(.*?)<\/ol>/gi,
+    '<ol class="preview-list-numbered">$1</ol>'
+  )
+  content = content.replace(
+    /<li[^>]*>(.*?)<\/li>/gi,
+    '<li class="preview-list-item">$1</li>'
+  )
 
   // 处理代码块
   if (previewSettings.syntaxHighlight) {
-    content = content.replace(/<pre[^>]*>(.*?)<\/pre>/gi, '<pre class="preview-code-block">$1</pre>')
-    content = content.replace(/<code[^>]*>(.*?)<\/code>/gi, '<code class="preview-inline-code">$1</code>')
+    content = content.replace(
+      /<pre[^>]*>(.*?)<\/pre>/gi,
+      '<pre class="preview-code-block">$1</pre>'
+    )
+    content = content.replace(
+      /<code[^>]*>(.*?)<\/code>/gi,
+      '<code class="preview-inline-code">$1</code>'
+    )
   }
 
   // 处理引用
-  content = content.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gi, '<blockquote class="preview-quote">$1</blockquote>')
+  content = content.replace(
+    /<blockquote[^>]*>(.*?)<\/blockquote>/gi,
+    '<blockquote class="preview-quote">$1</blockquote>'
+  )
 
   // 处理链接
-  content = content.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '<a href="$1" class="preview-link" target="_blank">$2</a>')
+  content = content.replace(
+    /<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi,
+    '<a href="$1" class="preview-link" target="_blank">$2</a>'
+  )
 
   // 处理图片
-  content = content.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi, '<img src="$1" alt="$2" class="preview-image" />')
+  content = content.replace(
+    /<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi,
+    '<img src="$1" alt="$2" class="preview-image" />'
+  )
 
   // 使用统一的sanitizeHtml方法
   return sanitizeHtml(content, 'preview')
@@ -513,7 +601,8 @@ const printDocument = () => {
 }
 
 const copyContent = async () => {
-  const content = previewMode.value === 'raw' ? textContent.value : exportContent.value
+  const content =
+    previewMode.value === 'raw' ? textContent.value : exportContent.value
 
   try {
     await navigator.clipboard.writeText(content.replace(/<[^>]*>/g, ''))
@@ -547,7 +636,7 @@ const formatDate = (date: Date) => {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -558,10 +647,13 @@ const convertToTXT = (html: string): string => {
   let txt = html
 
   // 移除HTML标签并保留文本结构
-  txt = txt.replace(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (match, level, text) => {
-    const prefix = '#'.repeat(parseInt(level))
-    return `\n${prefix} ${text.trim()}\n`
-  })
+  txt = txt.replace(
+    /<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi,
+    (match, level, text) => {
+      const prefix = '#'.repeat(parseInt(level))
+      return `\n${prefix} ${text.trim()}\n`
+    }
+  )
 
   // 处理段落
   txt = txt.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
@@ -584,9 +676,12 @@ const convertToTXT = (html: string): string => {
   txt = txt.replace(/<br[^>]*>/gi, '\n')
 
   // 处理引用
-  txt = txt.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gi, (match, content) => {
-    return '\n> ' + content.replace(/\n/g, '\n> ') + '\n'
-  })
+  txt = txt.replace(
+    /<blockquote[^>]*>(.*?)<\/blockquote>/gi,
+    (match, content) => {
+      return '\n> ' + content.replace(/\n/g, '\n> ') + '\n'
+    }
+  )
 
   // 处理代码块
   txt = txt.replace(/<pre[^>]*>(.*?)<\/pre>/gi, '\n```\n$1\n```\n')
@@ -596,7 +691,10 @@ const convertToTXT = (html: string): string => {
   txt = txt.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '$2 ($1)')
 
   // 处理图片
-  txt = txt.replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, '[图片: $1] ($2)')
+  txt = txt.replace(
+    /<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi,
+    '[图片: $1] ($2)'
+  )
 
   // 移除剩余的HTML标签
   txt = txt.replace(/<[^>]*>/g, '')
@@ -658,15 +756,21 @@ const convertToMarkdown = (html: string): string => {
   md = md.replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`')
 
   // 处理引用
-  md = md.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gi, (match, content) => {
-    return '\n> ' + content.replace(/\n/g, '\n> ') + '\n'
-  })
+  md = md.replace(
+    /<blockquote[^>]*>(.*?)<\/blockquote>/gi,
+    (match, content) => {
+      return '\n> ' + content.replace(/\n/g, '\n> ') + '\n'
+    }
+  )
 
   // 处理链接
   md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
 
   // 处理图片
-  md = md.replace(/<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi, '![$1]($2)')
+  md = md.replace(
+    /<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*>/gi,
+    '![$1]($2)'
+  )
 
   // 处理换行
   md = md.replace(/<br[^>]*>/gi, '\n')
@@ -692,9 +796,12 @@ const convertToMarkdown = (html: string): string => {
 }
 
 // 监听器
-watch(() => toolbarStore.toolbarSettings.targetWords, () => {
-  // 目标字数变化时可以添加相关逻辑
-})
+watch(
+  () => toolbarStore.toolbarSettings.targetWords,
+  () => {
+    // 目标字数变化时可以添加相关逻辑
+  }
+)
 
 // 监听编辑器内容变化
 let contentUpdateTimer: NodeJS.Timeout | null = null

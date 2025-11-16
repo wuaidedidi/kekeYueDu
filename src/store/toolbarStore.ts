@@ -81,7 +81,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
     wordCount: 0,
     targetWords: 5000,
     progress: 0,
-    lastSaved: null
+    lastSaved: null,
   })
 
   // 纠错问题
@@ -116,39 +116,50 @@ export const useToolbarStore = defineStore('toolbar', () => {
     characterHighlightEnabled: true,
     previewMode: 'split',
     fontSize: 16,
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
     lineHeight: 1.6,
     contentWidth: 100,
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
   })
 
   // 计算属性
   const hasErrors = computed(() =>
-    proofreadIssues.value.some(issue => issue.status === 'pending' && issue.severity === 'error')
+    proofreadIssues.value.some(
+      (issue) => issue.status === 'pending' && issue.severity === 'error'
+    )
   )
 
   const hasWarnings = computed(() =>
-    proofreadIssues.value.some(issue => issue.status === 'pending' && issue.severity === 'warning')
+    proofreadIssues.value.some(
+      (issue) => issue.status === 'pending' && issue.severity === 'warning'
+    )
   )
 
   const filteredCharacters = computed(() => {
     if (!characterSearchQuery.value) return characters.value
 
     const query = characterSearchQuery.value.toLowerCase()
-    return characters.value.filter(char =>
-      char.name.toLowerCase().includes(query) ||
-      char.aliases.some(alias => alias.toLowerCase().includes(query)) ||
-      char.tags.some(tag => tag.toLowerCase().includes(query))
+    return characters.value.filter(
+      (char) =>
+        char.name.toLowerCase().includes(query) ||
+        char.aliases.some((alias) => alias.toLowerCase().includes(query)) ||
+        char.tags.some((tag) => tag.toLowerCase().includes(query))
     )
   })
 
   const filteredSettings = computed(() => {
     if (settingFilterCategory.value === 'all') return settings.value
-    return settings.value.filter(setting => setting.category === settingFilterCategory.value)
+    return settings.value.filter(
+      (setting) => setting.category === settingFilterCategory.value
+    )
   })
 
   const completedProgress = computed(() =>
-    Math.min(100, Math.round((stats.value.wordCount / stats.value.targetWords) * 100))
+    Math.min(
+      100,
+      Math.round((stats.value.wordCount / stats.value.targetWords) * 100)
+    )
   )
 
   // Actions
@@ -172,7 +183,9 @@ export const useToolbarStore = defineStore('toolbar', () => {
 
     // 计算进度
     if (stats.value.targetWords > 0) {
-      stats.value.progress = Math.round((stats.value.wordCount / stats.value.targetWords) * 100)
+      stats.value.progress = Math.round(
+        (stats.value.wordCount / stats.value.targetWords) * 100
+      )
     }
 
     saveToLocalStorage()
@@ -183,16 +196,24 @@ export const useToolbarStore = defineStore('toolbar', () => {
     saveToLocalStorage()
   }
 
-  const updateProofreadIssue = (id: string, updates: Partial<ProofreadIssue>) => {
-    const index = proofreadIssues.value.findIndex(issue => issue.id === id)
+  const updateProofreadIssue = (
+    id: string,
+    updates: Partial<ProofreadIssue>
+  ) => {
+    const index = proofreadIssues.value.findIndex((issue) => issue.id === id)
     if (index !== -1) {
-      proofreadIssues.value[index] = { ...proofreadIssues.value[index], ...updates }
+      proofreadIssues.value[index] = {
+        ...proofreadIssues.value[index],
+        ...updates,
+      }
       saveToLocalStorage()
     }
   }
 
   const removeProofreadIssue = (id: string) => {
-    proofreadIssues.value = proofreadIssues.value.filter(issue => issue.id !== id)
+    proofreadIssues.value = proofreadIssues.value.filter(
+      (issue) => issue.id !== id
+    )
     saveToLocalStorage()
   }
 
@@ -219,7 +240,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
     const newCharacter: Character = {
       ...character,
       id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      mentions: 0
+      mentions: 0,
     }
     characters.value.push(newCharacter)
     saveToLocalStorage()
@@ -227,7 +248,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
   }
 
   const updateCharacter = (id: string, updates: Partial<Character>) => {
-    const index = characters.value.findIndex(char => char.id === id)
+    const index = characters.value.findIndex((char) => char.id === id)
     if (index !== -1) {
       characters.value[index] = { ...characters.value[index], ...updates }
       saveToLocalStorage()
@@ -235,12 +256,12 @@ export const useToolbarStore = defineStore('toolbar', () => {
   }
 
   const removeCharacter = (id: string) => {
-    characters.value = characters.value.filter(char => char.id !== id)
+    characters.value = characters.value.filter((char) => char.id !== id)
     saveToLocalStorage()
   }
 
   const incrementCharacterMentions = (id: string) => {
-    const character = characters.value.find(char => char.id === id)
+    const character = characters.value.find((char) => char.id === id)
     if (character) {
       character.mentions++
       saveToLocalStorage()
@@ -251,7 +272,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
     const newSetting: Setting = {
       ...setting,
       id: `setting_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date()
+      createdAt: new Date(),
     }
     settings.value.push(newSetting)
     saveToLocalStorage()
@@ -259,7 +280,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
   }
 
   const updateSetting = (id: string, updates: Partial<Setting>) => {
-    const index = settings.value.findIndex(setting => setting.id === id)
+    const index = settings.value.findIndex((setting) => setting.id === id)
     if (index !== -1) {
       settings.value[index] = { ...settings.value[index], ...updates }
       saveToLocalStorage()
@@ -267,7 +288,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
   }
 
   const removeSetting = (id: string) => {
-    settings.value = settings.value.filter(setting => setting.id !== id)
+    settings.value = settings.value.filter((setting) => setting.id !== id)
     saveToLocalStorage()
   }
 
@@ -285,7 +306,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
       stats: stats.value,
       toolbarSettings: toolbarSettings.value,
       characters: characters.value,
-      settings: settings.value
+      settings: settings.value,
     }
     localStorage.setItem('toolbar-store', JSON.stringify(data))
   }
@@ -299,19 +320,22 @@ export const useToolbarStore = defineStore('toolbar', () => {
         isPanelVisible.value = data.isPanelVisible !== false
         panelWidth.value = data.panelWidth || 400
         stats.value = { ...stats.value, ...data.stats }
-        toolbarSettings.value = { ...toolbarSettings.value, ...data.toolbarSettings }
+        toolbarSettings.value = {
+          ...toolbarSettings.value,
+          ...data.toolbarSettings,
+        }
 
         if (data.characters) {
           characters.value = data.characters.map((char: any) => ({
             ...char,
-            createdAt: new Date(char.createdAt)
+            createdAt: new Date(char.createdAt),
           }))
         }
 
         if (data.settings) {
           settings.value = data.settings.map((setting: any) => ({
             ...setting,
-            createdAt: new Date(setting.createdAt)
+            createdAt: new Date(setting.createdAt),
           }))
         }
       }
@@ -371,7 +395,7 @@ export const useToolbarStore = defineStore('toolbar', () => {
 
     // 工具方法
     saveToLocalStorage,
-    loadFromLocalStorage
+    loadFromLocalStorage,
   }
 })
 

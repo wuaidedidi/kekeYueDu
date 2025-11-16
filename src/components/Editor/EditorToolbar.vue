@@ -215,7 +215,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { ElButton, ElSelect, ElOption, ElMessage, ElMessageBox } from 'element-plus'
+import {
+  ElButton,
+  ElSelect,
+  ElOption,
+  ElMessage,
+  ElMessageBox,
+} from 'element-plus'
 // 暂时移除Element Plus图标导入，使用文本符号代替
 import ImageInsert from './ImageInsert.vue'
 
@@ -334,11 +340,17 @@ const insertLink = async () => {
   if (!editor) return
 
   try {
-    const { value: url } = await ElMessageBox.prompt('请输入链接地址', '插入链接')
+    const { value: url } = await ElMessageBox.prompt(
+      '请输入链接地址',
+      '插入链接'
+    )
     if (!url) return
 
     const selectedRange = editor.getSelectedRange()
-    const selectedText = editor.getDocument().toString().substring(selectedRange[0], selectedRange[1])
+    const selectedText = editor
+      .getDocument()
+      .toString()
+      .substring(selectedRange[0], selectedRange[1])
     const linkText = selectedText || url
 
     editor.insertHTML(`<a href="${url}" target="_blank">${linkText}</a>`)
@@ -355,7 +367,10 @@ const insertVideo = async () => {
   if (!editor) return
 
   try {
-    const { value: url } = await ElMessageBox.prompt('请输入视频地址', '插入视频')
+    const { value: url } = await ElMessageBox.prompt(
+      '请输入视频地址',
+      '插入视频'
+    )
     if (!url) return
 
     const videoHtml = `
@@ -381,33 +396,42 @@ const insertTable = async () => {
   if (!editor) return
 
   try {
-    const { value: rows } = await ElMessageBox.prompt('请输入行数', '插入表格', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputValue: '3',
-      inputValidator: (value) => {
-        if (!value || isNaN(parseInt(value)) || parseInt(value) < 1) {
-          return '请输入有效的行数（大于0的数字）'
-        }
-        return true
+    const { value: rows } = await ElMessageBox.prompt(
+      '请输入行数',
+      '插入表格',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValue: '3',
+        inputValidator: (value) => {
+          if (!value || isNaN(parseInt(value)) || parseInt(value) < 1) {
+            return '请输入有效的行数（大于0的数字）'
+          }
+          return true
+        },
       }
-    })
+    )
     if (!rows) return
 
-    const { value: cols } = await ElMessageBox.prompt('请输入列数', '插入表格', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputValue: '3',
-      inputValidator: (value) => {
-        if (!value || isNaN(parseInt(value)) || parseInt(value) < 1) {
-          return '请输入有效的列数（大于0的数字）'
-        }
-        return true
+    const { value: cols } = await ElMessageBox.prompt(
+      '请输入列数',
+      '插入表格',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValue: '3',
+        inputValidator: (value) => {
+          if (!value || isNaN(parseInt(value)) || parseInt(value) < 1) {
+            return '请输入有效的列数（大于0的数字）'
+          }
+          return true
+        },
       }
-    })
+    )
     if (!cols) return
 
-    let tableHtml = '<table style="border-collapse: collapse; width: 100%; margin: 16px 0;">'
+    let tableHtml =
+      '<table style="border-collapse: collapse; width: 100%; margin: 16px 0;">'
 
     // 表头
     tableHtml += '<thead><tr>'
@@ -448,7 +472,10 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  document.removeEventListener('insertImage', handleInsertImage as EventListener)
+  document.removeEventListener(
+    'insertImage',
+    handleInsertImage as EventListener
+  )
 })
 </script>
 
@@ -572,7 +599,7 @@ onUnmounted(() => {
 @media (max-width: 480px) {
   .editor-toolbar {
     .toolbar-group {
-      &:nth-child(n+4) {
+      &:nth-child(n + 4) {
         display: none; // 在小屏幕上隐藏一些不常用的工具
       }
     }

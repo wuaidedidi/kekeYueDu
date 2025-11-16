@@ -74,7 +74,11 @@
     <div class="versions-container" v-loading="loading">
       <div v-if="versions.length === 0 && !loading" class="empty-state">
         <el-empty description="暂无版本历史" :image-size="100">
-          <el-button type="primary" @click="createManualVersion" :disabled="!currentChapterId">
+          <el-button
+            type="primary"
+            @click="createManualVersion"
+            :disabled="!currentChapterId"
+          >
             创建第一个版本
           </el-button>
         </el-empty>
@@ -88,7 +92,7 @@
           :class="{
             'is-current': version.id === currentVersionId,
             'is-pinned': version.isPinned,
-            'is-snapshot': version.isSnapshot
+            'is-snapshot': version.isSnapshot,
           }"
         >
           <!-- 版本头部信息 -->
@@ -112,10 +116,7 @@
                 >
                   快照
                 </el-tag>
-                <el-tag
-                  :type="getSourceTagType(version.source)"
-                  size="small"
-                >
+                <el-tag :type="getSourceTagType(version.source)" size="small">
                   {{ getSourceLabel(version.source) }}
                 </el-tag>
               </div>
@@ -154,7 +155,9 @@
                 title="回退到此版本"
                 :disabled="version.id === currentVersionId"
               />
-              <el-dropdown @command="(cmd) => handleVersionAction(cmd, version)">
+              <el-dropdown
+                @command="(cmd) => handleVersionAction(cmd, version)"
+              >
                 <el-button :icon="More" title="更多操作" />
                 <template #dropdown>
                   <el-dropdown-menu>
@@ -164,16 +167,15 @@
                     >
                       {{ version.isPinned ? '取消置顶' : '置顶版本' }}
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      command="download"
-                      :icon="Download"
-                    >
+                    <el-dropdown-item command="download" :icon="Download">
                       下载版本
                     </el-dropdown-item>
                     <el-dropdown-item
                       command="delete"
                       :icon="Delete"
-                      :disabled="version.isPinned || version.id === currentVersionId"
+                      :disabled="
+                        version.isPinned || version.id === currentVersionId
+                      "
                     >
                       删除版本
                     </el-dropdown-item>
@@ -210,17 +212,28 @@
         <div v-if="diffDialog.stats" class="diff-stats">
           <el-row :gutter="24">
             <el-col :span="8">
-              <el-statistic title="新增字数" :value="diffDialog.stats.insertions">
+              <el-statistic
+                title="新增字数"
+                :value="diffDialog.stats.insertions"
+              >
                 <template #suffix>字</template>
               </el-statistic>
             </el-col>
             <el-col :span="8">
-              <el-statistic title="删除字数" :value="diffDialog.stats.deletions">
+              <el-statistic
+                title="删除字数"
+                :value="diffDialog.stats.deletions"
+              >
                 <template #suffix>字</template>
               </el-statistic>
             </el-col>
             <el-col :span="8">
-              <el-statistic title="净变化" :value="diffDialog.stats.insertions - diffDialog.stats.deletions">
+              <el-statistic
+                title="净变化"
+                :value="
+                  diffDialog.stats.insertions - diffDialog.stats.deletions
+                "
+              >
                 <template #suffix>字</template>
               </el-statistic>
             </el-col>
@@ -290,8 +303,17 @@ import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import '@/assets/styles/version-history.css'
 import {
-  Plus, Refresh, Star, Camera, View, DocumentCopy, RefreshLeft,
-  More, Download, Delete, StarFilled
+  Plus,
+  Refresh,
+  Star,
+  Camera,
+  View,
+  DocumentCopy,
+  RefreshLeft,
+  More,
+  Download,
+  Delete,
+  StarFilled,
 } from '@element-plus/icons-vue'
 import http from '@/utils/http'
 import type { ChapterVersion, VersionStats, DiffItem } from './types'
@@ -304,12 +326,14 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   currentChapterId: undefined,
-  currentVersionId: undefined
+  currentVersionId: undefined,
 })
 
 // Emits
 const emit = defineEmits<{
-  versionReverted: [data: { chapterId: number; content: string }]
+  versionReverted: [
+    data: { chapterId: number; content: string; newVersionId?: number }
+  ]
   requestClose: []
 }>()
 
@@ -323,7 +347,7 @@ const pageSize = ref(20)
 const filters = reactive({
   source: '',
   type: '',
-  pinnedOnly: false
+  pinnedOnly: false,
 })
 
 const diffDialog = reactive({
@@ -332,7 +356,7 @@ const diffDialog = reactive({
   loading: false,
   stats: null as VersionStats | null,
   diffs: null as DiffItem[] | null,
-  baseVersion: null as ChapterVersion | null
+  baseVersion: null as ChapterVersion | null,
 })
 
 const viewDialog = reactive({
@@ -340,11 +364,13 @@ const viewDialog = reactive({
   title: '',
   loading: false,
   content: '',
-  version: null as ChapterVersion | null
+  version: null as ChapterVersion | null,
 })
 
 // 计算属性
-const totalPages = computed(() => Math.ceil(totalVersions.value / pageSize.value))
+const totalPages = computed(() =>
+  Math.ceil(totalVersions.value / pageSize.value)
+)
 
 // 方法
 const loadVersions = async () => {
@@ -354,7 +380,7 @@ const loadVersions = async () => {
   try {
     const params: any = {
       page: currentPage.value,
-      limit: pageSize.value
+      limit: pageSize.value,
     }
 
     if (filters.source) params.source = filters.source
@@ -362,7 +388,10 @@ const loadVersions = async () => {
       // 需要后端支持pinnedOnly参数，这里先过滤客户端
     }
 
-    const response = await http.get(`/chapters/${props.currentChapterId}/versions`, { params })
+    const response = await http.get(
+      `/chapters/${props.currentChapterId}/versions`,
+      { params }
+    )
 
     if (response.data.success) {
       let allVersions = response.data.data.versions
@@ -370,12 +399,12 @@ const loadVersions = async () => {
 
       // 客户端过滤
       if (filters.pinnedOnly) {
-        allVersions = allVersions.filter(v => v.isPinned)
+        allVersions = allVersions.filter((v) => v.isPinned)
       }
       if (filters.type === 'snapshot') {
-        allVersions = allVersions.filter(v => v.isSnapshot)
+        allVersions = allVersions.filter((v) => v.isSnapshot)
       } else if (filters.type === 'increment') {
-        allVersions = allVersions.filter(v => !v.isSnapshot)
+        allVersions = allVersions.filter((v) => !v.isSnapshot)
       }
 
       versions.value = allVersions
@@ -395,40 +424,63 @@ const createManualVersion = async () => {
   }
 
   try {
-    const { value: label } = await ElMessageBox.prompt('请输入版本标签', '创建版本', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputPlaceholder: '可选，为这个版本添加备注'
-    })
-
-    // 获取当前章节内容
-    console.log('正在获取章节内容，ID:', props.currentChapterId)
-    const chapterResponse = await http.get(`/chapters/${props.currentChapterId}`)
-
-    console.log('章节API响应:', chapterResponse.data)
-
-    if (chapterResponse.data.success) {
-      const content = chapterResponse.data.data.content
-      console.log('章节内容长度:', content?.length, '内容预览:', content?.substring(0, 100))
-
-      if (!content || content.trim().length === 0) {
-        ElMessage.warning('章节内容为空，无法创建版本')
-        return
+    const { value: label } = await ElMessageBox.prompt(
+      '请输入版本标签',
+      '创建版本',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPlaceholder: '可选，为这个版本添加备注',
       }
+    )
+
+    // 从当前编辑器获取内容，而不是从服务器
+    console.log('从编辑器获取当前内容，章节ID:', props.currentChapterId)
+
+    // 获取 Trix 编辑器实例
+    const trixEditor = document.querySelector('trix-editor') as HTMLElement
+    if (!trixEditor) {
+      ElMessage.error('找不到编辑器，无法创建版本')
+      return
+    }
+
+    const trixEditorInstance = (trixEditor as any).editor
+    if (!trixEditorInstance) {
+      ElMessage.error('编辑器实例不可用，无法创建版本')
+      return
+    }
+
+    // 从编辑器获取当前内容
+    const content = trixEditorInstance.getDocument().toString()
+
+    console.log(
+      '编辑器内容长度:',
+      content?.length,
+      '内容预览:',
+      content?.substring(0, 100)
+    )
+
+    if (!content || content.trim().length === 0) {
+      ElMessage.warning('编辑器内容为空，无法创建版本')
+      return
+    }
 
       console.log('准备创建版本，数据:', {
         contentLength: content.length,
         source: 'manual',
         label: label || undefined,
-        is_snapshot: true
+        is_snapshot: true,
       })
 
-      const response = await http.post(`/chapters/${props.currentChapterId}/versions`, {
-        content_html: content,
-        source: 'manual',
-        label: label || undefined,
-        is_snapshot: true
-      })
+      const response = await http.post(
+        `/chapters/${props.currentChapterId}/versions`,
+        {
+          content_html: content,
+          source: 'manual',
+          label: label || undefined,
+          is_snapshot: true,
+        }
+      )
 
       console.log('创建版本响应:', response.data)
 
@@ -436,7 +488,6 @@ const createManualVersion = async () => {
         ElMessage.success('版本创建成功')
         await loadVersions()
       }
-    }
   } catch (error) {
     if (error !== 'cancel') {
       console.error('创建版本失败:', error)
@@ -454,12 +505,15 @@ const compareWithCurrent = async (version: ChapterVersion) => {
   diffDialog.baseVersion = version
 
   try {
-    const response = await http.get(`/chapters/${props.currentChapterId}/diff`, {
-      params: {
-        baseVersionId: version.id,
-        format: 'json'
+    const response = await http.get(
+      `/chapters/${props.currentChapterId}/diff`,
+      {
+        params: {
+          baseVersionId: version.id,
+          format: 'json',
+        },
       }
-    })
+    )
 
     if (response.data.success) {
       diffDialog.stats = response.data.data.stats
@@ -483,7 +537,9 @@ const viewVersion = async (version: ChapterVersion) => {
 
   try {
     // 获取版本详细内容
-    const response = await http.get(`/chapters/${props.currentChapterId}/versions/${version.id}`)
+    const response = await http.get(
+      `/chapters/${props.currentChapterId}/versions/${version.id}`
+    )
 
     if (response.data.success) {
       const versionData = response.data.data
@@ -537,20 +593,24 @@ const revertToVersion = async (version: ChapterVersion) => {
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
 
-    const response = await http.post(`/chapters/${props.currentChapterId}/revert`, {
-      toVersionId: version.id,
-      label: `回退到版本 v${version.versionSeq}`
-    })
+    const response = await http.post(
+      `/chapters/${props.currentChapterId}/revert`,
+      {
+        toVersionId: version.id,
+        label: `回退到版本 v${version.versionSeq}`,
+      }
+    )
 
     if (response.data.success) {
       ElMessage.success('已成功回退到指定版本')
       emit('versionReverted', {
         chapterId: props.currentChapterId,
-        content: response.data.data.content
+        content: response.data.data.content,
+        newVersionId: response.data.data.newVersionId,
       })
 
       // 延迟一点刷新版本列表，然后请求关闭面板
@@ -569,7 +629,10 @@ const revertToVersion = async (version: ChapterVersion) => {
   }
 }
 
-const handleVersionAction = async (command: string, version: ChapterVersion) => {
+const handleVersionAction = async (
+  command: string,
+  version: ChapterVersion
+) => {
   switch (command) {
     case 'pin':
       await togglePinVersion(version)
@@ -587,9 +650,12 @@ const togglePinVersion = async (version: ChapterVersion) => {
   if (!props.currentChapterId) return
 
   try {
-    const response = await http.post(`/chapters/${props.currentChapterId}/versions/${version.id}/pin`, {
-      pinned: !version.isPinned
-    })
+    const response = await http.post(
+      `/chapters/${props.currentChapterId}/versions/${version.id}/pin`,
+      {
+        pinned: !version.isPinned,
+      }
+    )
 
     if (response.data.success) {
       ElMessage.success(version.isPinned ? '已取消置顶' : '已置顶版本')
@@ -616,11 +682,13 @@ const deleteVersion = async (version: ChapterVersion) => {
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
 
-    const response = await http.delete(`/chapters/${props.currentChapterId}/versions/${version.id}`)
+    const response = await http.delete(
+      `/chapters/${props.currentChapterId}/versions/${version.id}`
+    )
 
     if (response.data.success) {
       ElMessage.success('版本已删除')
@@ -674,7 +742,7 @@ const formatTime = (timeStr: string) => {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -682,7 +750,7 @@ const getSourceLabel = (source: string) => {
   const labels: Record<string, string> = {
     auto: '自动保存',
     manual: '手动创建',
-    revert: '回退操作'
+    revert: '回退操作',
   }
   return labels[source] || source
 }
@@ -691,7 +759,7 @@ const getSourceTagType = (source: string) => {
   const types: Record<string, string> = {
     auto: 'info',
     manual: 'success',
-    revert: 'warning'
+    revert: 'warning',
   }
   return types[source] || 'info'
 }
@@ -709,18 +777,27 @@ onMounted(() => {
   if (props.currentChapterId) {
     loadVersions()
   }
-  window.addEventListener('versionCreated', handleVersionCreated as EventListener)
+  window.addEventListener(
+    'versionCreated',
+    handleVersionCreated as EventListener
+  )
 })
 
-watch(() => props.currentChapterId, (newId) => {
-  if (newId) {
-    currentPage.value = 1
-    loadVersions()
+watch(
+  () => props.currentChapterId,
+  (newId) => {
+    if (newId) {
+      currentPage.value = 1
+      loadVersions()
+    }
   }
-})
+)
 
 onUnmounted(() => {
-  window.removeEventListener('versionCreated', handleVersionCreated as EventListener)
+  window.removeEventListener(
+    'versionCreated',
+    handleVersionCreated as EventListener
+  )
 })
 </script>
 
@@ -979,12 +1056,18 @@ onUnmounted(() => {
       text-align: justify;
     }
 
-    :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+    :deep(h1),
+    :deep(h2),
+    :deep(h3),
+    :deep(h4),
+    :deep(h5),
+    :deep(h6) {
       margin: 16px 0 8px 0;
       color: #2c3e50;
     }
 
-    :deep(ul), :deep(ol) {
+    :deep(ul),
+    :deep(ol) {
       margin: 12px 0;
       padding-left: 24px;
     }

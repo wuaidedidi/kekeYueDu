@@ -5,7 +5,7 @@ import { useUserStore } from '@/store/userStore'
 
 // Mock user store
 vi.mock('@/store/userStore', () => ({
-  useUserStore: vi.fn()
+  useUserStore: vi.fn(),
 }))
 
 describe('路由守卫', () => {
@@ -17,25 +17,29 @@ describe('路由守卫', () => {
     router = createRouter({
       history: createWebHistory(),
       routes: [
-        { path: '/login', name: 'Login', component: { template: '<div>Login</div>' } },
+        {
+          path: '/login',
+          name: 'Login',
+          component: { template: '<div>Login</div>' },
+        },
         {
           path: '/workspace/all-books',
           name: 'AllBooks',
           component: { template: '<div>All Books</div>' },
-          meta: { requiresAuth: true }
+          meta: { requiresAuth: true },
         },
         {
           path: '/profile',
           name: 'Profile',
           component: { template: '<div>Profile</div>' },
-          meta: { requireAuth: true }
+          meta: { requireAuth: true },
         },
         {
           path: '/public',
           name: 'Public',
-          component: { template: '<div>Public</div>' }
-        }
-      ]
+          component: { template: '<div>Public</div>' },
+        },
+      ],
     })
 
     // Mock user store
@@ -44,7 +48,7 @@ describe('路由守卫', () => {
       token: null,
       isLoggedIn: false,
       initAuth: vi.fn(),
-      setUser: vi.fn()
+      setUser: vi.fn(),
     }
 
     vi.mocked(useUserStore).mockReturnValue(mockUserStore)
@@ -74,7 +78,10 @@ describe('路由守卫', () => {
   })
 
   it('应该重定向未登录用户到登录页当访问需要认证的页面', async () => {
-    const to = { path: '/workspace/all-books', matched: [{ meta: { requiresAuth: true } }] }
+    const to = {
+      path: '/workspace/all-books',
+      matched: [{ meta: { requiresAuth: true } }],
+    }
     const from = {}
     const next = vi.fn()
 
@@ -99,7 +106,10 @@ describe('路由守卫', () => {
     mockUserStore.user = { id: 1, name: 'Test User' }
     mockUserStore.token = 'test-token'
 
-    const to = { path: '/workspace/all-books', matched: [{ meta: { requiresAuth: true } }] }
+    const to = {
+      path: '/workspace/all-books',
+      matched: [{ meta: { requiresAuth: true } }],
+    }
     const from = {}
     const next = vi.fn()
 
@@ -156,10 +166,7 @@ describe('路由守卫', () => {
     // 测试嵌套路由
     const to = {
       path: '/workspace/all-books',
-      matched: [
-        { meta: {} },
-        { meta: { requiresAuth: true } }
-      ]
+      matched: [{ meta: {} }, { meta: { requiresAuth: true } }],
     }
     const from = {}
     const next = vi.fn()

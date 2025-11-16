@@ -1,8 +1,4 @@
-import {
-  createRouter,
-  createWebHashHistory,
-  RouteRecordRaw,
-} from 'vue-router'
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import { setupRouterGuards } from './auth'
 
 const Index = () => import('../view/index/index.vue')

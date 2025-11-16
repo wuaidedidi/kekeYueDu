@@ -12,10 +12,16 @@
         <div class="comment-header">
           <div class="user-info">
             <el-avatar :size="32" :src="comment.avatar_url">
-              {{ (comment.nickname || comment.user_name || '匿名用户').charAt(0).toUpperCase() }}
+              {{
+                (comment.nickname || comment.user_name || '匿名用户')
+                  .charAt(0)
+                  .toUpperCase()
+              }}
             </el-avatar>
             <div class="user-details">
-              <div class="username">{{ comment.nickname || comment.user_name || '匿名用户' }}</div>
+              <div class="username">
+                {{ comment.nickname || comment.user_name || '匿名用户' }}
+              </div>
               <div class="time">{{ formatTime(comment.created_at) }}</div>
             </div>
           </div>
@@ -128,15 +134,16 @@
 
           <!-- 预览模式 -->
           <div v-else class="preview-wrapper">
-            <div class="preview-content" v-html="replyContent || '<em>暂无内容</em>'"></div>
+            <div
+              class="preview-content"
+              v-html="replyContent || '<em>暂无内容</em>'"
+            ></div>
           </div>
         </div>
 
         <!-- 字数统计 -->
         <div class="editor-footer">
-          <div class="char-count">
-            {{ charCount }} / 2000 字符
-          </div>
+          <div class="char-count">{{ charCount }} / 2000 字符</div>
           <div class="tips">
             支持 Ctrl+B 加粗、Ctrl+I 斜体、Ctrl+U 下划线等快捷键
           </div>
@@ -163,10 +170,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import {
-  EditPen, Link, List, Rank,
-  View, Edit
-} from '@element-plus/icons-vue'
+import { EditPen, Link, List, Rank, View, Edit } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import http from '@/utils/http'
 
@@ -194,7 +198,7 @@ const emit = defineEmits<{
 // 响应式数据
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (value) => emit('update:visible', value)
+  set: (value) => emit('update:visible', value),
 })
 
 const editorRef = ref<HTMLElement>()
@@ -210,7 +214,7 @@ const editorFormats = reactive({
   link: false,
   quote: false,
   ul: false,
-  ol: false
+  ol: false,
 })
 
 // 字数统计
@@ -219,22 +223,25 @@ const charCount = computed(() => {
 })
 
 // 监听弹窗显示状态
-watch(() => props.visible, (visible) => {
-  if (visible && props.comment) {
-    // 重置状态
-    replyContent.value = ''
-    previewMode.value = false
-    submitting.value = false
-    resetFormats()
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible && props.comment) {
+      // 重置状态
+      replyContent.value = ''
+      previewMode.value = false
+      submitting.value = false
+      resetFormats()
 
-    // 等待DOM更新后聚焦编辑器
-    nextTick(() => {
-      if (editorRef.value) {
-        editorRef.value.focus()
-      }
-    })
+      // 等待DOM更新后聚焦编辑器
+      nextTick(() => {
+        if (editorRef.value) {
+          editorRef.value.focus()
+        }
+      })
+    }
   }
-})
+)
 
 // 监听内容变化，更新格式状态
 watch(replyContent, () => {
@@ -264,7 +271,7 @@ const formatTime = (timeString: string) => {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 }
@@ -351,7 +358,20 @@ const sanitizeHtml = (html: string) => {
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<[^>]*>/g, (match) => {
       const tagName = match.match(/<\/?([a-zA-Z]+)/)
-      const allowedTags = ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'a', 'ul', 'ol', 'li', 'blockquote']
+      const allowedTags = [
+        'p',
+        'br',
+        'strong',
+        'b',
+        'em',
+        'i',
+        'u',
+        'a',
+        'ul',
+        'ol',
+        'li',
+        'blockquote',
+      ]
       if (tagName && allowedTags.includes(tagName[1].toLowerCase())) {
         return match
       }
@@ -405,7 +425,7 @@ const insertFormat = (format: string) => {
 
 // 重置格式状态
 const resetFormats = () => {
-  Object.keys(editorFormats).forEach(key => {
+  Object.keys(editorFormats).forEach((key) => {
     editorFormats[key] = false
   })
 }
@@ -452,7 +472,7 @@ const handleSubmit = async () => {
 
   try {
     const response = await http.post(`/comments/${props.comment.id}/replies`, {
-      contentHtml: replyContent.value
+      contentHtml: replyContent.value,
     })
 
     if (response.data.success) {
@@ -589,7 +609,8 @@ const handleClose = () => {
           color: #666;
         }
 
-        :deep(ul), :deep(ol) {
+        :deep(ul),
+        :deep(ol) {
           padding-left: 20px;
           margin: 8px 0;
         }
@@ -598,11 +619,13 @@ const handleClose = () => {
           margin: 4px 0;
         }
 
-        :deep(strong), :deep(b) {
+        :deep(strong),
+        :deep(b) {
           font-weight: bold;
         }
 
-        :deep(em), :deep(i) {
+        :deep(em),
+        :deep(i) {
           font-style: italic;
         }
 
@@ -643,7 +666,8 @@ const handleClose = () => {
           color: #666;
         }
 
-        :deep(ul), :deep(ol) {
+        :deep(ul),
+        :deep(ol) {
           padding-left: 20px;
           margin: 8px 0;
         }

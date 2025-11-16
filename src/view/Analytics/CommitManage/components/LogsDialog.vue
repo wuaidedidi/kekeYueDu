@@ -52,11 +52,7 @@
         </div>
 
         <div v-else class="logs-list">
-          <div
-            v-for="log in logs"
-            :key="log.id"
-            class="log-item"
-          >
+          <div v-for="log in logs" :key="log.id" class="log-item">
             <div class="log-header">
               <div class="log-info">
                 <div class="action-info">
@@ -85,7 +81,9 @@
             <div v-if="log.details" class="log-details">
               <el-collapse>
                 <el-collapse-item title="详细信息">
-                  <pre class="details-content">{{ formatDetails(log.details) }}</pre>
+                  <pre class="details-content">{{
+                    formatDetails(log.details)
+                  }}</pre>
                 </el-collapse-item>
               </el-collapse>
             </div>
@@ -160,7 +158,7 @@ const emit = defineEmits<{
 // 响应式数据
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (value) => emit('update:visible', value)
+  set: (value) => emit('update:visible', value),
 })
 
 const loading = ref(false)
@@ -170,7 +168,7 @@ const logs = ref<Log[]>([])
 const filters = reactive({
   action: '',
   targetType: '',
-  userId: ''
+  userId: '',
 })
 
 // 分页信息
@@ -178,16 +176,19 @@ const pagination = reactive({
   page: 1,
   pageSize: 50,
   total: 0,
-  totalPages: 0
+  totalPages: 0,
 })
 
 // 监听弹窗显示状态
-watch(() => props.visible, (visible) => {
-  if (visible) {
-    resetFilters()
-    loadLogs()
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetFilters()
+      loadLogs()
+    }
   }
-})
+)
 
 // 重置筛选条件
 const resetFilters = () => {
@@ -203,15 +204,14 @@ const loadLogs = async () => {
   loading.value = true
   const authStore = useAuthStore()
   try {
-
     const { data } = await http.get('/admin/logs', {
       params: {
         page: pagination.page,
         pageSize: pagination.pageSize,
         ...(filters.action ? { action: filters.action } : {}),
         ...(filters.targetType ? { targetType: filters.targetType } : {}),
-        ...(filters.userId ? { userId: filters.userId } : {})
-      }
+        ...(filters.userId ? { userId: filters.userId } : {}),
+      },
     })
 
     if (data.success) {
@@ -303,7 +303,7 @@ const formatDateTime = (timeString: string) => {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   })
 }
 
@@ -342,14 +342,17 @@ const exportLogs = async () => {
         pageSize: 10000,
         ...(filters.action ? { action: filters.action } : {}),
         ...(filters.targetType ? { targetType: filters.targetType } : {}),
-        ...(filters.userId ? { userId: filters.userId } : {})
-      }
+        ...(filters.userId ? { userId: filters.userId } : {}),
+      },
     })
 
     if (data.success) {
       const logs = data.data.logs
       const csvContent = convertToCSV(logs)
-      downloadCSV(csvContent, `admin_logs_${new Date().toISOString().split('T')[0]}.csv`)
+      downloadCSV(
+        csvContent,
+        `admin_logs_${new Date().toISOString().split('T')[0]}.csv`
+      )
       ElMessage.success('日志导出成功')
     } else {
       ElMessage.error(data.message || '导出失败')
@@ -363,11 +366,18 @@ const exportLogs = async () => {
 // 转换为CSV格式
 const convertToCSV = (logs: Log[]) => {
   const headers = [
-    'ID', '用户名', '操作类型', '目标类型', '目标ID',
-    'IP地址', 'User Agent', '详细信息', '创建时间'
+    'ID',
+    '用户名',
+    '操作类型',
+    '目标类型',
+    '目标ID',
+    'IP地址',
+    'User Agent',
+    '详细信息',
+    '创建时间',
   ]
 
-  const rows = logs.map(log => [
+  const rows = logs.map((log) => [
     log.id,
     log.username || '',
     getActionText(log.action),
@@ -376,12 +386,12 @@ const convertToCSV = (logs: Log[]) => {
     log.ip_address || '',
     formatUserAgent(log.user_agent || ''),
     formatDetails(log.details || ''),
-    formatDateTime(log.created_at)
+    formatDateTime(log.created_at),
   ])
 
   const csvContent = [
     headers.join(','),
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
   ].join('\n')
 
   return '\ufeff' + csvContent // 添加BOM以支持中文

@@ -1,11 +1,16 @@
 <template>
-  <div class="right-toolbar" :class="{ collapsed: !toolbarStore.isPanelVisible }">
+  <div
+    class="right-toolbar"
+    :class="{ collapsed: !toolbarStore.isPanelVisible }"
+  >
     <!-- 折叠按钮 -->
     <button
       class="toolbar-toggle"
       @click="toolbarStore.togglePanel"
       :aria-expanded="toolbarStore.isPanelVisible"
-      :aria-label="toolbarStore.isPanelVisible ? '折叠右侧面板' : '展开右侧面板'"
+      :aria-label="
+        toolbarStore.isPanelVisible ? '折叠右侧面板' : '展开右侧面板'
+      "
       tabindex="0"
       @keydown.enter="toolbarStore.togglePanel"
       @keydown.space.prevent="toolbarStore.togglePanel"
@@ -26,10 +31,7 @@
           tab-position="top"
           @tab-click="handleTabClick"
         >
-          <el-tab-pane
-            label="纠错"
-            name="proofread"
-          >
+          <el-tab-pane label="纠错" name="proofread">
             <template #label>
               <div class="tab-label">
                 <el-icon><EditPen /></el-icon>
@@ -45,10 +47,7 @@
             <ProofreadPanel />
           </el-tab-pane>
 
-          <el-tab-pane
-            label="拼写"
-            name="spellcheck"
-          >
+          <el-tab-pane label="拼写" name="spellcheck">
             <template #label>
               <div class="tab-label">
                 <el-icon><View /></el-icon>
@@ -64,10 +63,7 @@
             <SpellCheckPanel />
           </el-tab-pane>
 
-          <el-tab-pane
-            label="大纲"
-            name="outline"
-          >
+          <el-tab-pane label="大纲" name="outline">
             <template #label>
               <div class="tab-label">
                 <el-icon><List /></el-icon>
@@ -77,10 +73,7 @@
             <OutlinePanel />
           </el-tab-pane>
 
-          <el-tab-pane
-            label="角色"
-            name="characters"
-          >
+          <el-tab-pane label="角色" name="characters">
             <template #label>
               <div class="tab-label">
                 <el-icon><User /></el-icon>
@@ -96,10 +89,7 @@
             <CharactersPanel />
           </el-tab-pane>
 
-          <el-tab-pane
-            label="设定"
-            name="settings"
-          >
+          <el-tab-pane label="设定" name="settings">
             <template #label>
               <div class="tab-label">
                 <el-icon><Setting /></el-icon>
@@ -115,10 +105,7 @@
             <SettingsPanel />
           </el-tab-pane>
 
-          <el-tab-pane
-            label="版本历史"
-            name="versions"
-          >
+          <el-tab-pane label="版本历史" name="versions">
             <template #label>
               <div class="tab-label">
                 <el-icon><Clock /></el-icon>
@@ -139,10 +126,7 @@
             />
           </el-tab-pane>
 
-          <el-tab-pane
-            label="预览"
-            name="preview"
-          >
+          <el-tab-pane label="预览" name="preview">
             <template #label>
               <div class="tab-label">
                 <el-icon><Document /></el-icon>
@@ -172,7 +156,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElIcon, ElTabs, ElTabPane, ElBadge } from 'element-plus'
-import { ArrowRight, ArrowLeft, EditPen, View, List, User, Setting, Document, Clock } from '@element-plus/icons-vue'
+import {
+  ArrowRight,
+  ArrowLeft,
+  EditPen,
+  View,
+  List,
+  User,
+  Setting,
+  Document,
+  Clock,
+} from '@element-plus/icons-vue'
 import { useToolbarStore } from '@/store/toolbarStore'
 import { editorBridge } from '@/utils/editorBridge'
 
@@ -195,12 +189,14 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   currentChapterId: undefined,
-  currentVersionId: undefined
+  currentVersionId: undefined,
 })
 
 // Emits
 const emit = defineEmits<{
-  versionReverted: [data: { chapterId: number; content: string }]
+  versionReverted: [
+    data: { chapterId: number; content: string; newVersionId?: number }
+  ]
 }>()
 
 // 拖拽调整宽度相关
@@ -211,13 +207,13 @@ const startWidth = ref(0)
 // 计算属性
 const errorCount = computed(() => {
   return toolbarStore.proofreadIssues.filter(
-    issue => issue.status === 'pending' && issue.severity === 'error'
+    (issue) => issue.status === 'pending' && issue.severity === 'error'
   ).length
 })
 
 const spellingErrorCount = computed(() => {
   return toolbarStore.proofreadIssues.filter(
-    issue => issue.status === 'pending' && issue.type === 'spelling'
+    (issue) => issue.status === 'pending' && issue.type === 'spelling'
   ).length
 })
 
@@ -225,7 +221,11 @@ const spellingErrorCount = computed(() => {
 const versionCount = ref(0)
 
 // 处理版本回退
-const handleVersionReverted = (data: { chapterId: number; content: string }) => {
+const handleVersionReverted = (data: {
+  chapterId: number
+  content: string
+  newVersionId?: number
+}) => {
   // 向上传递版本回退事件
   emit('versionReverted', data)
   console.log('版本已回退:', data)
@@ -347,7 +347,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       '3': 'outline',
       '4': 'characters',
       '5': 'settings',
-      '6': 'preview'
+      '6': 'preview',
     }
 
     const tabName = keyMap[e.key]

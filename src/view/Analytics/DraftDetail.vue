@@ -166,7 +166,6 @@
         插入
       </div>
 
-  
       <div class="rightHeader">
         <div>
           <el-popover
@@ -224,7 +223,9 @@
                     <el-icon class="info-icon"><InfoFilled /></el-icon>
                     <span class="info-text">
                       找到 <strong>{{ matches.length }}</strong> 个匹配项
-                      <span v-if="matches.length > 0">，当前第 {{ currentMatchIndex + 1 }} 个</span>
+                      <span v-if="matches.length > 0"
+                        >，当前第 {{ currentMatchIndex + 1 }} 个</span
+                      >
                     </span>
                   </div>
                 </div>
@@ -260,7 +261,9 @@
                       @click="replace"
                       type="primary"
                       size="small"
-                      :disabled="matches.length === 0 || !replaceForm.searchText"
+                      :disabled="
+                        matches.length === 0 || !replaceForm.searchText
+                      "
                       class="action-btn"
                     >
                       <el-icon><Edit /></el-icon>
@@ -270,7 +273,9 @@
                       @click="replaceInChapter"
                       type="warning"
                       size="small"
-                      :disabled="matches.length === 0 || !replaceForm.searchText"
+                      :disabled="
+                        matches.length === 0 || !replaceForm.searchText
+                      "
                       class="action-btn"
                     >
                       <el-icon><DocumentCopy /></el-icon>
@@ -283,7 +288,9 @@
                       @click="handleReplaceInBook"
                       type="danger"
                       size="small"
-                      :disabled="!replaceForm.searchText || !replaceForm.replaceText"
+                      :disabled="
+                        !replaceForm.searchText || !replaceForm.replaceText
+                      "
                       class="book-replace-btn"
                     >
                       <el-icon><FolderOpened /></el-icon>
@@ -293,7 +300,10 @@
                 </div>
 
                 <!-- 提示信息 -->
-                <div v-if="replaceForm.searchText && matches.length === 0" class="no-results">
+                <div
+                  v-if="replaceForm.searchText && matches.length === 0"
+                  class="no-results"
+                >
                   <el-icon><Warning /></el-icon>
                   <span>未找到匹配项</span>
                 </div>
@@ -367,6 +377,9 @@
             highlight-current
             @node-click="nodeClickHandler"
             node-key="key"
+            :default-expand-all="false"
+            :default-expanded-keys="defaultExpandedKeys"
+            :expand-on-click-node="false"
           />
         </div>
       </div>
@@ -484,7 +497,7 @@
           >
         </div>
 
-      <!-- 地点筛选条件 -->
+        <!-- 地点筛选条件 -->
         <div v-if="activeTab === 'place'">
           <h3>地点分类</h3>
           <el-tag
@@ -515,14 +528,27 @@
         <div class="batch-and-strategy">
           <div class="batch-controls">
             <span class="label">批量数量</span>
-            <el-input-number v-model="batchCount" :min="1" :max="50" size="small" />
-            <el-button type="success" size="small" @click="generateBatchNames(batchCount)">批量生成</el-button>
+            <el-input-number
+              v-model="batchCount"
+              :min="1"
+              :max="50"
+              size="small"
+            />
+            <el-button
+              type="success"
+              size="small"
+              @click="generateBatchNames(batchCount)"
+              >批量生成</el-button
+            >
           </div>
 
           <el-divider content-position="left">生成策略</el-divider>
           <div class="strategy-controls">
             <span class="label">复杂度</span>
-            <el-radio-group v-model="userPreferences.complexityPreference" size="small">
+            <el-radio-group
+              v-model="userPreferences.complexityPreference"
+              size="small"
+            >
               <el-radio-button label="simple">简单</el-radio-button>
               <el-radio-button label="medium">平衡</el-radio-button>
               <el-radio-button label="complex">复杂</el-radio-button>
@@ -556,17 +582,29 @@
             <span class="name-text">{{ name }}</span>
             <div class="name-actions">
               <el-tooltip content="复制" placement="top">
-                <el-button type="text" size="small" @click.stop="copyNameToClipboard(name)">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click.stop="copyNameToClipboard(name)"
+                >
                   <el-icon><DocumentCopy /></el-icon>
                 </el-button>
               </el-tooltip>
               <el-tooltip content="收藏" placement="top">
-                <el-button type="text" size="small" @click.stop="addToFavorites(name)">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click.stop="addToFavorites(name)"
+                >
                   <el-icon><Star /></el-icon>
                 </el-button>
               </el-tooltip>
               <el-tooltip content="屏蔽" placement="top">
-                <el-button type="text" size="small" @click.stop="addToBlocked(name)">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click.stop="addToBlocked(name)"
+                >
                   <el-icon><Close /></el-icon>
                 </el-button>
               </el-tooltip>
@@ -671,7 +709,11 @@ import {
 import 'trix'
 import { useRoute } from 'vue-router'
 import http from '@/utils/http'
-import { processText, loadSensitiveWords, detectAndReplaceSensitiveWords } from '@/utils/sensitiveWordUtils'
+import {
+  processText,
+  loadSensitiveWords,
+  detectAndReplaceSensitiveWords,
+} from '@/utils/sensitiveWordUtils'
 import type { TreeNodeData as ElTreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 import { marked } from 'marked'
 import RightToolbar from '@/components/RightToolbar/RightToolbar.vue'
@@ -685,7 +727,7 @@ import {
   type NamingContext,
   type UserPreferences,
   type GeneratedName,
-  createNamingEngine
+  createNamingEngine,
 } from '@/utils/naming'
 
 // Element Plus 图标
@@ -698,7 +740,7 @@ import {
   DocumentCopy,
   Star,
   FolderOpened,
-  Warning
+  Warning,
 } from '@element-plus/icons-vue'
 
 // 删除重复的 Chapter 接口定义，使用下面的定义
@@ -790,6 +832,7 @@ const editContent = ref('')
 
 const currentVolumeId = ref(0)
 const treeData = ref<TreeNode[]>([])
+const defaultExpandedKeys = ref<any[]>([])
 
 const appLoaded = ref(false)
 // 敏感词缓存
@@ -797,12 +840,14 @@ const sensitiveWords = ref<string[]>([])
 
 // 监听自动保存创建版本事件处理函数，更新当前版本ID
 const handleVersionCreated = (e: Event) => {
-  const detail = (e as CustomEvent).detail as { chapterId?: number; newVersionId?: number }
+  const detail = (e as CustomEvent).detail as {
+    chapterId?: number
+    newVersionId?: number
+  }
   if (detail?.chapterId && currentcheckNode.value?.id === detail.chapterId) {
     currentVersionId.value = detail.newVersionId
   }
 }
-
 
 onMounted(async () => {
   // 初始化数据
@@ -819,28 +864,50 @@ onMounted(async () => {
   const handleInsertImageEvent = (event: CustomEvent) => {
     handleInsertImage(event.detail.html)
   }
-  document.addEventListener('insertImage', handleInsertImageEvent as EventListener)
+  document.addEventListener(
+    'insertImage',
+    handleInsertImageEvent as EventListener
+  )
 
   // 监听自动保存创建版本事件，更新当前版本ID
-  window.addEventListener('versionCreated', handleVersionCreated as EventListener)
+  window.addEventListener(
+    'versionCreated',
+    handleVersionCreated as EventListener
+  )
 
   // 确保 DOM 完成更新后执行
   nextTick(() => {
     // 检查 treeData 的存在性，确保有数据和子节点存在
-    if (treeData.value && treeData.value[1]?.children?.[0]?.key) {
-      const firstChildKey = treeData.value[1].children[0].key
-      treeRef.value?.setCurrentKey(firstChildKey) // 第二个参数为 true 表示自动滚动
+    if (treeData.value && treeData.value.length > 0) {
+      // 查找第一个有子节点的分卷
+      let firstChapterKey = null
+      let parentVolumeKey = null
 
-      // 手动触发 node-click 事件，模拟用户点击行为
-      const selectedNode = treeRef.value?.getCurrentNode()
-      if (selectedNode) {
-        nodeClickHandler(selectedNode) // 调用点击事件处理函数
+      for (const volume of treeData.value) {
+        if (volume.children && volume.children.length > 0) {
+          firstChapterKey = volume.children[0].key
+          parentVolumeKey = volume.key
+          break
+        }
+      }
+
+      if (firstChapterKey) {
+        // 只展开当前选中章节的父卷
+        defaultExpandedKeys.value = [parentVolumeKey]
+
+        treeRef.value?.setCurrentKey(firstChapterKey, true) // 第二个参数为 true 表示自动滚动
+        // 手动触发 node-click 事件，模拟用户点击行为
+        const selectedNode = treeRef.value?.getCurrentNode()
+        if (selectedNode) {
+          nodeClickHandler(selectedNode) // 调用点击事件处理函数
+        }
+      } else {
+        console.warn('未找到可用的章节，无法设置默认选中项')
       }
     } else {
-      console.warn('treeData 或子节点不存在，无法设置默认选中项')
+      console.warn('treeData 不存在，无法设置默认选中项')
     }
 
-    
     // 设置自动保存
     setupAutoSave()
 
@@ -863,14 +930,50 @@ onMounted(async () => {
 
 const initTreeData = async () => {
   try {
-    const res = await http.get('/treeData')
+    console.log('路由参数:', route.params)
+    console.log('书籍ID:', bookId, '类型:', typeof bookId)
 
-    // 确保获取正确的数据格式
+    if (!bookId || isNaN(bookId) || bookId <= 0) {
+      console.error('无效的书籍ID:', bookId, '将使用默认书籍ID 1')
+      // 使用默认书籍ID或创建新数据
+      treeData.value = []
+      return
+    }
+
+    const res = await http.get(`/treeData?bookId=${bookId}`)
     const rawData = res.data?.data || res.data || []
-    treeData.value = rawData
-    console.log('树形数据:', JSON.stringify(rawData, null, 2))
+
+    // 如果没有数据，创建默认分卷
+    if (!rawData || rawData.length === 0) {
+      console.log('书籍ID', bookId, '没有分卷数据，创建默认分卷')
+      try {
+        const createRes = await http.post('/saveVolume', {
+          bookId: bookId,
+          title: '默认分卷',
+          order: 1,
+        })
+        const v = createRes?.data?.data
+        if (v?.id) {
+          // 成功创建后刷新一次树数据
+          const refreshed = await http.get(`/treeData?bookId=${bookId}`)
+          treeData.value = refreshed.data?.data || refreshed.data || []
+          ElMessage.success('已为该书创建默认分卷')
+        } else {
+          treeData.value = []
+        }
+      } catch (e) {
+        console.warn('创建默认分卷失败:', e)
+        treeData.value = []
+      }
+    } else {
+      treeData.value = rawData
+    }
+
+    console.log('书籍ID', bookId, '的树形数据:', JSON.stringify(treeData.value, null, 2))
   } catch (error) {
     console.error('获取树形数据失败', error)
+    // 设置默认数据防止页面崩溃
+    treeData.value = []
   }
 }
 
@@ -885,14 +988,15 @@ interface Tree {
 }
 
 // 自定义图标渲染函数
-const renderIcon = (node: TreeNode) => {
-  const hasChildren = Array.isArray(node.children)
-  const iconSrc = hasChildren
+const renderIcon = (node: any) => {
+  // 如果是分卷（有子节点或isVolumn为true）
+  const isVolume = node.isVolumn || (node.children && node.children.length > 0)
+  const iconSrc = isVolume
     ? './icon/a-weidakaidewenjianjiajiami.png'
     : './icon/dakaidewenjianjia.png'
 
   return h(ElImage, {
-    key: node.id,
+    key: node.id || node.key,
     src: iconSrc,
     style: { width: '15px', height: '15px' },
   })
@@ -1019,7 +1123,10 @@ const replace = () => {
     return
   }
 
-  if (currentMatchIndex.value >= 0 && currentMatchIndex.value < matches.value.length) {
+  if (
+    currentMatchIndex.value >= 0 &&
+    currentMatchIndex.value < matches.value.length
+  ) {
     try {
       // 选中当前匹配项
       const matchStartIndex = matches.value[currentMatchIndex.value]
@@ -1083,10 +1190,15 @@ const saveChapterContent = async (
 ): Promise<void> => {
   try {
     // 验证章节ID有效性（仅限当前章节）
-    if (!id || id <= 0 || !currentcheckNode.value || currentcheckNode.value.id !== id) {
+    if (
+      !id ||
+      id <= 0 ||
+      !currentcheckNode.value ||
+      currentcheckNode.value.id !== id
+    ) {
       console.warn('保存章节时ID无效或不匹配，跳过保存:', {
         saveId: id,
-        currentNodeId: currentcheckNode.value?.id
+        currentNodeId: currentcheckNode.value?.id,
       })
       return
     }
@@ -1097,7 +1209,7 @@ const saveChapterContent = async (
     console.log('开始保存章节:', {
       id,
       title: currentcheckNode.value?.title,
-      contentLength: chapterContent.length
+      contentLength: chapterContent.length,
     })
 
     const res = await http.post('/saveChapter', {
@@ -1121,7 +1233,10 @@ const saveChapterContent = async (
 }
 
 // 批量保存专用函数（用于全书替换）- 绕过当前章节限制
-const saveChapterContentDirect = async (id: number, content: string): Promise<boolean> => {
+const saveChapterContentDirect = async (
+  id: number,
+  content: string
+): Promise<boolean> => {
   try {
     if (!id || id <= 0) {
       console.warn('批量保存：章节ID无效', { id })
@@ -1131,7 +1246,7 @@ const saveChapterContentDirect = async (id: number, content: string): Promise<bo
     console.log('批量保存章节:', {
       id,
       contentLength: content.length,
-      contentPreview: content.substring(0, 100) + '...'
+      contentPreview: content.substring(0, 100) + '...',
     })
 
     const res = await http.post('/saveChapter', {
@@ -1164,7 +1279,9 @@ const setupAutoSave = () => {
       if (currentcheckNode.value && currentcheckNode.value.id) {
         try {
           // 获取Trix编辑器实例
-          const trixEditorElement = document.querySelector('trix-editor') as HTMLElement
+          const trixEditorElement = document.querySelector(
+            'trix-editor'
+          ) as HTMLElement
           const trixEditorInstance = (trixEditorElement as any)?.editor
 
           let editorContent = ''
@@ -1178,23 +1295,39 @@ const setupAutoSave = () => {
                 editorContent = trixEditorInstance.value || ''
               }
             } catch (e) {
-              console.warn('Trix editor getDocument failed, trying fallback:', e)
+              console.warn(
+                'Trix editor getDocument failed, trying fallback:',
+                e
+              )
               editorContent = trixEditorInstance.value || ''
             }
           } else {
             // 如果无法获取编辑器实例，直接从input元素获取
-            const trixInput = document.querySelector('input[id="trix-editor"]') as HTMLInputElement
+            const trixInput = document.querySelector(
+              'input[id="trix-editor"]'
+            ) as HTMLInputElement
             editorContent = trixInput?.value || ''
           }
 
-          console.log('创建自动版本，章节ID:', currentcheckNode.value.id, '内容长度:', editorContent.length, '编辑器实例存在:', !!trixEditorInstance)
+          console.log(
+            '创建自动版本，章节ID:',
+            currentcheckNode.value.id,
+            '内容长度:',
+            editorContent.length,
+            '编辑器实例存在:',
+            !!trixEditorInstance
+          )
 
           // 只有在有实际内容时才创建版本
           if (editorContent && editorContent.trim().length > 0) {
-            VersionService.scheduleAutoSave(currentcheckNode.value.id, {
-              content_html: editorContent,
-              source: 'auto'
-            }, 30000)
+            VersionService.scheduleAutoSave(
+              currentcheckNode.value.id,
+              {
+                content_html: editorContent,
+                source: 'auto',
+              },
+              30000
+            )
           } else {
             console.log('编辑器内容为空，跳过版本创建')
           }
@@ -1227,8 +1360,26 @@ const setupAutoSave = () => {
 const nodeClickHandler = (data: ElTreeNodeData) => {
   const treeData = data as unknown as TreeNodeData
 
-  if (treeData.children && treeData.children.length > 0) {
+  // 只有章节类型的节点才能加载内容，分卷节点如果有子节点则不加载内容
+  if (treeData.type === 'volume') {
+    // 如果是分卷且有子节点，不加载内容
+    if (treeData.children && treeData.children.length > 0) {
+      return
+    }
+    // 如果是空的分卷，也不加载章节内容（避免把volume ID当作chapter ID）
+    console.log('点击了空分卷:', treeData.label, 'ID:', treeData.id, '不加载内容')
     return
+  }
+
+  // 只有章节类型才继续执行
+  if (treeData.type !== 'chapter') {
+    console.log('非章节节点，跳过内容加载:', treeData.type, treeData.label)
+    return
+  }
+
+  // 确保当前章节的父卷被展开
+  if (treeData.vid) {
+    defaultExpandedKeys.value = [treeData.vid]
   }
 
   // 清除当前的自动保存定时器，避免切换章节时保存错误的内容
@@ -1240,7 +1391,7 @@ const nodeClickHandler = (data: ElTreeNodeData) => {
 
   // 立即保存之前的自动版本（如果有的话）
   if (currentcheckNode.value) {
-    VersionService.flushAutoSave(currentcheckNode.value.id).catch(error => {
+    VersionService.flushAutoSave(currentcheckNode.value.id).catch((error) => {
       console.error('切换章节时保存自动版本失败:', error)
     })
   }
@@ -1323,13 +1474,17 @@ const getTrixEditor = () => {
     instance: trixEditorInstance,
     // 便捷方法
     getSelectedRange: () => trixEditorInstance.getSelectedRange(),
-    setSelectedRange: (range: [number, number]) => trixEditorInstance.setSelectedRange(range),
+    setSelectedRange: (range: [number, number]) =>
+      trixEditorInstance.setSelectedRange(range),
     getDocument: () => trixEditorInstance.getDocument(),
-    activateAttribute: (attr: string) => trixEditorInstance.activateAttribute(attr),
-    deactivateAttribute: (attr: string) => trixEditorInstance.deactivateAttribute(attr),
+    activateAttribute: (attr: string) =>
+      trixEditorInstance.activateAttribute(attr),
+    deactivateAttribute: (attr: string) =>
+      trixEditorInstance.deactivateAttribute(attr),
     insertString: (text: string) => trixEditorInstance.insertString(text),
     insertHTML: (html: string) => trixEditorInstance.insertHTML(html),
-    deleteInDirection: (direction: string) => trixEditorInstance.deleteInDirection(direction)
+    deleteInDirection: (direction: string) =>
+      trixEditorInstance.deleteInDirection(direction),
   }
 }
 
@@ -1345,7 +1500,7 @@ const inputSearchTextHandler = async (currentValue: string) => {
   console.log('搜索调试信息:', {
     搜索内容: currentSearchValue.value,
     章节内容长度: chapterContent.length,
-    章节内容预览: chapterContent.substring(0, 100) + '...'
+    章节内容预览: chapterContent.substring(0, 100) + '...',
   })
 
   if (!currentSearchValue.value) {
@@ -1373,7 +1528,7 @@ const inputSearchTextHandler = async (currentValue: string) => {
   console.log('搜索结果:', {
     匹配项数量: matches.value.length,
     匹配位置: matches.value,
-    当前匹配索引: currentMatchIndex.value
+    当前匹配索引: currentMatchIndex.value,
   })
 
   // 高亮第一个匹配项
@@ -1400,7 +1555,10 @@ const clearHighlight = () => {
       .replace(/<mark[^>]*class="[^"]*?\bsearch-highlight\b[^"]*"[^>]*>/gi, '')
       .replace(/<\/mark>/gi, '')
       // 移除带有 search-highlight class 且有背景色样式的 strong 标签
-      .replace(/<strong[^>]*class="[^"]*?\bsearch-highlight\b[^"]*"[^>]*style="background-color:[^"]*"[^>]*>/gi, '')
+      .replace(
+        /<strong[^>]*class="[^"]*?\bsearch-highlight\b[^"]*"[^>]*style="background-color:[^"]*"[^>]*>/gi,
+        ''
+      )
       .replace(/<\/strong>/gi, '')
 
     // 如果内容有变化，则更新编辑器
@@ -1421,7 +1579,7 @@ const highlightCurrentMatch = () => {
     编辑器实例: !!trixEditorInstance,
     匹配项数量: matches.value.length,
     当前索引: currentMatchIndex.value,
-    搜索内容: currentSearchValue.value
+    搜索内容: currentSearchValue.value,
   })
 
   if (!trixEditorInstance || matches.value.length === 0) {
@@ -1452,7 +1610,7 @@ const highlightCurrentMatch = () => {
       匹配位置: currentPosition,
       结束位置: matchEnd,
       匹配文本长度: searchValue.length,
-      总文本长度: trixEditorInstance.getDocument().toString().length
+      总文本长度: trixEditorInstance.getDocument().toString().length,
     })
 
     // 选中要高亮的文本
@@ -1465,13 +1623,16 @@ const highlightCurrentMatch = () => {
 
     // 保持选中状态指定时间后取消选中，但保留用户可以清楚看到匹配位置
     setTimeout(() => {
-      if (trixEditorInstance && trixEditorInstance.getSelectedRange()[0] !== trixEditorInstance.getSelectedRange()[1]) {
+      if (
+        trixEditorInstance &&
+        trixEditorInstance.getSelectedRange()[0] !==
+          trixEditorInstance.getSelectedRange()[1]
+      ) {
         // 将光标移动到匹配项之后，而不是取消选中
         trixEditorInstance.setSelectedRange([matchEnd, matchEnd])
         console.log('已取消选中状态，光标移动到匹配项之后')
       }
     }, SEARCH_HIGHLIGHT_DURATION)
-
   } catch (error) {
     console.error('高亮匹配项时出错:', error)
   }
@@ -1481,7 +1642,7 @@ const highlightCurrentMatch = () => {
 const goToNextMatch = () => {
   console.log('点击下一个匹配项:', {
     当前索引: currentMatchIndex.value,
-    总匹配数: matches.value.length
+    总匹配数: matches.value.length,
   })
 
   if (matches.value.length > 0) {
@@ -1492,7 +1653,7 @@ const goToNextMatch = () => {
     console.log('切换到下一个匹配项:', {
       旧索引: oldIndex,
       新索引: currentMatchIndex.value,
-      匹配位置: matches.value[currentMatchIndex.value]
+      匹配位置: matches.value[currentMatchIndex.value],
     })
 
     highlightCurrentMatch() // 高亮显示
@@ -1506,7 +1667,7 @@ const goToNextMatch = () => {
 const goToPreviousMatch = () => {
   console.log('点击上一个匹配项:', {
     当前索引: currentMatchIndex.value,
-    总匹配数: matches.value.length
+    总匹配数: matches.value.length,
   })
 
   if (matches.value.length > 0) {
@@ -1518,7 +1679,7 @@ const goToPreviousMatch = () => {
     console.log('切换到上一个匹配项:', {
       旧索引: oldIndex,
       新索引: currentMatchIndex.value,
-      匹配位置: matches.value[currentMatchIndex.value]
+      匹配位置: matches.value[currentMatchIndex.value],
     })
 
     highlightCurrentMatch() // 高亮显示
@@ -1557,7 +1718,10 @@ const replaceInChapter = () => {
     }
 
     // 执行替换
-    const updatedContent = chapterContent.replace(regex, replaceForm.value.replaceText)
+    const updatedContent = chapterContent.replace(
+      regex,
+      replaceForm.value.replaceText
+    )
 
     // 更新富文本内容
     trixEditorInstance.setSelectedRange([0, chapterContent.length])
@@ -1570,7 +1734,6 @@ const replaceInChapter = () => {
     currentMatchIndex.value = -1
 
     ElMessage.success('本章替换完成，共替换了 ' + replacementCount + ' 处')
-
   } catch (error) {
     console.error('本章替换失败:', error)
     ElMessage.error('本章替换失败，请重试')
@@ -1634,7 +1797,8 @@ const replaceInBook = async (oldName: string, newName: string) => {
           console.log('处理章节:', chapter)
 
           // 确保章节有有效的ID
-          const chapterId = chapter.id || chapter.chapter_id || chapter.chapterId
+          const chapterId =
+            chapter.id || chapter.chapter_id || chapter.chapterId
           if (!chapterId) {
             console.warn('章节没有有效的ID:', chapter)
             failedChapters.push(chapter.title || chapter.name || '未知章节')
@@ -1655,10 +1819,15 @@ const replaceInBook = async (oldName: string, newName: string) => {
               const updatedContent = chapterContent.replace(regex, newName)
 
               // 使用批量保存专用函数
-              const saveSuccess = await saveChapterContentDirect(chapterId, updatedContent)
+              const saveSuccess = await saveChapterContentDirect(
+                chapterId,
+                updatedContent
+              )
               if (saveSuccess) {
                 totalReplacements += replacementCount
-                console.log(`章节 ${chapter.title || chapterId} 替换了 ${replacementCount} 处`)
+                console.log(
+                  `章节 ${chapter.title || chapterId} 替换了 ${replacementCount} 处`
+                )
               } else {
                 failedChapters.push(chapter.title || `章节 ${chapterId}`)
                 console.error(`章节 ${chapter.title || chapterId} 保存失败`)
@@ -1671,11 +1840,19 @@ const replaceInBook = async (oldName: string, newName: string) => {
           processedChapters++
 
           // 更新进度信息
-          updateProgress(`正在替换中... ${processedChapters}/${allChapters.length} 章节`)
-
+          updateProgress(
+            `正在替换中... ${processedChapters}/${allChapters.length} 章节`
+          )
         } catch (chapterError) {
-          console.error(`处理章节 ${chapter.title || chapter.id || '未知'} 时出错:`, chapterError)
-          failedChapters.push(chapter.title || chapter.name || `章节 ${chapter.id || chapter.chapter_id || '未知'}`)
+          console.error(
+            `处理章节 ${chapter.title || chapter.id || '未知'} 时出错:`,
+            chapterError
+          )
+          failedChapters.push(
+            chapter.title ||
+              chapter.name ||
+              `章节 ${chapter.id || chapter.chapter_id || '未知'}`
+          )
         }
       }
 
@@ -1694,7 +1871,7 @@ const replaceInBook = async (oldName: string, newName: string) => {
 
         await ElMessageBox.alert(resultMessage, '替换完成', {
           confirmButtonText: '确定',
-          type: totalReplacements > 0 ? 'success' : 'info'
+          type: totalReplacements > 0 ? 'success' : 'info',
         })
       } else {
         ElMessage.info('没有找到需要替换的内容')
@@ -1704,12 +1881,10 @@ const replaceInBook = async (oldName: string, newName: string) => {
       if (currentcheckNode.value) {
         await getChapterContent(currentcheckNode.value.id)
       }
-
     } catch (progressError) {
       progressMessage.close()
       throw progressError
     }
-
   } catch (error) {
     if (error !== 'cancel') {
       console.error('全书替换失败:', error)
@@ -1771,7 +1946,7 @@ const userPreferences = ref<UserPreferences>({
   complexityPreference: 'medium',
   culturalPreference: ['chinese'],
   favoriteElements: [],
-  avoidedElements: []
+  avoidedElements: [],
 })
 
 // 命名历史记录
@@ -1786,7 +1961,10 @@ const namingEngineRef = ref<IntelligentNamingEngine | null>(null)
 const namingSeed = ref<number>(Date.now())
 const getNamingEngine = () => {
   if (!namingEngineRef.value) {
-    namingEngineRef.value = createNamingEngine(userPreferences.value, namingSeed.value)
+    namingEngineRef.value = createNamingEngine(
+      userPreferences.value,
+      namingSeed.value
+    )
   }
   return namingEngineRef.value
 }
@@ -1800,7 +1978,7 @@ const updateUserPreferences = (generatedName: GeneratedName) => {
   const engine = getNamingEngine()
   engine.updateUserPreferencesDirect({
     favoriteElements: [...userPreferences.value.favoriteElements],
-    avoidedElements: [...userPreferences.value.avoidedElements]
+    avoidedElements: [...userPreferences.value.avoidedElements],
   })
 }
 
@@ -1822,12 +2000,13 @@ const generateName = async () => {
     culture,
     userPreferences: userPreferences.value,
     complexity: userPreferences.value.complexityPreference,
-    count: 1
+    count: 1,
   }
 
   // 如果是人物类型，需要包含性别偏好
   if (category === 'person') {
-    userPreferences.value.stylePreference = getNameform.value.gender || 'balanced'
+    userPreferences.value.stylePreference =
+      getNameform.value.gender || 'balanced'
   }
 
   // 如果是地点类型，需要包含子类别
@@ -1843,16 +2022,18 @@ const generateName = async () => {
     if (result.names.length > 0) {
       // 敏感词过滤
       const nameText = result.names[0].text
-      const replaced = sensitiveWords.value.length > 0
-        ? detectAndReplaceSensitiveWords(nameText, sensitiveWords.value)
-        : nameText
+      const replaced =
+        sensitiveWords.value.length > 0
+          ? detectAndReplaceSensitiveWords(nameText, sensitiveWords.value)
+          : nameText
       if (replaced !== nameText && replaced.includes('*')) {
         ElMessage.warning('生成结果包含敏感词，已过滤')
         return
       }
       // 添加到显示列表
       generatedNames.value.unshift(nameText)
-      if (generatedNames.value.length > 20) { // 限制显示列表长度
+      if (generatedNames.value.length > 20) {
+        // 限制显示列表长度
         generatedNames.value = generatedNames.value.slice(0, 20)
       }
 
@@ -1889,12 +2070,13 @@ const generateBatchNames = async (count: number) => {
     culture,
     userPreferences: userPreferences.value,
     complexity: userPreferences.value.complexityPreference,
-    count
+    count,
   }
 
   // 如果是人物类型，需要包含性别偏好
   if (category === 'person') {
-    userPreferences.value.stylePreference = getNameform.value.gender || 'balanced'
+    userPreferences.value.stylePreference =
+      getNameform.value.gender || 'balanced'
   }
 
   // 如果是地点类型，需要包含子类别
@@ -1910,10 +2092,11 @@ const generateBatchNames = async (count: number) => {
     if (result.names.length > 0) {
       // 添加到显示列表（敏感词过滤与去重）
       const nameSet = new Set<string>()
-      result.names.forEach(name => {
-        const replaced = sensitiveWords.value.length > 0
-          ? detectAndReplaceSensitiveWords(name.text, sensitiveWords.value)
-          : name.text
+      result.names.forEach((name) => {
+        const replaced =
+          sensitiveWords.value.length > 0
+            ? detectAndReplaceSensitiveWords(name.text, sensitiveWords.value)
+            : name.text
         if (replaced !== name.text && replaced.includes('*')) {
           return
         }
@@ -1922,7 +2105,8 @@ const generateBatchNames = async (count: number) => {
           generatedNames.value.unshift(name.text)
         }
       })
-      if (generatedNames.value.length > 50) { // 批量生成时增加显示限制
+      if (generatedNames.value.length > 50) {
+        // 批量生成时增加显示限制
         generatedNames.value = generatedNames.value.slice(0, 50)
       }
 
@@ -1932,7 +2116,9 @@ const generateBatchNames = async (count: number) => {
         namingHistory.value = namingHistory.value.slice(0, maxHistoryItems)
       }
 
-      ElMessage.success('批量生成成功，共生成 ' + result.names.length + ' 个名称')
+      ElMessage.success(
+        '批量生成成功，共生成 ' + result.names.length + ' 个名称'
+      )
     } else {
       ElMessage.warning('未能生成合适的名称，请重试')
     }
@@ -1959,7 +2145,7 @@ const insertNameToEditor = (name: string) => {
     // 获取编辑器实例并插入文本
     const editor = document.querySelector('trix-editor')
     if (editor) {
-      const trixEditor = (editor as any)
+      const trixEditor = editor as any
       trixEditor.insertString(name)
       ElMessage.success('已插入到编辑器')
     } else {
@@ -1988,7 +2174,7 @@ const addToFavorites = (name: string) => {
 const addToBlocked = (name: string) => {
   if (!userPreferences.value.avoidedElements.includes(name)) {
     userPreferences.value.avoidedElements.push(name)
-    generatedNames.value = generatedNames.value.filter(n => n !== name)
+    generatedNames.value = generatedNames.value.filter((n) => n !== name)
     ElMessage.success('已屏蔽该名称')
   } else {
     ElMessage.info('该名称已在屏蔽列表中')
@@ -2002,20 +2188,18 @@ const clearAllNames = () => {
     return
   }
 
-  ElMessageBox.confirm(
-    '确定要清空所有生成的名称吗？',
-    '清空确认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  ).then(() => {
-    generatedNames.value = []
-    ElMessage.success('已清空所有名称')
-  }).catch(() => {
-    // 用户取消操作
+  ElMessageBox.confirm('确定要清空所有生成的名称吗？', '清空确认', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
   })
+    .then(() => {
+      generatedNames.value = []
+      ElMessage.success('已清空所有名称')
+    })
+    .catch(() => {
+      // 用户取消操作
+    })
 }
 
 const batchCopyNames = () => {
@@ -2025,18 +2209,25 @@ const batchCopyNames = () => {
   }
 
   const namesText = generatedNames.value.join('\n')
-  navigator.clipboard.writeText(namesText).then(() => {
-    ElMessage.success('已复制 ' + generatedNames.value.length + ' 个名称到剪贴板')
-  }).catch(() => {
-    // 降级方案
-    const textarea = document.createElement('textarea')
-    textarea.value = namesText
-    document.body.appendChild(textarea)
-    textarea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textarea)
-    ElMessage.success('已复制 ' + generatedNames.value.length + ' 个名称到剪贴板')
-  })
+  navigator.clipboard
+    .writeText(namesText)
+    .then(() => {
+      ElMessage.success(
+        '已复制 ' + generatedNames.value.length + ' 个名称到剪贴板'
+      )
+    })
+    .catch(() => {
+      // 降级方案
+      const textarea = document.createElement('textarea')
+      textarea.value = namesText
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+      ElMessage.success(
+        '已复制 ' + generatedNames.value.length + ' 个名称到剪贴板'
+      )
+    })
 }
 
 const regenerateNames = async () => {
@@ -2092,12 +2283,13 @@ const saveVolumn = async () => {
 
   // 创建新分卷对象
   const newVolumn = {
-    id: response.data.id,
-    key: treeData.value.length + 2,
-    label: response.data.title,
-    title: response.data.title,
-    order: treeData.value.length + 2,
-    vid: response.data.id,
+    id: response.id,
+    key: response.id,
+    label: response.title,
+    title: response.title,
+    type: 'volume',
+    order: response.order_index ?? (treeData.value.length + 2),
+    vid: response.id,
     children: [], // 新建的分卷可能有章节，因此初始化一个空数组
     isVolumn: true,
   }
@@ -2105,9 +2297,25 @@ const saveVolumn = async () => {
   // 将新分卷加入到 volumnTreeData 中
   treeData.value.push(newVolumn)
   // 使用 nextTick 确保 ElTree 组件在 DOM 中已更新后再调用 refresh
+  await nextTick()
+
+  // 设置当前卷ID
   currentVolumeId.value = newVolumn.id
+
+  // 只展开新创建的分卷，其他卷保持折叠状态
+  defaultExpandedKeys.value = [newVolumn.key]
+  treeRef.value?.setCurrentKey(newVolumn.key)
+
   // 关闭对话框
   closeVolumnDialog()
+
+  // 添加成功提示，包含更多详细信息
+  ElMessage({
+    message: `分卷"${newVolumn.title}"创建成功`,
+    type: 'success',
+    duration: 3000,
+    showClose: true
+  })
 }
 
 // 修改saveVolumnToBackend函数
@@ -2122,7 +2330,7 @@ const saveVolumnToBackend = async () => {
 
     // 弹出保存成功的提示
     ElMessage.success('新建分卷成功')
-    return response
+    return response.data?.data
   } catch (error) {
     console.error('保存失败:', error)
     ElMessage.error('保存失败')
@@ -2131,44 +2339,147 @@ const saveVolumnToBackend = async () => {
 }
 
 const createChapter = async () => {
-  // id, content,volume_id,title,\`order\`
+  try {
+    // 如果没有选中的分卷，先创建一个默认分卷
+    let vid = currentVolumeId.value
+    if (!vid) {
+      try {
+        const volRes = await http.post('/saveVolume', {
+          bookId: bookId,
+          title: '新分卷',
+          order: (treeData.value?.length || 0) + 1,
+        })
 
-  let vid = currentVolumeId.value
-  // currentcheckNode.value?.vid
-  //   ? currentcheckNode.value.vid
-  //   : currentVolumeId.value
+        const v = volRes.data?.data
+        if (v?.id) {
+          const newVolumeNode = {
+            id: v.id,
+            key: v.id,
+            label: v.title,
+            title: v.title,
+            type: 'volume',
+            order: v.order_index ?? ((treeData.value?.length || 0) + 1),
+            vid: v.id,
+            children: [],
+            isVolumn: true,
+          }
+          treeData.value.push(newVolumeNode)
+          currentVolumeId.value = v.id
+          vid = v.id
+        } else {
+          ElMessage.error('创建默认分卷失败：服务器返回无效数据')
+          return
+        }
+      } catch (e) {
+        console.error('创建默认分卷失败:', e)
+        const errorMsg = e?.response?.data?.message || e?.message || '创建分卷失败，无法新建章节'
+        ElMessage.error(errorMsg)
+        return
+      }
+    }
 
-  const children = treeData.value.find((e) => e.id === vid)?.children
+  // 根据当前分卷的 children 计算章节顺序
+  const volumeNode = treeData.value.find((e) => e.id === vid)
+  const children = volumeNode?.children || []
+  const order = children.length + 1
 
-  let order = children ? children.length + 1 : 1
-
+  const title = '第' + order + '章'
   const param = {
     content: '',
     vid: vid,
-    title: '第' + order + '章',
-    order: order,
+    title,
+    order,
   }
 
   const res = await http.post('/createChapter', param)
+  console.log('创建章节响应数据:', res.data)
+  console.log('响应数据结构:', {
+    success: res.data?.success,
+    message: res.data?.message,
+    data: res.data?.data,
+    hasId: !!res.data?.data?.id
+  })
+
+  // 根据实际返回结构，数据在 res.data.data 中
+  const created = res.data?.data
+  let chapterId = created?.id
+
+  // 如果没有 id 字段，尝试从 lastID 获取（SQLite 响应格式）
+  if (!chapterId && created?.lastID) {
+    chapterId = created.lastID
+    console.log('使用 lastID 作为章节ID:', chapterId)
+  }
+
+  if (!chapterId) {
+    // 检查是否数据结构不同
+    if (res.data?.success && res.data?.data) {
+      console.log('数据存在但ID可能为:', Object.keys(res.data.data))
+    }
+    const errorMsg = res.data?.message || res.data?.error || '新建章节失败，服务器返回无效数据'
+    ElMessage.error(errorMsg)
+    console.error('新建章节失败 - 详细信息:', {
+      response: res.data,
+      created: created,
+      hasData: !!res.data?.data,
+      chapterId: chapterId
+    })
+    return
+  }
 
   const key = countNodes()
-  children?.push({
-    id: res.data.data.id,
+  volumeNode!.children.push({
+    id: chapterId,
     key: key,
-    label: '第' + order + '章',
-    order: order,
-    title: '第' + order + '章',
+    label: created.title || title,
+    title: created.title || title,
+    type: 'chapter',
+    order: created.order_index ?? order,
     vid: vid,
+    isVolumn: false,
   })
+
   // 使用 nextTick 确保 DOM 完全更新后再设置选中状态
   await nextTick()
-  treeRef.value?.setCurrentKey(key, true) // 第二个参数为 true 表示自动滚动
 
-  // 手动触发 node-click 事件，模拟用户点击行为
+  // 只展开当前章节的父卷，其他卷保持折叠状态
+  if (volumeNode) {
+    // 更新展开的卷列表，只包含当前父卷
+    defaultExpandedKeys.value = [volumeNode.key]
+  }
+
+  // 选中新创建的章节并自动滚动到视图
+  treeRef.value?.setCurrentKey(key, true)
+
+  // 手动触发 node-click 事件，模拟用户点击行为，进入编辑状态
   const selectedNode = treeRef.value?.getCurrentNode()
-
   if (selectedNode) {
-    nodeClickHandler(selectedNode) // 调用点击事件处理函数
+    // 添加短暂延迟确保UI响应
+    setTimeout(() => {
+      nodeClickHandler(selectedNode)
+    }, 100)
+  }
+
+  // 添加创建成功的视觉反馈
+  ElMessage({
+    message: `章节"${title}"创建成功，已自动选中`,
+    type: 'success',
+    duration: 3000,
+    showClose: true
+  })
+
+  // 添加短暂的高亮效果 - 3秒后自动移除
+  const newChapterKey = key
+  setTimeout(() => {
+    // 移除高亮类
+    const treeNodeEl = document.querySelector(`.el-tree-node[data-key="${newChapterKey}"]`)
+    if (treeNodeEl) {
+      treeNodeEl.classList.remove('newly-created-node')
+    }
+  }, 3000)
+  } catch (error) {
+    console.error('创建章节过程中发生错误:', error)
+    const errorMsg = error?.response?.data?.message || error?.message || '创建章节失败，请稍后重试'
+    ElMessage.error(errorMsg)
   }
 }
 
@@ -2186,7 +2497,6 @@ const countNodes = () => {
 
   return count
 }
-
 
 // 处理图片插入
 const handleInsertImage = (html: string) => {
@@ -2215,7 +2525,10 @@ const handleInsertImage = (html: string) => {
         // 验证插入是否成功
         setTimeout(() => {
           const editorContent = trixEditorInstance.getDocument().toString()
-          if (editorContent.includes(img.src) || editorContent.includes(img.alt)) {
+          if (
+            editorContent.includes(img.src) ||
+            editorContent.includes(img.alt)
+          ) {
             console.log('图片插入成功')
           } else {
             console.warn('图片可能未正确插入，尝试备选方案')
@@ -2224,7 +2537,6 @@ const handleInsertImage = (html: string) => {
             trixEditorInstance.insertHTML(simpleHtml)
           }
         }, 100)
-
       } else {
         console.log('未检测到图片，直接插入HTML')
         trixEditorInstance.insertHTML(html)
@@ -2245,7 +2557,6 @@ const handleInsertImage = (html: string) => {
   }
 }
 
-
 // 图片上传前的验证
 const beforeImageUpload = (file: File) => {
   const isImage = file.type.startsWith('image/')
@@ -2261,7 +2572,6 @@ const beforeImageUpload = (file: File) => {
   }
   return true
 }
-
 
 // 获取章节内容
 const getChapterContent = async (id: number): Promise<void> => {
@@ -2285,9 +2595,16 @@ const getChapterContent = async (id: number): Promise<void> => {
         content = response.data
       } else if (response.data.data && typeof response.data.data === 'string') {
         content = response.data.data
-      } else if (response.data.data && response.data.data.content && typeof response.data.data.content === 'string') {
+      } else if (
+        response.data.data &&
+        response.data.data.content &&
+        typeof response.data.data.content === 'string'
+      ) {
         content = response.data.data.content
-      } else if (response.data.content && typeof response.data.content === 'string') {
+      } else if (
+        response.data.content &&
+        typeof response.data.content === 'string'
+      ) {
         content = response.data.content
       } else {
         console.warn('未知的API响应格式:', response.data)
@@ -2296,6 +2613,21 @@ const getChapterContent = async (id: number): Promise<void> => {
     }
 
     trixContent.value = content
+
+    // 同步当前版本ID（如果接口提供）
+    try {
+      const newVid = response?.data?.data?.current_version_id
+      if (typeof newVid === 'number') {
+        currentVersionId.value = newVid
+      } else if (
+        response?.data?.current_version_id &&
+        typeof response.data.current_version_id === 'number'
+      ) {
+        currentVersionId.value = response.data.current_version_id
+      }
+    } catch (e) {
+      // ignore parsing errors, keep currentVersionId unchanged
+    }
 
     // 设置编辑器内容
     nextTick(() => {
@@ -2335,11 +2667,16 @@ const getCurrentEditorContent = (): string => {
 const getChapters = async (volumeId: number): Promise<Chapter[]> => {
   try {
     // 从treeData中提取指定volume的章节
-    const response = await http.get('/treeData')
+    const response = await http.get('/treeData', {
+      params: { bookId },
+    })
     const treeData = response.data.data || response.data
 
     // 递归查找指定volumeId的章节
-    const findChaptersInVolume = (items: any[], targetVolumeId: number): Chapter[] => {
+    const findChaptersInVolume = (
+      items: any[],
+      targetVolumeId: number
+    ): Chapter[] => {
       const chapters: Chapter[] = []
 
       for (const item of items) {
@@ -2356,7 +2693,7 @@ const getChapters = async (volumeId: number): Promise<Chapter[]> => {
                   bookId: item.bookId || 1,
                   order: chapters.length + 1,
                   created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
+                  updated_at: new Date().toISOString(),
                 })
               }
             }
@@ -2385,7 +2722,7 @@ const updateChapterContent = async (
     // 使用现有的saveChapter API
     await http.post('/saveChapter', {
       id: chapterId,
-      content: content
+      content: content,
     })
   } catch (error) {
     console.error('更新章节内容失败:', error)
@@ -2424,12 +2761,19 @@ const handleReplaceInBook = () => {
 }
 
 // 处理版本回退
-const handleVersionReverted = async (data: { chapterId: number; content: string }) => {
+const handleVersionReverted = async (data: {
+  chapterId: number
+  content: string
+  newVersionId?: number
+}) => {
   try {
     console.log('处理版本回退:', data)
 
     // 如果回退的是当前章节，更新编辑器内容
-    if (currentcheckNode.value && currentcheckNode.value.id === data.chapterId) {
+    if (
+      currentcheckNode.value &&
+      currentcheckNode.value.id === data.chapterId
+    ) {
       const trixEditor = document.querySelector('trix-editor') as HTMLElement
       if (trixEditor) {
         const trixEditorInstance = (trixEditor as any).editor
@@ -2441,6 +2785,11 @@ const handleVersionReverted = async (data: { chapterId: number; content: string 
           trixContent.value = data.content
           saveStatus.value = 'saved'
 
+          // 同步当前版本ID（如果载荷提供）
+          if (typeof data.newVersionId === 'number') {
+            currentVersionId.value = data.newVersionId
+          }
+
           ElMessage.success('内容已回退到指定版本')
         }
       }
@@ -2451,15 +2800,19 @@ const handleVersionReverted = async (data: { chapterId: number; content: string 
   }
 }
 
-
-
 // 添加onUnmounted函数来清理资源
 onUnmounted(() => {
   // 移除图片插入事件监听器
-  document.removeEventListener('insertImage', handleInsertImage as EventListener)
+  document.removeEventListener(
+    'insertImage',
+    handleInsertImage as EventListener
+  )
 
   // 移除版本创建事件监听器
-  window.removeEventListener('versionCreated', handleVersionCreated as EventListener)
+  window.removeEventListener(
+    'versionCreated',
+    handleVersionCreated as EventListener
+  )
 
   // 清理自动保存定时器
   if (saveInterval.value) {
@@ -2850,7 +3203,8 @@ onUnmounted(() => {
 
             // 编辑器内容区域
             .trix-content {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                'Helvetica Neue', Arial, sans-serif;
               font-size: inherit;
               line-height: inherit;
               color: inherit;
@@ -2870,26 +3224,49 @@ onUnmounted(() => {
               }
 
               // 处理长文本不换行的情况
-              span, strong, em, b, i, u, s {
+              span,
+              strong,
+              em,
+              b,
+              i,
+              u,
+              s {
                 word-wrap: break-word;
                 word-break: break-word;
                 overflow-wrap: break-word;
               }
 
               // 标题样式
-              h1, h2, h3, h4, h5, h6 {
+              h1,
+              h2,
+              h3,
+              h4,
+              h5,
+              h6 {
                 margin: clamp(1rem, 2vh, 1.5rem) 0 clamp(0.5rem, 1vh, 0.75rem) 0;
                 font-weight: 600;
                 line-height: 1.3;
                 color: #2c3e50;
               }
 
-              h1 { font-size: clamp(1.5rem, 3vw, 2rem); }
-              h2 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
-              h3 { font-size: clamp(1.1rem, 2vw, 1.5rem); }
-              h4 { font-size: clamp(1rem, 1.8vw, 1.25rem); }
-              h5 { font-size: clamp(0.9rem, 1.6vw, 1.1rem); }
-              h6 { font-size: clamp(0.8rem, 1.4vw, 1rem); }
+              h1 {
+                font-size: clamp(1.5rem, 3vw, 2rem);
+              }
+              h2 {
+                font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+              }
+              h3 {
+                font-size: clamp(1.1rem, 2vw, 1.5rem);
+              }
+              h4 {
+                font-size: clamp(1rem, 1.8vw, 1.25rem);
+              }
+              h5 {
+                font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+              }
+              h6 {
+                font-size: clamp(0.8rem, 1.4vw, 1rem);
+              }
 
               // 段落样式
               p {
@@ -2900,7 +3277,8 @@ onUnmounted(() => {
               }
 
               // 列表样式
-              ul, ol {
+              ul,
+              ol {
                 margin: clamp(0.5rem, 1vh, 0.75rem) 0;
                 padding-left: clamp(1.5rem, 3vw, 2rem);
 
@@ -2928,7 +3306,8 @@ onUnmounted(() => {
                 background-color: #f6f8fa;
                 border-radius: clamp(4px, 0.5vw, 8px);
                 overflow-x: auto;
-                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono',
+                  Menlo, monospace;
                 font-size: clamp(0.8rem, 1vw, 0.9rem);
                 line-height: 1.5;
 
@@ -2946,7 +3325,8 @@ onUnmounted(() => {
                 padding: 0.2em 0.4em;
                 border-radius: 3px;
                 font-size: 85%;
-                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono',
+                  Menlo, monospace;
                 word-wrap: break-word;
                 word-break: break-word;
                 overflow-wrap: break-word;
@@ -2986,9 +3366,11 @@ onUnmounted(() => {
                 display: block;
                 white-space: nowrap;
 
-                th, td {
+                th,
+                td {
                   border: 1px solid #e0e0e0;
-                  padding: clamp(0.5rem, 1vh, 0.75rem) clamp(0.75rem, 1.5vw, 1rem);
+                  padding: clamp(0.5rem, 1vh, 0.75rem)
+                    clamp(0.75rem, 1.5vw, 1rem);
                   text-align: left;
                   word-wrap: break-word;
                   max-width: 200px;
@@ -3391,7 +3773,12 @@ onUnmounted(() => {
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+      );
       transition: left 0.6s ease;
     }
 
@@ -3624,7 +4011,6 @@ onUnmounted(() => {
 .empty-state {
   animation: fadeIn 0.5s ease-out;
 }
-
 
 .save-status {
   position: fixed;
@@ -4000,8 +4386,7 @@ onUnmounted(() => {
       }
     }
   }
-
-  }
+}
 
 @media screen and (max-width: 1200px) {
   .main {
@@ -4054,12 +4439,24 @@ onUnmounted(() => {
             font-size: clamp(0.85rem, 1.1vw, 0.95rem);
 
             .trix-content {
-              h1 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); }
-              h2 { font-size: clamp(1.1rem, 2vw, 1.5rem); }
-              h3 { font-size: clamp(1rem, 1.8vw, 1.3rem); }
-              h4 { font-size: clamp(0.9rem, 1.6vw, 1.15rem); }
-              h5 { font-size: clamp(0.85rem, 1.5vw, 1rem); }
-              h6 { font-size: clamp(0.75rem, 1.3vw, 0.9rem); }
+              h1 {
+                font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+              }
+              h2 {
+                font-size: clamp(1.1rem, 2vw, 1.5rem);
+              }
+              h3 {
+                font-size: clamp(1rem, 1.8vw, 1.3rem);
+              }
+              h4 {
+                font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+              }
+              h5 {
+                font-size: clamp(0.85rem, 1.5vw, 1rem);
+              }
+              h6 {
+                font-size: clamp(0.75rem, 1.3vw, 0.9rem);
+              }
             }
           }
         }
@@ -4081,7 +4478,6 @@ onUnmounted(() => {
     }
   }
 
-  
   .editor-toolbar {
     padding: clamp(0.4rem, 0.8vh, 0.6rem) clamp(0.75rem, 1.5vw, 1rem);
     gap: clamp(6px, 1vw, 12px);
@@ -4168,18 +4564,31 @@ onUnmounted(() => {
             font-size: clamp(0.8rem, 1.1vw, 0.9rem);
 
             .trix-content {
-              h1 { font-size: clamp(1.2rem, 2.2vw, 1.6rem); }
-              h2 { font-size: clamp(1rem, 1.8vw, 1.4rem); }
-              h3 { font-size: clamp(0.9rem, 1.6vw, 1.2rem); }
-              h4 { font-size: clamp(0.85rem, 1.4vw, 1.1rem); }
-              h5 { font-size: clamp(0.8rem, 1.3vw, 1rem); }
-              h6 { font-size: clamp(0.7rem, 1.2vw, 0.85rem); }
+              h1 {
+                font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+              }
+              h2 {
+                font-size: clamp(1rem, 1.8vw, 1.4rem);
+              }
+              h3 {
+                font-size: clamp(0.9rem, 1.6vw, 1.2rem);
+              }
+              h4 {
+                font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+              }
+              h5 {
+                font-size: clamp(0.8rem, 1.3vw, 1rem);
+              }
+              h6 {
+                font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+              }
 
               p {
                 margin: clamp(0.6rem, 1.2vh, 0.8rem) 0;
               }
 
-              ul, ol {
+              ul,
+              ol {
                 padding-left: clamp(1.2rem, 2.5vw, 1.5rem);
                 margin: clamp(0.4rem, 0.8vh, 0.6rem) 0;
               }
@@ -4225,7 +4634,6 @@ onUnmounted(() => {
     }
   }
 
-  
   .editor-toolbar {
     padding: clamp(0.3rem, 0.6vh, 0.4rem) clamp(0.5rem, 1vw, 0.75rem);
     gap: clamp(4px, 0.8vw, 8px);
@@ -4362,12 +4770,24 @@ onUnmounted(() => {
             line-height: 1.6;
 
             .trix-content {
-              h1 { font-size: clamp(1.1rem, 2vw, 1.4rem); }
-              h2 { font-size: clamp(0.95rem, 1.6vw, 1.25rem); }
-              h3 { font-size: clamp(0.85rem, 1.4vw, 1.1rem); }
-              h4 { font-size: clamp(0.8rem, 1.3vw, 1rem); }
-              h5 { font-size: clamp(0.75rem, 1.2vw, 0.9rem); }
-              h6 { font-size: clamp(0.65rem, 1.1vw, 0.8rem); }
+              h1 {
+                font-size: clamp(1.1rem, 2vw, 1.4rem);
+              }
+              h2 {
+                font-size: clamp(0.95rem, 1.6vw, 1.25rem);
+              }
+              h3 {
+                font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+              }
+              h4 {
+                font-size: clamp(0.8rem, 1.3vw, 1rem);
+              }
+              h5 {
+                font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+              }
+              h6 {
+                font-size: clamp(0.65rem, 1.1vw, 0.8rem);
+              }
 
               p {
                 margin: clamp(0.5rem, 1vh, 0.7rem) 0;
@@ -4375,7 +4795,8 @@ onUnmounted(() => {
                 line-height: 1.6;
               }
 
-              ul, ol {
+              ul,
+              ol {
                 padding-left: clamp(1rem, 2vw, 1.2rem);
                 margin: clamp(0.3rem, 0.7vh, 0.5rem) 0;
 
@@ -4416,8 +4837,10 @@ onUnmounted(() => {
               table {
                 font-size: clamp(0.7rem, 1vw, 0.8rem);
 
-                th, td {
-                  padding: clamp(0.3rem, 0.7vh, 0.5rem) clamp(0.4rem, 0.8vw, 0.6rem);
+                th,
+                td {
+                  padding: clamp(0.3rem, 0.7vh, 0.5rem)
+                    clamp(0.4rem, 0.8vw, 0.6rem);
                 }
               }
 
@@ -4451,7 +4874,6 @@ onUnmounted(() => {
     }
   }
 
-  
   .editor-toolbar {
     padding: clamp(0.2rem, 0.4vh, 0.3rem) clamp(0.3rem, 0.7vw, 0.4rem);
     gap: clamp(2px, 0.4vw, 4px);
@@ -4571,7 +4993,8 @@ onUnmounted(() => {
       margin: clamp(0.5rem, 0.8vh, 0.6rem) 0;
     }
 
-    :deep(ul), :deep(ol) {
+    :deep(ul),
+    :deep(ol) {
       padding-left: clamp(1rem, 1.5vw, 1.2rem);
     }
 
@@ -4807,6 +5230,26 @@ onUnmounted(() => {
         font-size: 11px;
       }
     }
+  }
+}
+
+// 新创建节点的高亮动画效果
+.new-node-highlight {
+  animation: highlightPulse 2s ease-in-out;
+}
+
+@keyframes highlightPulse {
+  0% {
+    background-color: #e1f3d8;
+    box-shadow: 0 0 8px rgba(103, 194, 58, 0.3);
+  }
+  50% {
+    background-color: #f0f9ff;
+    box-shadow: 0 0 12px rgba(64, 158, 255, 0.4);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
   }
 }
 

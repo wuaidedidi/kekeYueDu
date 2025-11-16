@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 dist-electron/*
+dist-server/
 #release
 release/*
  

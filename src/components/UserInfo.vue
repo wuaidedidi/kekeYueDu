@@ -91,7 +91,7 @@ const saving = ref(false)
 const profileForm = reactive({
   username: '',
   email: '',
-  created_at: ''
+  created_at: '',
 })
 
 // 显示个人资料
@@ -99,7 +99,9 @@ const showProfile = () => {
   if (userStore.user) {
     profileForm.username = userStore.user.username
     profileForm.email = userStore.user.email || ''
-    profileForm.created_at = new Date(userStore.user.created_at).toLocaleDateString()
+    profileForm.created_at = new Date(
+      userStore.user.created_at
+    ).toLocaleDateString()
     profileVisible.value = true
     editingProfile.value = false
   }
@@ -123,13 +125,13 @@ const saveProfile = async () => {
     const response = await http.put('/profile', {
       userId: userStore.user.id,
       updates: {
-        email: profileForm.email.trim() || null
-      }
+        email: profileForm.email.trim() || null,
+      },
     })
 
     if (response.data.success) {
       userStore.updateUser({
-        email: profileForm.email.trim() || undefined
+        email: profileForm.email.trim() || undefined,
       })
       ElMessage.success('保存成功')
       editingProfile.value = false
@@ -168,20 +170,18 @@ const handleCommand = (command: string) => {
 
 // 退出登录
 const handleLogout = () => {
-  ElMessageBox.confirm(
-    '确定要退出登录吗？',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  ).then(() => {
-    userStore.logout()
-    ElMessage.success('已退出登录')
-  }).catch(() => {
-    // 用户取消
+  ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
   })
+    .then(() => {
+      userStore.logout()
+      ElMessage.success('已退出登录')
+    })
+    .catch(() => {
+      // 用户取消
+    })
 }
 </script>
 

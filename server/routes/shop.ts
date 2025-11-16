@@ -1,8 +1,8 @@
 import express from 'express'
-import { ShopModel } from '../models/Shop'
-import { authenticateToken } from './user'
+import { ShopModel } from '../models/Shop.js'
+import { authenticateToken } from './user.js'
 import sqlite3 from 'sqlite3'
-import { config } from '../config/db'
+import { config } from '../config/db.js'
 
 const router = express.Router()
 const db = new sqlite3.Database(config.database)
@@ -22,14 +22,14 @@ router.get('/shop/balance', authenticateToken, async (req: any, res) => {
     res.json({
       success: true,
       data: {
-        points: balance.ink_points
-      }
+        points: balance.ink_points,
+      },
     })
   } catch (error) {
     console.error('Get balance error:', error)
     res.status(500).json({
       success: false,
-      message: '获取余额失败'
+      message: '获取余额失败',
     })
   }
 })
@@ -41,7 +41,7 @@ router.get('/shop/products', async (req, res) => {
       type = 'all',
       status = 'active',
       page = 1,
-      pageSize = 20
+      pageSize = 20,
     } = req.query
 
     const pageNum = parseInt(page as string)
@@ -51,23 +51,28 @@ router.get('/shop/products', async (req, res) => {
       type: type as string,
       status: status as string,
       page: pageNum,
-      pageSize: pageSizeNum
+      pageSize: pageSizeNum,
     })
 
     // 如果有token，获取用户权益信息
     const token = req.headers.authorization?.replace('Bearer ', '')
     if (token) {
       try {
-        const jwt = require('jsonwebtoken')
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
+        const { default: jwt } = await import('jsonwebtoken')
+        const decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET || 'your-secret-key'
+        ) as any
         const userId = decoded.id || decoded.userId
         const userRights = await shopModel.getUserRights(userId)
-        const ownedProductIds = new Set(userRights.map(right => right.product_id))
+        const ownedProductIds = new Set(
+          userRights.map((right) => right.product_id)
+        )
 
         // 为商品添加用户拥有状态
-        const productsWithOwnership = result.products.map(product => ({
+        const productsWithOwnership = result.products.map((product) => ({
           ...product,
-          owned: ownedProductIds.has(product.id!)
+          owned: ownedProductIds.has(product.id!),
         }))
 
         res.json({
@@ -75,7 +80,7 @@ router.get('/shop/products', async (req, res) => {
           data: productsWithOwnership,
           page: pageNum,
           pageSize: pageSizeNum,
-          total: result.total
+          total: result.total,
         })
       } catch (error) {
         // Token无效，返回普通商品列表
@@ -84,7 +89,7 @@ router.get('/shop/products', async (req, res) => {
           data: result.products,
           page: pageNum,
           pageSize: pageSizeNum,
-          total: result.total
+          total: result.total,
         })
       }
     } else {
@@ -94,14 +99,14 @@ router.get('/shop/products', async (req, res) => {
         data: result.products,
         page: pageNum,
         pageSize: pageSizeNum,
-        total: result.total
+        total: result.total,
       })
     }
   } catch (error) {
     console.error('Get products error:', error)
     res.status(500).json({
       success: false,
-      message: '获取商品列表失败'
+      message: '获取商品列表失败',
     })
   }
 })
@@ -113,44 +118,52 @@ router.post('/shop/redeem', authenticateToken, async (req: any, res) => {
     const { productId, quantity = 1 } = req.body
 
     if (!productId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
-        message: '商品ID不能为空'
+        message: '商品ID不能为空',
       })
+      return
     }
 
-    const result = await shopModel.redeemProduct(userId, parseInt(productId), parseInt(quantity))
+    const result = await shopModel.redeemProduct(
+      userId,
+      parseInt(productId),
+      parseInt(quantity)
+    )
 
     if (result.success) {
       res.json({
         success: true,
         data: result.data,
-        message: result.message
+        message: result.message,
       })
     } else {
       // 根据错误类型返回不同的状态码
       if (result.message === '余额不足') {
-        return res.status(402).json({
+        res.status(402).json({
           success: false,
-          message: result.message
+          message: result.message,
         })
+        return
       } else if (result.message === '库存不足') {
-        return res.status(409).json({
+        res.status(409).json({
           success: false,
-          message: result.message
+          message: result.message,
         })
+        return
       } else {
-        return res.status(422).json({
+        res.status(422).json({
           success: false,
-          message: result.message
+          message: result.message,
         })
+        return
       }
     }
   } catch (error) {
     console.error('Redeem product error:', error)
     res.status(500).json({
       success: false,
-      message: '兑换失败，请重试'
+      message: '兑换失败，请重试',
     })
   }
 })
@@ -167,20 +180,20 @@ router.get('/shop/user-rights', authenticateToken, async (req: any, res) => {
         const product = await shopModel.getProduct(right.product_id)
         return {
           ...right,
-          product
+          product,
         }
       })
     )
 
     res.json({
       success: true,
-      data: rightsWithProducts
+      data: rightsWithProducts,
     })
   } catch (error) {
     console.error('Get user rights error:', error)
     res.status(500).json({
       success: false,
-      message: '获取用户权益失败'
+      message: '获取用户权益失败',
     })
   }
 })
@@ -201,13 +214,13 @@ router.get('/shop/orders', authenticateToken, async (req: any, res) => {
       data: result.orders,
       page: pageNum,
       pageSize: pageSizeNum,
-      total: result.total
+      total: result.total,
     })
   } catch (error) {
     console.error('Get orders error:', error)
     res.status(500).json({
       success: false,
-      message: '获取订单记录失败'
+      message: '获取订单记录失败',
     })
   }
 })
@@ -219,29 +232,33 @@ router.post('/shop/recharge', authenticateToken, async (req: any, res) => {
     const { amount } = req.body
 
     if (!amount || amount <= 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
-        message: '充值金额必须大于0'
+        message: '充值金额必须大于0',
       })
+      return
     }
 
     const currentBalance = await shopModel.getUserBalance(userId)
     const currentPoints = currentBalance?.ink_points || 0
-    const newBalance = await shopModel.upsertUserBalance(userId, currentPoints + amount)
+    const newBalance = await shopModel.upsertUserBalance(
+      userId,
+      currentPoints + amount
+    )
 
     res.json({
       success: true,
       data: {
         newBalance: newBalance.ink_points,
-        recharged: amount
+        recharged: amount,
       },
-      message: '充值成功'
+      message: '充值成功',
     })
   } catch (error) {
     console.error('Recharge error:', error)
     res.status(500).json({
       success: false,
-      message: '充值失败'
+      message: '充值失败',
     })
   }
 })

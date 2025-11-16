@@ -1,9 +1,9 @@
 // src/models/User.ts
-import connectDB from '../config/db'
-import sqlite3 from 'sqlite3'
+import connectDB from '../config/db.js'
+import type { Database } from 'sqlite'
 
 // 初始化草稿表
-const initVolumeTable = async (db: sqlite3.Database) => {
+const initVolumeTable = async (db: Database) => {
   // 创建 Volumes 表
   await db.exec(`
     CREATE TABLE IF NOT EXISTS Volumes (

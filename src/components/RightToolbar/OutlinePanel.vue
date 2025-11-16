@@ -38,9 +38,7 @@
             <span class="level-indicator">H{{ item.level }}</span>
             {{ item.text }}
           </div>
-          <div class="item-meta">
-            行 {{ item.line }}
-          </div>
+          <div class="item-meta">行 {{ item.line }}</div>
         </button>
       </div>
     </div>

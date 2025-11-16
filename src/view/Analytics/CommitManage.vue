@@ -89,18 +89,15 @@
 
           <el-button @click="handleRefresh" icon="Refresh">刷新</el-button>
           <el-button @click="showLogsDialog" icon="View">操作日志</el-button>
-          <el-button @click="createTestComment" type="primary" icon="Plus">创建测试评论</el-button>
+          <el-button @click="createTestComment" type="primary" icon="Plus"
+            >创建测试评论</el-button
+          >
         </div>
       </div>
 
       <!-- 新评论提示 -->
       <div v-if="hasNewComments" class="new-comments-notice">
-        <el-alert
-          title="有新评论"
-          type="info"
-          :closable="false"
-          show-icon
-        >
+        <el-alert title="有新评论" type="info" :closable="false" show-icon>
           <template #default>
             <span>有新的评论，点击</span>
             <el-button type="text" @click="handleRefresh">刷新</el-button>
@@ -152,9 +149,7 @@
     />
 
     <!-- 操作日志弹窗 -->
-    <LogsDialog
-      v-model:visible="logsDialog.visible"
-    />
+    <LogsDialog v-model:visible="logsDialog.visible" />
   </div>
 </template>
 
@@ -181,7 +176,7 @@ const stats = reactive({
   total: 0,
   unread: 0,
   new: 0,
-  handled: 0
+  handled: 0,
 })
 
 // 筛选条件
@@ -189,7 +184,7 @@ const filters = reactive({
   status: '',
   isRead: '',
   sortBy: 'created_at',
-  sortOrder: 'DESC'
+  sortOrder: 'DESC',
 })
 
 // 分页信息
@@ -197,7 +192,7 @@ const pagination = reactive({
   page: 1,
   pageSize: 20,
   total: 0,
-  totalPages: 0
+  totalPages: 0,
 })
 
 // 评论列表
@@ -206,11 +201,11 @@ const comments = ref([])
 // 弹窗状态
 const replyDialog = reactive({
   visible: false,
-  comment: null
+  comment: null,
 })
 
 const logsDialog = reactive({
-  visible: false
+  visible: false,
 })
 
 // SSE连接
@@ -236,7 +231,7 @@ const loadComments = async () => {
     const params = {
       page: pagination.page,
       pageSize: pagination.pageSize,
-      ...filters
+      ...filters,
     }
 
     // 如果有搜索关键词，添加到参数中
@@ -313,7 +308,7 @@ const startPolling = () => {
     try {
       const lastCheck = new Date(Date.now() - 15000).toISOString() // 15秒前
       const { data } = await http.get('/comments', {
-        params: { after: lastCheck }
+        params: { after: lastCheck },
       })
       if (data.success && data.data.comments.length > 0) {
         hasNewComments.value = true
@@ -371,7 +366,10 @@ const handlePageSizeChange = (pageSize: number) => {
 // 标记已读/未读
 const handleMarkRead = async (commentId: number, isRead: boolean) => {
   try {
-    const response = await commentsStore.updateCommentReadStatus(commentId, isRead)
+    const response = await commentsStore.updateCommentReadStatus(
+      commentId,
+      isRead
+    )
     if (response.success) {
       ElMessage.success(isRead ? '已标记为已读' : '已标记为未读')
       loadComments() // 刷新列表
@@ -426,8 +424,8 @@ const createTestComment = async () => {
       bookId: 1,
       chapterId: 1,
       nickname: '测试用户',
-      content: testContent
-    });
+      content: testContent,
+    })
 
     const data = response.data
     if (data.success) {

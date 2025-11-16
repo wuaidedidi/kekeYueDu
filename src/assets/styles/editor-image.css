@@ -87,7 +87,7 @@ img.loading {
 }
 
 img.loading::before {
-  content: "加载中...";
+  content: '加载中...';
   font-size: 14px;
 }
 
@@ -103,7 +103,7 @@ img.error {
 }
 
 img.error::before {
-  content: "图片加载失败";
+  content: '图片加载失败';
   font-size: 14px;
 }
 
@@ -151,7 +151,7 @@ trix-editor img {
 }
 
 /* Trix编辑器工具栏图片按钮样式 */
-.trix-button-row .trix-button.trix-active[data-trix-attribute="attachment"] {
+.trix-button-row .trix-button.trix-active[data-trix-attribute='attachment'] {
   background: #67c23a;
   color: white;
 }

@@ -1,13 +1,13 @@
 import express from 'express'
-import { app as electronApp } from 'electron'
 import cors from 'cors'
-import useRouter from './routes/user' // 导入用户路由
-import shopRouter from './routes/shop' // 导入商店路由
+import useRouter from './routes/user.js'
+import shopRouter from './routes/shop.js'
+import cfg from '../config.js'
 const server = express()
-const PORT = Number(process.env.PORT) || 9999
+const env = cfg.getEnv()
+const desired = cfg.resolvePorts(env, process.env)
 
 server.use(cors())
-// 中间件示例
 server.use(express.json())
 
 // 使用认证路由
@@ -33,12 +33,10 @@ server.get('/api/placeholder/:width/:height', (req, res) => {
   res.send(svg.trim())
 })
 
-// 路由示例
 server.get('/', (req, res) => {
   res.send('Hello from Express!')
 })
 
-// 启动 Express 服务器
-server.listen(PORT, () => {
-  console.log(`Express server is running at http://localhost:${PORT}`)
+cfg.startServerWithRetry(server, desired.backend, 20, (p) => {
+  console.log(`Express server is running at http://localhost:${p}`)
 })

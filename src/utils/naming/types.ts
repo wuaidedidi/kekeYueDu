@@ -47,4 +47,11 @@ export interface NameBatch {
 }
 
 export type CulturalAdapterType = 'chinese' | 'japanese' | 'western'
-export type NamingCategory = 'person' | 'place' | 'move' | 'equipment' | 'monster' | 'item' | 'default'
+export type NamingCategory =
+  | 'person'
+  | 'place'
+  | 'move'
+  | 'equipment'
+  | 'monster'
+  | 'item'
+  | 'default'

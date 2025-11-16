@@ -65,12 +65,14 @@ import { EditPen, Refresh, Check } from '@element-plus/icons-vue'
 import { editorBridge } from '@/utils/editorBridge'
 
 const isChecking = ref(false)
-const spellingErrors = ref<Array<{
-  word: string
-  line: number
-  column: number
-  suggestions: string[]
-}>>([])
+const spellingErrors = ref<
+  Array<{
+    word: string
+    line: number
+    column: number
+    suggestions: string[]
+  }>
+>([])
 
 const totalWords = computed(() => {
   return editorBridge.getTextStats().wordCount
@@ -90,11 +92,11 @@ const checkSpelling = () => {
     // 这里可以集成更复杂的拼写检查逻辑
     // 目前使用简单的常见错误检查
     const commonMisspellings: Record<string, string[]> = {
-      'alot': ['allot'],
-      'seperate': ['separate'],
-      'recieve': ['receive'],
-      'beleive': ['believe'],
-      'occured': ['occurred']
+      alot: ['allot'],
+      seperate: ['separate'],
+      recieve: ['receive'],
+      beleive: ['believe'],
+      occured: ['occurred'],
     }
 
     if (commonMisspellings[word.toLowerCase()]) {
@@ -105,7 +107,7 @@ const checkSpelling = () => {
         word,
         line,
         column,
-        suggestions: commonMisspellings[word.toLowerCase()]
+        suggestions: commonMisspellings[word.toLowerCase()],
       })
     }
   })
@@ -114,7 +116,7 @@ const checkSpelling = () => {
   isChecking.value = false
 }
 
-const highlightError = (error: typeof spellingErrors.value[0]) => {
+const highlightError = (error: (typeof spellingErrors.value)[0]) => {
   const position = editorBridge.getPositionFromLine(error.line)
   if (position) {
     editorBridge.scrollToPosition(position)
@@ -134,13 +136,15 @@ const fixWord = (wrongWord: string, correctWord: string) => {
       end: {
         line: position.line,
         column: position.column + wrongWord.length,
-        offset: position.offset + wrongWord.length
-      }
+        offset: position.offset + wrongWord.length,
+      },
     })
     editorBridge.replaceSelectedText(correctWord)
 
     // 更新错误列表
-    spellingErrors.value = spellingErrors.value.filter(e => e.word !== wrongWord)
+    spellingErrors.value = spellingErrors.value.filter(
+      (e) => e.word !== wrongWord
+    )
   }
 }
 
@@ -217,7 +221,7 @@ onMounted(() => {
 
     &:hover {
       border-color: #007bff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .error-word {

@@ -52,7 +52,7 @@ const form = reactive<Book>({
   id: 0,
   bookName: '',
   fontCount: 0,
-  src: '/allBooks/bookList/bookTemplate1.png'
+  src: '/allBooks/bookList/bookTemplate1.png',
 })
 
 // 如果是编辑模式，初始化表单数据
@@ -174,7 +174,8 @@ const handleConfirm = () => {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
 
-        &:hover, &.is-focus {
+        &:hover,
+        &.is-focus {
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
       }

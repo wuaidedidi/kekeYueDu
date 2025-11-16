@@ -1,8 +1,8 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 const customRequire = createRequire(import.meta.url);
-customRequire('../../server/index.cjs');
 import { fileURLToPath } from 'node:url'
+import { spawn } from 'node:child_process'
 import path from 'node:path'
 import os from 'node:os'
 
@@ -25,14 +25,25 @@ process.env.APP_ROOT = path.join(__dirname, '../..')
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
-
-// 开发服务器端口配置
-const DEV_PORT = process.env.DEV_PORT || 3000
-const DEV_SERVER_URL = `http://localhost:${DEV_PORT}`
+// 优先使用 vite-plugin-electron 注入的实际地址，其次回退到 FRONTEND_PORT 或 3000
+const DEV_SERVER_URL =
+  VITE_DEV_SERVER_URL || `http://localhost:${process.env.FRONTEND_PORT || 3000}`
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, 'public')
   : RENDERER_DIST
+
+// 全局兜底：避免主进程因端口占用弹出错误窗口
+process.on('uncaughtException', (err: any) => {
+  if (err && err.code === 'EADDRINUSE') {
+    console.warn(`Main process: 端口占用 (${err.code})，忽略异常以继续运行。`)
+    return
+  }
+  console.error('Main process uncaughtException:', err)
+})
+process.on('unhandledRejection', (reason) => {
+  console.error('Main process unhandledRejection:', reason)
+})
 
 // Disable GPU Acceleration for Windows 7
 if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
@@ -40,13 +51,19 @@ if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
 // Set application name for Windows 10+ notifications
 if (process.platform === 'win32') app.setAppUserModelId(app.getName())
 
+// 启用远程调试端口，便于使用外部浏览器 DevTools 连接渲染进程
+app.commandLine.appendSwitch('remote-debugging-port', '9222')
+// 提升 Electron 主/渲染进程日志输出
+process.env.ELECTRON_ENABLE_LOGGING = 'true'
+process.env.ELECTRON_ENABLE_STACK_DUMPING = 'true'
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
   process.exit(0)
 }
 
 let win: BrowserWindow | null = null
-const preload = path.join(__dirname, '../electron-preload/index.js')
+const preload = path.join(__dirname, '../electron-preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
 // 创建窗口，没有渐变过渡效果
@@ -121,8 +138,9 @@ async function createWindow() {
 }
 
 // 应用准备好后创建窗口
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   console.log('App is ready, creating window...')
+  await ensureBackend()
   createWindow()
 })
 
@@ -212,3 +230,29 @@ ipcMain.handle('close-window', () => {
     win.close()
   }
 })
+// 后端自检：如果端口可用则启动后端，否则认为已有后端实例在运行
+async function ensureBackend() {
+  const port = Number(process.env.PORT) || 7777
+  const base = `http://localhost:${port}`
+  try {
+    // Node18+ 支持全局 fetch；尝试请求根路由或健康检查
+    const res = await fetch(base, { method: 'GET' })
+    if (res.ok) {
+      console.log(`Backend already running at ${base}`)
+      return
+    }
+  } catch (err) {
+    console.log(`Backend not responding at ${base}, booting embedded server...`)
+    try {
+      const child = spawn('npm', ['run', 'server:dev'], {
+        cwd: path.join(process.env.APP_ROOT!, '.'),
+        env: process.env,
+        stdio: 'inherit',
+        shell: true,
+      })
+      child.on('error', (e) => console.error('Failed to spawn backend:', e))
+    } catch (e) {
+      console.error('Failed to start embedded backend:', e)
+    }
+  }
+}

@@ -271,7 +271,7 @@ const register = async () => {
     const response = await http.post('/register', {
       username: username.trim(),
       password,
-      confirmPassword
+      confirmPassword,
     })
 
     if (response.data.success) {
@@ -300,7 +300,8 @@ const register = async () => {
     }
   } catch (error: any) {
     console.error('注册错误:', error)
-    const message = error.response?.data?.message || error.message || '网络错误，请稍后重试'
+    const message =
+      error.response?.data?.message || error.message || '网络错误，请稍后重试'
     ElMessage({
       message: '注册失败：' + message,
       type: 'error',
@@ -342,7 +343,9 @@ const handleTabClick = (tab) => {
   border-radius: clamp(8px, 2vw, 16px); /* 响应式圆角 */
   box-shadow: 0 clamp(2px, 0.5vw, 12px) rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 
   &:hover {
     transform: translateY(-2px);

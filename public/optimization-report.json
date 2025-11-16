@@ -1,0 +1,64 @@
+{
+  "timestamp": "2025-11-12T10:00:01.007Z",
+  "directory": "public",
+  "analysis": {
+    "totalFiles": 25,
+    "totalSize": 7666464,
+    "formatStats": {
+      ".png": {
+        "count": 25,
+        "size": 7666464
+      }
+    },
+    "largeFiles": [
+      {
+        "path": "public\\allBooks\\banner\\carousel1.png",
+        "size": 874285,
+        "formattedSize": "853.79 KB"
+      },
+      {
+        "path": "public\\allBooks\\banner\\carousel2.png",
+        "size": 882606,
+        "formattedSize": "861.92 KB"
+      },
+      {
+        "path": "public\\allBooks\\banner\\carousel3.png",
+        "size": 1014612,
+        "formattedSize": "990.83 KB"
+      },
+      {
+        "path": "public\\allBooks\\banner\\carousel4.png",
+        "size": 1103836,
+        "formattedSize": "1.05 MB"
+      },
+      {
+        "path": "public\\allBooks\\bookList\\bookTemplate1.png",
+        "size": 514048,
+        "formattedSize": "502 KB"
+      },
+      {
+        "path": "public\\login_assets\\loginBackground.png",
+        "size": 1834126,
+        "formattedSize": "1.75 MB"
+      }
+    ],
+    "recommendations": [
+      "发现 6 个大图片文件需要压缩"
+    ]
+  },
+  "settings": {
+    "quality": 85,
+    "progressive": true,
+    "interlaced": true,
+    "lossless": false,
+    "supportedFormats": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp"
+    ],
+    "outputFormat": "webp",
+    "keepOriginal": true,
+    "webpQuality": 80
+  }
+}

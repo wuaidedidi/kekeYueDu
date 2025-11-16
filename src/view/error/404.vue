@@ -3,9 +3,7 @@
     <div class="not-found-content">
       <div class="error-code">404</div>
       <div class="error-message">页面未找到</div>
-      <div class="error-description">
-        抱歉，您访问的页面不存在或已被删除
-      </div>
+      <div class="error-description">抱歉，您访问的页面不存在或已被删除</div>
       <el-button type="primary" @click="goHome" size="large">
         返回首页
       </el-button>

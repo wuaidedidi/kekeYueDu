@@ -1,0 +1,182 @@
+@startuml kekeYueDu 阅读写作平台架构图
+
+!define LIGHTBLUE #ADD8E6
+!define LIGHTGREEN #90EE90
+!define LIGHTYELLOW #FFFFE0
+!define LIGHTCORAL #F08080
+!define LIGHTGRAY #D3D3D3
+
+title kekeYueDu 阅读写作平台 - 技术架构图
+
+' 前端层 (Electron Renderer)
+package "前端 (Electron Renderer)" {
+  [Vue 3 应用] as vue_app
+  [Vue Router] as vue_router
+  [Pinia 状态管理] as pinia
+  [Element Plus UI] as element_plus
+  [ECharts 图表] as echarts
+  [Trix 编辑器] as trix_editor
+
+  vue_app --> vue_router
+  vue_app --> pinia
+  vue_app --> element_plus
+  vue_app --> echarts
+  vue_app --> trix_editor
+}
+
+' Electron 主进程
+package "Electron 主进程" {
+  [主进程 Main] as main_process
+  [IPC 通信] as ipc
+  [窗口管理] as window_manager
+  [文件系统] as file_system
+
+  main_process --> ipc
+  main_process --> window_manager
+  main_process --> file_system
+}
+
+' 预加载脚本
+package "预加载脚本" {
+  [Preload Script] as preload_script
+}
+
+' API 服务层
+package "API 服务层" {
+  [HTTP 客户端] as http_client
+  [用户服务] as user_service
+  [评论服务] as comment_service
+  [商店服务] as shop_service
+  [版本服务] as version_service
+
+  http_client --> user_service
+  http_client --> comment_service
+  http_client --> shop_service
+  http_client --> version_service
+}
+
+' 后端服务
+package "后端服务 (Node.js)" {
+  [Express 服务器] as express_server
+  [用户路由] as user_routes
+  [评论路由] as comment_routes
+  [商店路由] as shop_routes
+  [中间件] as middleware
+
+  express_server --> user_routes
+  express_server --> comment_routes
+  express_server --> shop_routes
+  express_server --> middleware
+}
+
+' 数据层
+package "数据层" {
+  [SQLite 数据库] as sqlite
+  [用户模型] as user_model
+  [评论模型] as comment_model
+  [书籍模型] as book_model
+  [商店模型] as shop_model
+
+  sqlite --> user_model
+  sqlite --> comment_model
+  sqlite --> book_model
+  sqlite --> shop_model
+}
+
+' 安全层
+package "安全层" {
+  [JWT 认证] as jwt_auth
+  [速率限制] as rate_limit
+  [Helmet 安全头] as helmet
+  [输入验证] as input_validation
+
+  middleware --> jwt_auth
+  middleware --> rate_limit
+  middleware --> helmet
+  middleware --> input_validation
+}
+
+' 外部服务
+package "外部服务" {
+  [文件上传] as file_upload
+  [API 文档] as api_docs
+  [图片存储] as image_storage
+}
+
+' 开发工具
+package "开发工具" {
+  [ESLint] as eslint
+  [Prettier] as prettier
+  [Vitest 测试] as vitest
+  [Playwright E2E] as playwright
+  [Swagger 文档] as swagger
+}
+
+' 部署和监控
+package "部署和监控" {
+  [GitHub Actions CI/CD] as github_actions
+  [Vite 构建工具] as vite
+  [Electron Builder] as electron_builder
+  [性能监控] as performance_monitor
+}
+
+' 连接关系
+package "连接关系" {
+  vue_app <--> preload_script
+  preload_script <--> main_process
+
+  vue_app --> http_client
+  http_client --> express_server
+
+  express_server --> sqlite
+  middleware --> express_server
+
+  user_routes --> user_model
+  comment_routes --> comment_model
+  shop_routes --> shop_model
+
+  express_server --> api_docs
+  express_server --> file_upload
+
+  github_actions --> vitest
+  github_actions --> playwright
+  github_actions --> electron_builder
+
+  vite --> vue_app
+  electron_builder --> vue_app
+
+  performance_monitor --> vue_app
+}
+
+note right of vue_app : **前端技术栈**
+  - Vue 3 + TypeScript
+  - Element Plus UI框架
+  - Pinia状态管理
+  - ECharts数据可视化
+  - Trix富文本编辑器
+
+note right of main_process : **Electron架构**
+  - 主进程管理窗口
+  - IPC进程间通信
+  - 预加载脚本桥接
+  - 原生API调用
+
+note right of express_server : **后端架构**
+  - Express.js RESTful API
+  - JWT认证授权
+  - 速率限制保护
+  - 数据验证和清洗
+
+note right of sqlite : **数据存储**
+  - SQLite轻量数据库
+  - 用户评论数据
+  - 商城商品信息
+  - 版本历史记录
+
+note bottom of github_actions : **质量保障**
+  - 自动化测试覆盖
+  - 代码质量检查
+  - 持续集成部署
+  - 安全扫描检测
+
+@enduml

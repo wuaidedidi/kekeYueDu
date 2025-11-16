@@ -6,10 +6,20 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios'
 
-// 创建 axios 实例（从环境变量读取 API 基址）
-// 默认回退端口改为 9999，与 .env 保持一致
-const RAW_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:9999'
-const BASE = RAW_BASE.endsWith('/api') ? RAW_BASE : RAW_BASE.replace(/\/$/, '') + '/api'
+// 创建 axios 实例（统一从同源或注入的服务端 Origin 构造）
+// 使用由 Vite define 注入的常量；不要从 globalThis 读取，以免未定义
+// 在构建时，__SERVER_ORIGIN__ 会被替换为字符串常量
+// eslint-disable-next-line no-undef
+const injectedOrigin: string | undefined =
+  typeof __SERVER_ORIGIN__ !== 'undefined' ? (__SERVER_ORIGIN__ as unknown as string) : undefined
+const sameOrigin = typeof window !== 'undefined' ? window.location.origin : undefined
+// 在开发模式优先使用同源，走 Vite 代理；否则使用注入的后端地址
+const RAW_BASE = (import.meta as any).env?.DEV
+  ? (sameOrigin || injectedOrigin || 'http://localhost:5000')
+  : (injectedOrigin || sameOrigin || 'http://localhost:5000')
+const BASE = RAW_BASE.endsWith('/api')
+  ? RAW_BASE
+  : RAW_BASE.replace(/\/$/, '') + '/api'
 const http: AxiosInstance = axios.create({
   baseURL: BASE,
   timeout: 10000, // 请求超时时间
@@ -45,12 +55,11 @@ http.interceptors.response.use(
       const msg: string = resp.data?.message || ''
       const isAuthError =
         status === 401 ||
-        (status === 403 && (
-          msg.includes('令牌无效') ||
-          msg.includes('过期') ||
-          msg.includes('未提供认证令牌') ||
-          msg.includes('未认证')
-        ))
+        (status === 403 &&
+          (msg.includes('令牌无效') ||
+            msg.includes('过期') ||
+            msg.includes('未提供认证令牌') ||
+            msg.includes('未认证')))
 
       if (isAuthError) {
         try {

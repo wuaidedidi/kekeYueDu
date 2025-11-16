@@ -51,10 +51,14 @@
                 class="image-uploader"
               >
                 <div class="upload-area">
-                  <el-icon class="upload-icon" :size="48"><UploadFilled /></el-icon>
+                  <el-icon class="upload-icon" :size="48"
+                    ><UploadFilled
+                  /></el-icon>
                   <div class="upload-text">
                     <p>点击或拖拽图片到此处上传</p>
-                    <p class="upload-hint">支持 JPG、PNG、GIF、WebP 格式，最大 10MB</p>
+                    <p class="upload-hint">
+                      支持 JPG、PNG、GIF、WebP 格式，最大 10MB
+                    </p>
                   </div>
                 </div>
               </el-upload>
@@ -69,9 +73,15 @@
               <div v-if="previewImage" class="preview-section">
                 <div class="preview-title">图片预览</div>
                 <div class="preview-image-container">
-                  <img :src="previewImage.url" :alt="previewImage.name" class="preview-image" />
+                  <img
+                    :src="previewImage.url"
+                    :alt="previewImage.name"
+                    class="preview-image"
+                  />
                   <div class="preview-info">
-                    <p><strong>{{ previewImage.name }}</strong></p>
+                    <p>
+                      <strong>{{ previewImage.name }}</strong>
+                    </p>
                     <p>{{ formatFileSize(previewImage.size) }}</p>
                     <p>{{ previewImage.dimensions }}</p>
                   </div>
@@ -117,7 +127,11 @@
                 <!-- 插入按钮 -->
                 <div class="insert-actions">
                   <el-button @click="showImagePanel = false">取消</el-button>
-                  <el-button type="primary" @click="insertImageToEditor" :disabled="!previewImage">
+                  <el-button
+                    type="primary"
+                    @click="insertImageToEditor"
+                    :disabled="!previewImage"
+                  >
                     插入图片
                   </el-button>
                 </div>
@@ -152,12 +166,20 @@
 
               <!-- URL图片预览 -->
               <div v-if="urlImagePreview" class="url-preview">
-                <img :src="urlImagePreview" alt="预览" class="url-preview-image" />
+                <img
+                  :src="urlImagePreview"
+                  alt="预览"
+                  class="url-preview-image"
+                />
               </div>
 
               <div class="insert-actions">
                 <el-button @click="clearUrlImage">清除</el-button>
-                <el-button type="primary" @click="insertUrlImageToEditor" :disabled="!validUrl">
+                <el-button
+                  type="primary"
+                  @click="insertUrlImageToEditor"
+                  :disabled="!validUrl"
+                >
                   插入图片
                 </el-button>
               </div>
@@ -178,7 +200,20 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage, ElButton, ElIcon, ElUpload, ElProgress, ElForm, ElFormItem, ElInput, ElRadioGroup, ElRadioButton, ElTabs, ElTabPane } from 'element-plus'
+import {
+  ElMessage,
+  ElButton,
+  ElIcon,
+  ElUpload,
+  ElProgress,
+  ElForm,
+  ElFormItem,
+  ElInput,
+  ElRadioGroup,
+  ElRadioButton,
+  ElTabs,
+  ElTabPane,
+} from 'element-plus'
 import { Picture, Close, UploadFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/userStore'
 import http, { buildApiUrl, buildServerUrl } from '@/utils/http'
@@ -199,7 +234,7 @@ const panelPosition = ref({ top: '40px', left: '0px' })
 // 上传相关
 const uploadUrl = computed(() => buildApiUrl('/upload'))
 const uploadHeaders = computed(() => ({
-  'Authorization': `Bearer ${userStore.token}`
+  Authorization: `Bearer ${userStore.token}`,
 }))
 const imageTypes = 'image/jpeg,image/jpg,image/png,image/gif,image/webp'
 
@@ -217,7 +252,7 @@ const imageSettings = reactive({
   alt: '',
   title: '',
   align: 'center',
-  size: 'original'
+  size: 'original',
 })
 
 // URL图片相关
@@ -226,7 +261,7 @@ const urlImagePreview = ref('')
 const validUrl = ref(false)
 const urlImageSettings = reactive({
   alt: '',
-  title: ''
+  title: '',
 })
 
 // 方法
@@ -261,7 +296,7 @@ const updatePanelPosition = () => {
 
   panelPosition.value = {
     top: `${top}px`,
-    left: `${left}px`
+    left: `${left}px`,
   }
 }
 
@@ -290,7 +325,7 @@ const beforeUpload = (file: File) => {
         url: e.target?.result as string,
         name: file.name,
         size: file.size,
-        dimensions: `${img.width} × ${img.height}`
+        dimensions: `${img.width} × ${img.height}`,
       }
       // 默认使用文件名作为alt文本
       imageSettings.alt = file.name.split('.')[0]
@@ -342,7 +377,7 @@ const resetUpload = () => {
     alt: '',
     title: '',
     align: 'center',
-    size: 'original'
+    size: 'original',
   })
 }
 
@@ -386,7 +421,7 @@ const clearUrlImage = () => {
   validUrl.value = false
   Object.assign(urlImageSettings, {
     alt: '',
-    title: ''
+    title: '',
   })
 }
 
@@ -401,12 +436,12 @@ const insertImageToEditor = () => {
     alt: imageSettings.alt || previewImage.value.name,
     title: imageSettings.title,
     align: imageSettings.align,
-    size: imageSettings.size
+    size: imageSettings.size,
   })
 
   // 发送自定义事件到父组件
   const event = new CustomEvent('insertImage', {
-    detail: { html: imageHtml }
+    detail: { html: imageHtml },
   })
   document.dispatchEvent(event)
 
@@ -424,12 +459,12 @@ const insertUrlImageToEditor = () => {
     alt: urlImageSettings.alt || '网络图片',
     title: urlImageSettings.title,
     align: 'center',
-    size: 'medium'
+    size: 'medium',
   })
 
   // 发送自定义事件到父组件
   const event = new CustomEvent('insertImage', {
-    detail: { html: imageHtml }
+    detail: { html: imageHtml },
   })
   document.dispatchEvent(event)
 
@@ -497,7 +532,10 @@ const handleClickOutside = (event: MouseEvent) => {
   if (!showImagePanel.value) return
 
   const target = event.target as Node
-  if (insertButton.value?.$el?.contains(target) || imagePanel.value?.contains(target)) {
+  if (
+    insertButton.value?.$el?.contains(target) ||
+    imagePanel.value?.contains(target)
+  ) {
     return
   }
 

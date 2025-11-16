@@ -10,3 +10,6 @@ interface Window {
   // expose in the `electron/preload/index.ts`
   ipcRenderer: import('electron').IpcRenderer
 }
+
+// Injected by Vite define in vite.config.ts
+declare const __SERVER_ORIGIN__: string

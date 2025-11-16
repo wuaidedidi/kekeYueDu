@@ -1,0 +1,167 @@
+@startuml kekeYueDu 前端组件架构图
+
+!define LIGHTBLUE #ADD8E6
+!define LIGHTGREEN #90EE90
+!define LIGHTYELLOW #FFFFE0
+!define LIGHTCORAL #F08080
+
+title kekeYueDu - 前端组件架构图
+
+' 页面组件 (Views)
+package "页面组件" {
+  [登录页面 Login.vue] as login_page
+  [主页面 Index.vue] as main_page
+  [工作空间 Workspace.vue] as workspace
+  [墨水商店 InkShop.vue] as ink_shop
+  [评论管理 CommitManage.vue] as comment_manage
+  [帮助中心 HelpCenter.vue] as help_center
+}
+
+' 布局组件 (Layout)
+package "布局组件" {
+  [应用布局 App.vue] as app_layout
+  [侧边栏 Sidebar.vue] as sidebar
+  [顶部导航 Header.vue] as header
+  [底部导航 Footer.vue] as footer
+}
+
+' 业务组件 (Business Components)
+package "业务组件" {
+  [用户信息 UserInfo.vue] as user_info
+  [编辑器 Editor.vue] as editor
+  [编辑器工具栏 EditorToolbar.vue] as editor_toolbar
+  [图片插入 ImageInsert.vue] as image_insert
+  [图片库 ImageLibrary.vue] as image_library
+  [版本历史 VersionHistory.vue] as version_history
+}
+
+' 通用组件 (Common Components)
+package "通用组件" {
+  [懒加载图片 LazyImage.vue] as lazy_image
+  [加载组件 Loading.vue] as loading
+  [确认对话框 ConfirmDialog.vue] as confirm_dialog
+  [空状态 EmptyState.vue] as empty_state
+  [错误边界 ErrorBoundary.vue] as error_boundary
+}
+
+' 右侧面板 (Right Panel)
+package "右侧面板" {
+  [右侧工具栏 RightToolbar.vue] as right_toolbar
+  [大纲面板 OutlinePanel.vue] as outline_panel
+  [预览面板 PreviewPanel.vue] as preview_panel
+  [校对面板 ProofreadPanel.vue] as proofread_panel
+  [设置面板 SettingsPanel.vue] as settings_panel
+  [字符面板 CharactersPanel.vue] as characters_panel
+}
+
+' 评论组件 (Comment Components)
+package "评论组件" {
+  [评论卡片 CommentCard.vue] as comment_card
+  [回复对话框 ReplyDialog.vue] as reply_dialog
+  [日志对话框 LogsDialog.vue] as logs_dialog
+  [评论列表 CommentList.vue] as comment_list
+}
+
+' 商店组件 (Shop Components)
+package "商店组件" {
+  [商店卡片 StoreCard.vue] as store_card
+  [邀请卡片 InviteCard.vue] as invite_card
+  [任务中心 TaskCenter.vue] as task_center
+  [订阅统计 SubscriptionStats.vue] as subscription_stats
+  [写作统计 WritingStats.vue] as writing_stats
+}
+
+' 状态管理 (Stores)
+package "状态管理" {
+  [用户状态 UserStore.ts] as user_store
+  [评论状态 CommentsStore.ts] as comments_store
+  [菜单状态 MenuStore.ts] as menu_store
+  [工具栏状态 ToolbarStore.ts] as toolbar_store
+  [认证状态 auth.ts] as auth_store
+}
+
+' 路由管理 (Router)
+package "路由管理" {
+  [路由配置 router/index.ts] as router_config
+  [路由守卫 router/auth.ts] as auth_guard
+}
+
+' 工具类 (Utils)
+package "工具类" {
+  [HTTP工具 utils/http.ts] as http_util
+  [编辑器桥接 utils/editorBridge.ts] as editor_bridge
+  [清洗工具 utils/sanitizer.ts] as sanitizer
+  [性能监控 utils/performance.ts] as performance_util
+  [命名工具 utils/naming/] as naming_util
+}
+
+' 连接关系
+package "组件依赖" {
+  app_layout --> header
+  app_layout --> sidebar
+  app_layout --> footer
+  app_layout --> main_page
+
+  main_page --> editor
+  main_page --> right_toolbar
+
+  editor --> editor_toolbar
+  editor --> image_insert
+  editor --> image_library
+
+  right_toolbar --> outline_panel
+  right_toolbar --> preview_panel
+  right_toolbar --> proofread_panel
+  right_toolbar --> settings_panel
+  right_toolbar --> characters_panel
+
+  comment_manage --> comment_card
+  comment_manage --> comment_list
+  comment_manage --> reply_dialog
+  comment_manage --> logs_dialog
+
+  workspace --> ink_shop
+  workspace --> store_card
+  workspace --> invite_card
+  workspace --> task_center
+
+  comment_manage --> comments_store
+  login_page --> auth_store
+  app_layout --> user_store
+
+  editor --> editor_bridge
+  editor --> sanitizer
+  app_layout --> http_util
+  app_layout --> performance_util
+
+  main_page --> router_config
+  router_config --> auth_guard
+}
+
+note right of app_layout : **根组件**
+  - 应用入口组件
+  - 管理全局状态
+  - 处理路由切换
+
+note right of editor : **核心编辑器**
+  - Trix富文本编辑器
+  - 支持图片插入
+  - 实时内容保存
+
+note right of right_toolbar : **右侧面板**
+  - 章节大纲管理
+  - 实时预览功能
+  - 文本校对工具
+  - 章节字符统计
+
+note right of comment_manage : **评论系统**
+  - 评论管理界面
+  - 批量操作功能
+  - 回复和日志查看
+
+note bottom of comments_store : **状态管理**
+  - Pinia集中状态
+  - 响应式数据流
+  - 模块化设计
+
+@enduml

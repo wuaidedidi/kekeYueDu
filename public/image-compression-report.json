@@ -1,0 +1,66 @@
+{
+  "timestamp": "2025-11-12T10:05:00.959Z",
+  "directory": "public",
+  "analysis": {
+    "totalFiles": 25,
+    "totalSize": 7666464,
+    "formatStats": {
+      ".png": {
+        "count": 25,
+        "size": 7666464
+      }
+    },
+    "largeFiles": [
+      {
+        "path": "allBooks\\banner\\carousel1.png",
+        "fullPath": "public\\allBooks\\banner\\carousel1.png",
+        "size": 874285,
+        "formattedSize": "853.79 KB"
+      },
+      {
+        "path": "allBooks\\banner\\carousel2.png",
+        "fullPath": "public\\allBooks\\banner\\carousel2.png",
+        "size": 882606,
+        "formattedSize": "861.92 KB"
+      },
+      {
+        "path": "allBooks\\banner\\carousel3.png",
+        "fullPath": "public\\allBooks\\banner\\carousel3.png",
+        "size": 1014612,
+        "formattedSize": "990.83 KB"
+      },
+      {
+        "path": "allBooks\\banner\\carousel4.png",
+        "fullPath": "public\\allBooks\\banner\\carousel4.png",
+        "size": 1103836,
+        "formattedSize": "1.05 MB"
+      },
+      {
+        "path": "allBooks\\bookList\\bookTemplate1.png",
+        "fullPath": "public\\allBooks\\bookList\\bookTemplate1.png",
+        "size": 514048,
+        "formattedSize": "502 KB"
+      },
+      {
+        "path": "login_assets\\loginBackground.png",
+        "fullPath": "public\\login_assets\\loginBackground.png",
+        "size": 1834126,
+        "formattedSize": "1.75 MB"
+      }
+    ],
+    "recommendations": [
+      "发现 6 个大图片文件 (>500KB) 需要压缩",
+      "建议使用在线工具如 TinyPNG 或 Squoosh 进行压缩",
+      "PNG 文件较多，建议转换为 WebP 格式以节省空间"
+    ]
+  },
+  "optimizationSuggestions": [
+    "1. 使用在线压缩工具: https://tinypng.com/",
+    "2. 批量转换工具: https://squoosh.app/",
+    "3. WebP 转换: https://converter.to/webp/",
+    "4. 图片格式建议:",
+    "   - 照片类: JPEG (质量 80-85%)",
+    "   - 图标/插画: PNG (带透明) 或 WebP",
+    "   - 复杂图片: WebP (体积小，质量好)"
+  ]
+}

@@ -70,7 +70,7 @@
         class="issue-item"
         :class="[
           `severity-${issue.severity}`,
-          { active: activeIssueIndex === index }
+          { active: activeIssueIndex === index },
         ]"
         @click="selectIssue(index)"
       >
@@ -131,32 +131,19 @@
     </div>
 
     <!-- 设置对话框 -->
-    <el-dialog
-      v-model="showSettings"
-      title="纠错设置"
-      width="500px"
-    >
+    <el-dialog v-model="showSettings" title="纠错设置" width="500px">
       <div class="proofread-settings">
         <div class="setting-item">
           <div class="setting-label">自动检查</div>
-          <el-switch
-            v-model="settings.autoCheck"
-            @change="saveSettings"
-          />
+          <el-switch v-model="settings.autoCheck" @change="saveSettings" />
         </div>
         <div class="setting-item">
           <div class="setting-label">检查语法错误</div>
-          <el-switch
-            v-model="settings.checkGrammar"
-            @change="saveSettings"
-          />
+          <el-switch v-model="settings.checkGrammar" @change="saveSettings" />
         </div>
         <div class="setting-item">
           <div class="setting-label">检查拼写错误</div>
-          <el-switch
-            v-model="settings.checkSpelling"
-            @change="saveSettings"
-          />
+          <el-switch v-model="settings.checkSpelling" @change="saveSettings" />
         </div>
         <div class="setting-item">
           <div class="setting-label">检查标点符号</div>
@@ -167,10 +154,7 @@
         </div>
         <div class="setting-item">
           <div class="setting-label">检查格式问题</div>
-          <el-switch
-            v-model="settings.checkStyle"
-            @change="saveSettings"
-          />
+          <el-switch v-model="settings.checkStyle" @change="saveSettings" />
         </div>
         <div class="setting-item">
           <div class="setting-label">最大问题数量</div>
@@ -185,9 +169,7 @@
 
       <template #footer>
         <el-button @click="showSettings = false">取消</el-button>
-        <el-button type="primary" @click="saveSettings">
-          保存设置
-        </el-button>
+        <el-button type="primary" @click="saveSettings"> 保存设置 </el-button>
       </template>
     </el-dialog>
   </div>
@@ -195,8 +177,25 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { ElButton, ElIcon, ElSelect, ElOption, ElDialog, ElInputNumber, ElSwitch } from 'element-plus'
-import { Document, DocumentChecked, CircleClose, Warning, InfoFilled, ArrowRight, Setting, Refresh } from '@element-plus/icons-vue'
+import {
+  ElButton,
+  ElIcon,
+  ElSelect,
+  ElOption,
+  ElDialog,
+  ElInputNumber,
+  ElSwitch,
+} from 'element-plus'
+import {
+  Document,
+  DocumentChecked,
+  CircleClose,
+  Warning,
+  InfoFilled,
+  ArrowRight,
+  Setting,
+  Refresh,
+} from '@element-plus/icons-vue'
 import { useToolbarStore } from '@/store/toolbarStore'
 import { editorBridge, type ProofreadIssue } from '@/utils/editorBridge'
 
@@ -215,7 +214,7 @@ const settings = ref({
   checkSpelling: true,
   checkPunctuation: true,
   checkStyle: true,
-  maxIssues: 100
+  maxIssues: 100,
 })
 
 // 计算属性
@@ -223,27 +222,27 @@ const filteredIssues = computed(() => {
   let issues = toolbarStore.proofreadIssues
 
   if (selectedSeverity.value) {
-    issues = issues.filter(issue => issue.severity === selectedSeverity.value)
+    issues = issues.filter((issue) => issue.severity === selectedSeverity.value)
   }
 
   return issues
 })
 
 const errorCount = computed(() => {
-  return toolbarStore.proofreadIssues.filter(issue =>
-    issue.status === 'pending' && issue.severity === 'error'
+  return toolbarStore.proofreadIssues.filter(
+    (issue) => issue.status === 'pending' && issue.severity === 'error'
   ).length
 })
 
 const warningCount = computed(() => {
-  return toolbarStore.proofreadIssues.filter(issue =>
-    issue.status === 'pending' && issue.severity === 'warning'
+  return toolbarStore.proofreadIssues.filter(
+    (issue) => issue.status === 'pending' && issue.severity === 'warning'
   ).length
 })
 
 const suggestionCount = computed(() => {
-  return toolbarStore.proofreadIssues.filter(issue =>
-    issue.status === 'pending' && issue.severity === 'info'
+  return toolbarStore.proofreadIssues.filter(
+    (issue) => issue.status === 'pending' && issue.severity === 'info'
   ).length
 })
 
@@ -253,7 +252,7 @@ const getIssueTypeLabel = (type: string): string => {
     grammar: '语法',
     spelling: '拼写',
     punctuation: '标点',
-    style: '格式'
+    style: '格式',
   }
   return labels[type as keyof typeof labels] || type
 }
@@ -262,7 +261,7 @@ const getStatusLabel = (status: string): string => {
   const labels = {
     pending: '待处理',
     fixed: '已修复',
-    ignored: '已忽略'
+    ignored: '已忽略',
   }
   return labels[status as keyof typeof labels] || status
 }
@@ -292,7 +291,7 @@ const fixIssue = async (issue: ProofreadIssue, index: number) => {
     if (position) {
       editorBridge.setSelection({
         start: position,
-        end: position
+        end: position,
       })
     }
 
@@ -306,7 +305,6 @@ const fixIssue = async (issue: ProofreadIssue, index: number) => {
     if (currentPosition) {
       editorBridge.setSelection(currentPosition)
     }
-
   } catch (error) {
     console.error('修复问题时出错:', error)
   }
@@ -373,10 +371,9 @@ const refreshIssues = async () => {
     const limitedIssues = issues.slice(0, settings.value.maxIssues)
 
     // 添加问题到store
-    limitedIssues.forEach(issue => {
+    limitedIssues.forEach((issue) => {
       toolbarStore.addProofreadIssue(issue)
     })
-
   } catch (error) {
     console.error('检查文本问题时出错:', error)
   } finally {
@@ -415,7 +412,7 @@ const checkGrammar = (text: string): ProofreadIssue[] => {
         line: lineIndex + 1,
         column: line.indexOf('。。') + 1,
         severity: 'error',
-        status: 'pending'
+        status: 'pending',
       })
     }
 
@@ -429,7 +426,7 @@ const checkGrammar = (text: string): ProofreadIssue[] => {
         line: lineIndex + 1,
         column: line.indexOf('，，') + 1,
         severity: 'error',
-        status: 'pending'
+        status: 'pending',
       })
     }
 
@@ -446,7 +443,7 @@ const checkGrammar = (text: string): ProofreadIssue[] => {
           line: lineIndex + 1,
           column,
           severity: 'warning',
-          status: 'pending'
+          status: 'pending',
         })
       })
     }
@@ -464,11 +461,11 @@ const checkSpelling = (text: string): ProofreadIssue[] => {
     { wrong: '的的', correct: '的' },
     { wrong: '的的', correct: '的' },
     { wrong: '的的', correct: '的' },
-    { wrong: '的的', correct: '的' }
+    { wrong: '的的', correct: '的' },
   ]
 
   lines.forEach((line, lineIndex) => {
-    commonErrors.forEach(error => {
+    commonErrors.forEach((error) => {
       const index = line.indexOf(error.wrong)
       if (index !== -1) {
         issues.push({
@@ -479,7 +476,7 @@ const checkSpelling = (text: string): ProofreadIssue[] => {
           line: lineIndex + 1,
           column: index + 1,
           severity: 'warning',
-          status: 'pending'
+          status: 'pending',
         })
       }
     })
@@ -511,7 +508,7 @@ const checkPunctuation = (text: string): ProofreadIssue[] => {
             line: lineIndex + 1,
             column,
             severity: 'info',
-            status: 'pending'
+            status: 'pending',
           })
         })
       }
@@ -536,7 +533,7 @@ const checkStyle = (text: string): ProofreadIssue[] => {
         line: lineIndex + 1,
         column: 1,
         severity: 'info',
-        status: 'pending'
+        status: 'pending',
       })
     }
 
@@ -550,7 +547,7 @@ const checkStyle = (text: string): ProofreadIssue[] => {
         line: lineIndex + 1,
         column: 1,
         severity: 'warning',
-        status: 'pending'
+        status: 'pending',
       })
     }
   })
@@ -592,13 +589,16 @@ onUnmounted(() => {
 })
 
 // 监听设置变化
-watch(() => settings.value.autoCheck, (newValue) => {
-  if (newValue) {
-    startAutoCheck()
-  } else {
-    stopAutoCheck()
+watch(
+  () => settings.value.autoCheck,
+  (newValue) => {
+    if (newValue) {
+      startAutoCheck()
+    } else {
+      stopAutoCheck()
+    }
   }
-})
+)
 </script>
 
 <style lang="scss" scoped>

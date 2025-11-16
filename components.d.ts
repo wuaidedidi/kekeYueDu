@@ -48,6 +48,7 @@ declare module 'vue' {
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     ImageInsert: typeof import('./src/components/Editor/ImageInsert.vue')['default']
     ImageLibrary: typeof import('./src/components/Editor/ImageLibrary.vue')['default']
+    LazyImage: typeof import('./src/components/LazyImage.vue')['default']
     OutlinePanel: typeof import('./src/components/RightToolbar/OutlinePanel.vue')['default']
     PreviewPanel: typeof import('./src/components/RightToolbar/PreviewPanel.vue')['default']
     ProofreadPanel: typeof import('./src/components/RightToolbar/ProofreadPanel.vue')['default']

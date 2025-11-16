@@ -492,9 +492,11 @@ onMounted(async () => {
 
 const initTreeData = async () => {
   try {
-    const res = await http.get('/treeData')
+    const res = await http.get('/treeData', {
+      params: { bookId: Number(bookId) },
+    })
 
-    treeData.value = res.data
+    treeData.value = res.data?.data || res.data
   } catch (error) {
     console.error('获取树形数据失败', error)
   }

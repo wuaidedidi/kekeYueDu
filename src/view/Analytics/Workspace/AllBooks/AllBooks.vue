@@ -66,7 +66,7 @@
                     checkEditFormIndex = index
                     dialogFormVisible = true
                     reset = true
-                    form = bookTemplates[index]
+                    Object.assign(form, bookTemplates[index])
                   }
                 "
               >
@@ -113,12 +113,18 @@
 
 <script setup lang="ts">
 import * as Icons from '@element-plus/icons-vue'
-import { ElButton, ElImage, ElNotification, ElMessageBox, ElMessage } from 'element-plus'
+import {
+  ElButton,
+  ElImage,
+  ElNotification,
+  ElMessageBox,
+  ElMessage,
+} from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import Dialog from './components/dialog.vue'
 import type { Book } from '@/typings/book'
 import router from '@/router'
-import http from '@/utils/http'
+import http, { SERVER_BASE_URL } from '@/utils/http'
 
 const dialogFormVisible = ref(false)
 const dialogAddFormVisible = ref(false)
@@ -126,10 +132,10 @@ const dialogAddFormVisible = ref(false)
 const dialogDeleteFormVisible = ref(false)
 
 const carouselPaths2 = [
-  '/allBooks/banner/carousel1.png',
-  '/allBooks/banner/carousel2.png',
-  '/allBooks/banner/carousel3.png',
-  '/allBooks/banner/carousel4.png',
+  `${SERVER_BASE_URL}/allBooks/banner/carousel1.png`,
+  `${SERVER_BASE_URL}/allBooks/banner/carousel2.png`,
+  `${SERVER_BASE_URL}/allBooks/banner/carousel3.png`,
+  `${SERVER_BASE_URL}/allBooks/banner/carousel4.png`,
 ]
 
 const bookTemplates = ref<Book[]>([])
@@ -150,12 +156,29 @@ const initAllDraft = async () => {
     const draftsData = res.data?.data || res.data || []
 
     // 将API返回的数据转换为Book格式
-    const drafts = draftsData.map((draft: any, index: number) => ({
-      id: draft.id || index + 1,
-      bookName: draft.bookName || '未命名草稿',
-      fontCount: draft.fontCount || 0,
-      src: draft.src || `/allBooks/bookList/bookTemplate${(index % 4) + 1}.png`
-    }))
+    const drafts = draftsData.map((draft: any, index: number) => {
+      const fallback = `${SERVER_BASE_URL}/allBooks/bookList/bookTemplate${
+        (index % 4) + 1
+      }.png`
+      const rawSrc = draft.src
+
+      // 将所有图片URL都统一指向当前前端服务器的静态资源
+      const normalizedSrc =
+        typeof rawSrc === 'string' && rawSrc.length > 0
+          ? rawSrc.startsWith('/allBooks/')
+            ? rawSrc // 如果是相对路径，直接使用
+            : rawSrc.includes('/allBooks/')
+            ? rawSrc.replace(/https?:\/\/[^\/]+/, '') // 如果是完整URL但路径正确，提取路径部分
+            : fallback // 其他情况使用默认图片
+          : fallback
+
+      return {
+        id: draft.id || index + 1,
+        bookName: draft.bookName || '未命名草稿',
+        fontCount: draft.fontCount || 0,
+        src: normalizedSrc,
+      }
+    })
 
     bookTemplates.value = drafts
     console.log('加载的草稿数据:', drafts)
@@ -216,7 +239,7 @@ const createNewBook = async () => {
     const res = await http.post('/createBook', {
       bookName: '新作品',
       fontCount: 0,
-      src: '/allBooks/bookList/bookTemplate1.png'
+      src: `${SERVER_BASE_URL}/allBooks/bookList/bookTemplate1.png`,
     })
 
     if (res.data.success) {
@@ -264,7 +287,7 @@ const handleAddConfirm = async (formData: Book) => {
     const res = await http.post('/createDraft', {
       bookName: formData.bookName || '未命名草稿',
       fontCount: formData.fontCount || 0,
-      src: formData.src || '/allBooks/bookList/bookTemplate1.png'
+      src: formData.src || `${SERVER_BASE_URL}/allBooks/bookList/bookTemplate1.png`,
     })
 
     if (res.data.success) {
@@ -276,7 +299,10 @@ const handleAddConfirm = async (formData: Book) => {
       // 自动跳转到新创建的草稿详情页
       const newDraftId = res.data.data.id
       if (newDraftId) {
-        router.push({ name: 'draftDetail', params: { id: newDraftId.toString() } })
+        router.push({
+          name: 'draftDetail',
+          params: { id: newDraftId.toString() },
+        })
       }
     } else {
       ElMessage.error(res.data.message || '创建草稿失败')

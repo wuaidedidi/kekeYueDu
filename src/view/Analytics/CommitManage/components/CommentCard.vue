@@ -9,11 +9,17 @@
               :src="comment.avatar_url"
               :alt="comment.nickname || comment.user_name"
             >
-              {{ (comment.nickname || comment.user_name || '匿名用户').charAt(0).toUpperCase() }}
+              {{
+                (comment.nickname || comment.user_name || '匿名用户')
+                  .charAt(0)
+                  .toUpperCase()
+              }}
             </el-avatar>
           </div>
           <div class="user-info">
-            <div class="username">{{ comment.nickname || comment.user_name || '匿名用户' }}</div>
+            <div class="username">
+              {{ comment.nickname || comment.user_name || '匿名用户' }}
+            </div>
             <div class="comment-time">{{ formatTime(comment.created_at) }}</div>
           </div>
         </div>
@@ -147,14 +153,14 @@ const actionLoading = reactive({
   markRead: false,
   markUnread: false,
   status: false,
-  reply: false
+  reply: false,
 })
 
 // 状态选项
 const statusOptions = [
   { value: 'new', label: '新评论' },
   { value: 'read', label: '已读' },
-  { value: 'handled', label: '已处理' }
+  { value: 'handled', label: '已处理' },
 ]
 
 // 格式化时间
@@ -180,7 +186,7 @@ const formatTime = (timeString: string) => {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 }
@@ -351,7 +357,8 @@ const replyComment = () => {
     color: #666;
   }
 
-  :deep(ul), :deep(ol) {
+  :deep(ul),
+  :deep(ol) {
     padding-left: 20px;
     margin: 8px 0;
   }
@@ -360,11 +367,13 @@ const replyComment = () => {
     margin: 4px 0;
   }
 
-  :deep(strong), :deep(b) {
+  :deep(strong),
+  :deep(b) {
     font-weight: bold;
   }
 
-  :deep(em), :deep(i) {
+  :deep(em),
+  :deep(i) {
     font-style: italic;
   }
 }

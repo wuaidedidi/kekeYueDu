@@ -63,20 +63,20 @@ describe('validateHtmlSafety', () => {
     const dangerousHtml = '<iframe src="javascript:alert(\'xss\')"></iframe>'
     const result = validateHtmlSafety(dangerousHtml)
     expect(result.isSafe).toBe(false)
-    expect(result.warnings.some(w => w.includes('iframe'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('iframe'))).toBe(true)
   })
 
   it('应该检测JavaScript协议', () => {
     const dangerousHtml = '<a href="javascript:alert(\'xss\')">Click</a>'
     const result = validateHtmlSafety(dangerousHtml)
     expect(result.isSafe).toBe(false)
-    expect(result.warnings.some(w => w.includes('javascript:'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('javascript:'))).toBe(true)
   })
 
   it('应该检测危险的事件属性', () => {
     const dangerousHtml = '<img src="image.jpg" onload="alert(\'xss\')" />'
     const result = validateHtmlSafety(dangerousHtml)
     expect(result.isSafe).toBe(false)
-    expect(result.warnings.some(w => w.includes('onload'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('onload'))).toBe(true)
   })
 })

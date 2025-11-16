@@ -9,15 +9,15 @@ export const useCommentsStore = defineStore('comments', {
       total: 0,
       unread: 0,
       new: 0,
-      handled: 0
+      handled: 0,
     },
     pagination: {
       page: 1,
       pageSize: 20,
       total: 0,
-      totalPages: 0
+      totalPages: 0,
     },
-    loading: false
+    loading: false,
   }),
 
   actions: {
@@ -26,7 +26,7 @@ export const useCommentsStore = defineStore('comments', {
       try {
         const authStore = useAuthStore()
         const { data } = await http.get('/comments', {
-          params
+          params,
         })
         return data
       } catch (error) {
@@ -36,7 +36,11 @@ export const useCommentsStore = defineStore('comments', {
     },
 
     // 搜索评论
-    async searchComments(params: { q: string; page?: number; pageSize?: number }) {
+    async searchComments(params: {
+      q: string
+      page?: number
+      pageSize?: number
+    }) {
       try {
         const authStore = useAuthStore()
         const { data } = await http.post('/comments/search', params)
@@ -51,7 +55,9 @@ export const useCommentsStore = defineStore('comments', {
     async updateCommentReadStatus(commentId: number, isRead: boolean) {
       try {
         const authStore = useAuthStore()
-        const { data } = await http.patch(`/comments/${commentId}/read`, { isRead })
+        const { data } = await http.patch(`/comments/${commentId}/read`, {
+          isRead,
+        })
         return data
       } catch (error) {
         console.error('更新评论已读状态失败:', error)
@@ -63,7 +69,9 @@ export const useCommentsStore = defineStore('comments', {
     async updateCommentStatus(commentId: number, status: string) {
       try {
         const authStore = useAuthStore()
-        const { data } = await http.patch(`/comments/${commentId}/status`, { status })
+        const { data } = await http.patch(`/comments/${commentId}/status`, {
+          status,
+        })
         return data
       } catch (error) {
         console.error('更新评论状态失败:', error)
@@ -75,7 +83,9 @@ export const useCommentsStore = defineStore('comments', {
     async replyComment(commentId: number, contentHtml: string) {
       try {
         const authStore = useAuthStore()
-        const { data } = await http.post(`/comments/${commentId}/replies`, { contentHtml })
+        const { data } = await http.post(`/comments/${commentId}/replies`, {
+          contentHtml,
+        })
         return data
       } catch (error) {
         console.error('回复评论失败:', error)
@@ -95,13 +105,13 @@ export const useCommentsStore = defineStore('comments', {
           bookId: params.bookId || 1,
           chapterId: params.chapterId || 1,
           nickname: params.nickname || '测试用户',
-          content: params.content
+          content: params.content,
         })
         return data
       } catch (error) {
         console.error('创建测试评论失败:', error)
         throw error
       }
-    }
-  }
+    },
+  },
 })

@@ -1,0 +1,110 @@
+@startuml kekeYueDu 数据流图
+
+!define LIGHTBLUE #ADD8E6
+!define LIGHTGREEN #90EE90
+!define LIGHTYELLOW #FFFFE0
+!define LIGHTCORAL #F08080
+
+title kekeYueDu - 用户认证数据流图
+
+' 用户注册流程
+package "用户注册流程" {
+  [用户输入表单] as register_form --> [前端验证] as frontend_validation
+  frontend_validation --> [发送POST请求] as register_request
+  register_request --> [速率限制检查] as rate_limit
+  rate_limit --> [输入验证中间件] as input_validation
+  input_validation --> [检查用户名是否存在] as check_username
+  check_username --> [密码加密] as password_hash
+  password_hash --> [保存到数据库] as save_to_db
+  save_to_db --> [返回用户信息和Token] as register_response
+  register_response --> [更新前端状态] as update_state
+  update_state --> [跳转到主页] as redirect_main
+}
+
+' 用户登录流程
+package "用户登录流程" {
+  [用户输入凭据] as login_form --> [发送POST请求] as login_request
+  login_request --> [速率限制检查] as auth_rate_limit
+  auth_rate_limit --> [查询用户] as find_user
+  find_user --> [验证密码] as verify_password
+  verify_password --> [生成JWT Token] as generate_token
+  generate_token --> [返回Token和用户信息] as login_response
+  login_response --> [保存Token到本地] as save_token
+  save_token --> [更新认证状态] as update_auth_state
+  update_auth_state --> [跳转到主页] as redirect_main_login
+}
+
+' API请求流程
+package "API请求流程" {
+  [组件调用API] as component_call --> [HTTP拦截器] as http_interceptor
+  http_interceptor --> [添加Authorization头] as add_auth_header
+  add_auth_header --> [发送请求] as send_request
+  send_request --> [JWT中间件] as jwt_middleware
+  jwt_middleware --> [权限检查] as permission_check
+  permission_check --> [业务逻辑] as business_logic
+  business_logic --> [数据库操作] as db_operation
+  db_operation --> [返回响应] as api_response
+  api_response --> [统一错误处理] as error_handling
+  error_handling --> [组件更新] as component_update
+}
+
+' 评论管理流程
+package "评论管理流程" {
+  [管理员查看评论] as admin_view --> [调用评论API] as call_comments_api
+  call_comments_api --> [分页查询] as paginate_query
+  paginate_query --> [返回评论列表] as comments_list
+  comments_list --> [批量操作] as batch_operations
+  batch_operations --> [更新评论状态] as update_status
+  update_status --> [记录操作日志] as log_operation
+  log_operation --> [返回更新结果] as update_result
+}
+
+' 文件上传流程
+package "文件上传流程" {
+  [用户选择文件] as select_file --> [前端验证] as frontend_validation
+  frontend_validation --> [FormData封装] as form_data
+  form_data --> [上传请求] as upload_request
+  upload_request --> [Multer中间件] as multer_middleware
+  multer_middleware --> [文件类型检查] as file_type_check
+  file_type_check --> [文件大小限制] as size_limit
+  size_limit --> [保存到服务器] as save_to_server
+  save_to_server --> [生成访问URL] as generate_url
+  generate_url --> [返回文件信息] as file_response
+}
+
+' 实时更新流程
+package "实时更新流程" {
+  [用户操作] as user_action --> [发送请求] as user_request
+  user_request --> [数据库更新] as db_update
+  db_update --> [Server-Sent事件] as sse_event
+  sse_event --> [推送到客户端] as push_to_client
+  push_to_client --> [EventSource监听] as event_source
+  event_source --> [更新UI状态] as update_ui
+  update_ui --> [实时显示更新] as real_time_update
+}
+
+note right of frontend_validation : **前端验证**
+  - 表单字段验证
+  - 密码强度检查
+  - 邮箱格式验证
+  - 用户名规则检查
+
+note right of jwt_middleware : **JWT验证**
+  - 解析Token
+  - 验证Token有效性
+  - 提取用户信息
+  - 检查权限
+
+note right of business_logic : **业务逻辑**
+  - 复杂业务规则
+  - 数据关联处理
+  - 事务管理
+  - 异常处理
+
+note right of sse_event : **实时通信**
+  - Server-Sent Events
+  - 实时数据推送
+  - 连接状态管理
+  - 断线重连机制
+
+@enduml

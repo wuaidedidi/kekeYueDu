@@ -14,10 +14,30 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
     { text: '刘', weight: 0.06, tags: ['common', 'traditional'] },
     { text: '陈', weight: 0.06, tags: ['common', 'traditional'] },
     { text: '杨', weight: 0.05, tags: ['common', 'traditional'] },
-    { text: '龙', weight: 0.02, tags: ['mythical', 'powerful'], semanticField: 'strength' },
-    { text: '风', weight: 0.01, tags: ['nature', 'elegant'], semanticField: 'freedom' },
-    { text: '云', weight: 0.01, tags: ['nature', 'mystical'], semanticField: 'mystery' },
-    { text: '月', weight: 0.01, tags: ['nature', 'elegant'], semanticField: 'beauty' }
+    {
+      text: '龙',
+      weight: 0.02,
+      tags: ['mythical', 'powerful'],
+      semanticField: 'strength',
+    },
+    {
+      text: '风',
+      weight: 0.01,
+      tags: ['nature', 'elegant'],
+      semanticField: 'freedom',
+    },
+    {
+      text: '云',
+      weight: 0.01,
+      tags: ['nature', 'mystical'],
+      semanticField: 'mystery',
+    },
+    {
+      text: '月',
+      weight: 0.01,
+      tags: ['nature', 'elegant'],
+      semanticField: 'beauty',
+    },
   ]
 
   private maleNameElements = [
@@ -30,7 +50,7 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
     { text: '博', weight: 0.04, tags: ['learned', 'intellectual'] },
     { text: '天', weight: 0.03, tags: ['nature', 'ambitious'] },
     { text: '海', weight: 0.03, tags: ['nature', 'vast'] },
-    { text: '山', weight: 0.02, tags: ['nature', 'stable'] }
+    { text: '山', weight: 0.02, tags: ['nature', 'stable'] },
   ]
 
   private femaleNameElements = [
@@ -43,7 +63,7 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
     { text: '兰', weight: 0.04, tags: ['flower', 'elegant'] },
     { text: '月', weight: 0.03, tags: ['nature', 'beauty'] },
     { text: '云', weight: 0.03, tags: ['nature', 'mystical'] },
-    { text: '琳', weight: 0.02, tags: ['beautiful', 'precious'] }
+    { text: '琳', weight: 0.02, tags: ['beautiful', 'precious'] },
   ]
 
   generatePersonName(context: NamingContext): string {
@@ -52,9 +72,12 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
 
     let givenName = ''
     if (this.random() < 0.7) {
-      const elements = gender === 'male' ? this.maleNameElements :
-                      gender === 'female' ? this.femaleNameElements :
-                      [...this.maleNameElements, ...this.femaleNameElements]
+      const elements =
+        gender === 'male'
+          ? this.maleNameElements
+          : gender === 'female'
+            ? this.femaleNameElements
+            : [...this.maleNameElements, ...this.femaleNameElements]
       const element1 = this.weightedRandom(elements, context)
       let element2 = this.weightedRandom(elements, context)
 
@@ -64,9 +87,12 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
 
       givenName = element1 + element2
     } else {
-      const elements = gender === 'male' ? this.maleNameElements :
-                      gender === 'female' ? this.femaleNameElements :
-                      [...this.maleNameElements, ...this.femaleNameElements]
+      const elements =
+        gender === 'male'
+          ? this.maleNameElements
+          : gender === 'female'
+            ? this.femaleNameElements
+            : [...this.maleNameElements, ...this.femaleNameElements]
       givenName = this.weightedRandom(elements, context)
     }
 
@@ -88,21 +114,21 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
           ['prefix', 'suffix'],
           ['prefix', 'root', 'suffix'],
           ['root1', 'root2', 'suffix'],
-          ['special']
+          ['special'],
         ]
       case 'village':
         return [
           ['prefix', 'suffix'],
           ['prefix', 'root', 'suffix'],
           ['root', 'suffix'],
-          ['nature', 'suffix']
+          ['nature', 'suffix'],
         ]
       case 'mountain':
         return [
           ['prefix', 'suffix'],
           ['root', 'suffix'],
           ['color', 'suffix'],
-          ['mythical', 'suffix']
+          ['mythical', 'suffix'],
         ]
       default:
         return [['prefix', 'suffix']]
@@ -112,13 +138,45 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
   private applyPlacePattern(pattern: string[], context: NamingContext): string {
     switch (pattern[0]) {
       case 'prefix':
-        const prefixes = ['东', '西', '南', '北', '上', '下', '中', '大', '小', '新', '古', '金', '银', '玉']
+        const prefixes = [
+          '东',
+          '西',
+          '南',
+          '北',
+          '上',
+          '下',
+          '中',
+          '大',
+          '小',
+          '新',
+          '古',
+          '金',
+          '银',
+          '玉',
+        ]
         const prefix = prefixes[this.randomInt(prefixes.length)]
         return prefix + this.getSuffix(pattern.slice(1), context)
 
       case 'root':
       case 'root1':
-        const roots = ['云', '海', '天', '地', '龙', '凤', '虎', '鹤', '松', '竹', '梅', '兰', '清', '明', '长', '安']
+        const roots = [
+          '云',
+          '海',
+          '天',
+          '地',
+          '龙',
+          '凤',
+          '虎',
+          '鹤',
+          '松',
+          '竹',
+          '梅',
+          '兰',
+          '清',
+          '明',
+          '长',
+          '安',
+        ]
         const root = roots[this.randomInt(roots.length)]
         if (pattern[0] === 'root') {
           return root + this.getSuffix(pattern.slice(1), context)
@@ -127,30 +185,114 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
         }
 
       case 'color':
-        const colors = ['青', '赤', '黄', '白', '黑', '紫', '金', '银', '彩', '碧']
+        const colors = [
+          '青',
+          '赤',
+          '黄',
+          '白',
+          '黑',
+          '紫',
+          '金',
+          '银',
+          '彩',
+          '碧',
+        ]
         const color = colors[this.randomInt(colors.length)]
         return color + this.getSuffix(pattern.slice(1), context)
 
       case 'nature':
-        const natures = ['风', '雨', '雪', '月', '星', '云', '泉', '溪', '竹', '松', '桃', '柳']
+        const natures = [
+          '风',
+          '雨',
+          '雪',
+          '月',
+          '星',
+          '云',
+          '泉',
+          '溪',
+          '竹',
+          '松',
+          '桃',
+          '柳',
+        ]
         const nature = natures[this.randomInt(natures.length)]
         return nature + this.getSuffix(pattern.slice(1), context)
 
       case 'mythical':
-        const mythicals = ['龙', '凤', '麒', '麟', '仙', '神', '灵', '妖', '魔', '圣']
+        const mythicals = [
+          '龙',
+          '凤',
+          '麒',
+          '麟',
+          '仙',
+          '神',
+          '灵',
+          '妖',
+          '魔',
+          '圣',
+        ]
         const mythical = mythicals[this.randomInt(mythicals.length)]
         return mythical + this.getSuffix(pattern.slice(1), context)
 
       case 'special':
-        const cityPrefixes = ['东', '西', '南', '北', '上', '下', '中', '大', '小', '新', '古']
-        const cityRoots = ['海', '山', '河', '湖', '云', '星', '月', '日', '天', '地']
-        const streetPrefixes = ['长', '安', '和', '平', '繁', '华', '文', '明', '幸', '福']
-        const streetRoots = ['东', '西', '南', '北', '中', '大', '新', '古', '金', '银']
+        const cityPrefixes = [
+          '东',
+          '西',
+          '南',
+          '北',
+          '上',
+          '下',
+          '中',
+          '大',
+          '小',
+          '新',
+          '古',
+        ]
+        const cityRoots = [
+          '海',
+          '山',
+          '河',
+          '湖',
+          '云',
+          '星',
+          '月',
+          '日',
+          '天',
+          '地',
+        ]
+        const streetPrefixes = [
+          '长',
+          '安',
+          '和',
+          '平',
+          '繁',
+          '华',
+          '文',
+          '明',
+          '幸',
+          '福',
+        ]
+        const streetRoots = [
+          '东',
+          '西',
+          '南',
+          '北',
+          '中',
+          '大',
+          '新',
+          '古',
+          '金',
+          '银',
+        ]
 
-        const city = cityPrefixes[this.randomInt(cityPrefixes.length)] +
-                    cityRoots[this.randomInt(cityRoots.length)] + '市'
-        const street = streetPrefixes[this.randomInt(streetPrefixes.length)] +
-                      streetRoots[this.randomInt(streetRoots.length)] + '街'
+        const city =
+          cityPrefixes[this.randomInt(cityPrefixes.length)] +
+          cityRoots[this.randomInt(cityRoots.length)] +
+          '市'
+        const street =
+          streetPrefixes[this.randomInt(streetPrefixes.length)] +
+          streetRoots[this.randomInt(streetRoots.length)] +
+          '街'
         return `${city}.${street}`
 
       default:
@@ -165,7 +307,7 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
       village: ['村', '庄', '寨', '坞', '堡', '营', '屯', '集'],
       mountain: ['山', '峰', '岭', '峦', '岳', '丘', '崖', '谷'],
       forest: ['林', '森', '木', '树', '丛', '森', '林', '木'],
-      river: ['江', '河', '川', '溪', '涧', '泉', '水', '流']
+      river: ['江', '河', '川', '溪', '涧', '泉', '水', '流'],
     }
 
     const suffixList = suffixes[placeType] || suffixes.city
@@ -173,12 +315,15 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
   }
 
   private weightedRandom(words: any[], context: NamingContext): string {
-    const enhancedWeights = words.map(word => ({
+    const enhancedWeights = words.map((word) => ({
       ...word,
-      weight: this.calculateEnhancedWeight(word, context)
+      weight: this.calculateEnhancedWeight(word, context),
     }))
 
-    const totalWeight = enhancedWeights.reduce((sum, word) => sum + word.weight, 0)
+    const totalWeight = enhancedWeights.reduce(
+      (sum, word) => sum + word.weight,
+      0
+    )
     let random = this.random() * totalWeight
 
     for (const word of enhancedWeights) {
@@ -214,14 +359,23 @@ export class ChineseCulturalAdapter extends CulturalAdapter {
     }
 
     // 3. 基于文化偏好调整权重
-    if (context.userPreferences?.culturalPreference?.includes('chinese') && this.isChineseElement(word.text)) {
+    if (
+      context.userPreferences?.culturalPreference?.includes('chinese') &&
+      this.isChineseElement(word.text)
+    ) {
       weight *= 1.2
     }
 
     // 4. 基于复杂度偏好调整权重
-    if (context.userPreferences?.complexityPreference === 'simple' && word.text.length <= 1) {
+    if (
+      context.userPreferences?.complexityPreference === 'simple' &&
+      word.text.length <= 1
+    ) {
       weight *= 1.3
-    } else if (context.userPreferences?.complexityPreference === 'complex' && word.text.length > 1) {
+    } else if (
+      context.userPreferences?.complexityPreference === 'complex' &&
+      word.text.length > 1
+    ) {
       weight *= 1.2
     }
 
@@ -240,8 +394,45 @@ export class JapaneseCulturalAdapter extends CulturalAdapter {
     super(engine)
   }
 
-  private surnames = ['佐藤', '鈴木', '高橋', '田中', '伊藤', '渡辺', '山本', '中村', '小林', '加藤', '吉田', '山田', '佐々木', '山口', '松本', '井上', '木村', '林', '斎藤', '清水']
-  private givenNames = ['太郎', '次郎', '花子', '桜', '陽子', '健太', '大輝', '翔太', '美咲', 'さくら', '結衣', '葵', '大輝', '蓮', '凪']
+  private surnames = [
+    '佐藤',
+    '鈴木',
+    '高橋',
+    '田中',
+    '伊藤',
+    '渡辺',
+    '山本',
+    '中村',
+    '小林',
+    '加藤',
+    '吉田',
+    '山田',
+    '佐々木',
+    '山口',
+    '松本',
+    '井上',
+    '木村',
+    '林',
+    '斎藤',
+    '清水',
+  ]
+  private givenNames = [
+    '太郎',
+    '次郎',
+    '花子',
+    '桜',
+    '陽子',
+    '健太',
+    '大輝',
+    '翔太',
+    '美咲',
+    'さくら',
+    '結衣',
+    '葵',
+    '大輝',
+    '蓮',
+    '凪',
+  ]
 
   generatePersonName(context: NamingContext): string {
     const surname = this.surnames[this.randomInt(this.surnames.length)]
@@ -251,7 +442,18 @@ export class JapaneseCulturalAdapter extends CulturalAdapter {
 
   generatePlaceName(context: NamingContext): string {
     const placeTypes = ['市', '町', '村', '山', '川', '島', '港', '駅']
-    const roots = ['東京', '大阪', '京都', '横浜', '名古屋', '札幌', '福岡', '仙台', '広島', '北九州']
+    const roots = [
+      '東京',
+      '大阪',
+      '京都',
+      '横浜',
+      '名古屋',
+      '札幌',
+      '福岡',
+      '仙台',
+      '広島',
+      '北九州',
+    ]
     const root = roots[this.randomInt(roots.length)]
     const type = placeTypes[this.randomInt(placeTypes.length)]
     return `${root}${type}`
@@ -264,9 +466,72 @@ export class WesternCulturalAdapter extends CulturalAdapter {
     super(engine)
   }
 
-  private surnames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Moore', 'Jackson', 'Martin', 'Lee', 'Thompson', 'White']
-  private maleNames = ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles', 'Christopher', 'Daniel', 'Matthew', 'Anthony', 'Mark', 'Steven', 'Paul', 'Kevin', 'Brian', 'George']
-  private femaleNames = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen', 'Lisa', 'Nancy', 'Betty', 'Helen', 'Sandra', 'Donna', 'Carol', 'Ruth', 'Sharon', 'Michelle']
+  private surnames = [
+    'Smith',
+    'Johnson',
+    'Williams',
+    'Brown',
+    'Jones',
+    'Garcia',
+    'Miller',
+    'Davis',
+    'Rodriguez',
+    'Martinez',
+    'Wilson',
+    'Anderson',
+    'Taylor',
+    'Thomas',
+    'Moore',
+    'Jackson',
+    'Martin',
+    'Lee',
+    'Thompson',
+    'White',
+  ]
+  private maleNames = [
+    'James',
+    'John',
+    'Robert',
+    'Michael',
+    'William',
+    'David',
+    'Richard',
+    'Joseph',
+    'Thomas',
+    'Charles',
+    'Christopher',
+    'Daniel',
+    'Matthew',
+    'Anthony',
+    'Mark',
+    'Steven',
+    'Paul',
+    'Kevin',
+    'Brian',
+    'George',
+  ]
+  private femaleNames = [
+    'Mary',
+    'Patricia',
+    'Jennifer',
+    'Linda',
+    'Elizabeth',
+    'Barbara',
+    'Susan',
+    'Jessica',
+    'Sarah',
+    'Karen',
+    'Lisa',
+    'Nancy',
+    'Betty',
+    'Helen',
+    'Sandra',
+    'Donna',
+    'Carol',
+    'Ruth',
+    'Sharon',
+    'Michelle',
+  ]
 
   generatePersonName(context: NamingContext): string {
     const surname = this.surnames[this.randomInt(this.surnames.length)]
@@ -277,9 +542,44 @@ export class WesternCulturalAdapter extends CulturalAdapter {
   }
 
   generatePlaceName(context: NamingContext): string {
-    const placeTypes = ['City', 'Town', 'Village', 'Mount', 'River', 'Lake', 'Falls', 'Bridge', 'Port', 'Hill']
-    const prefixes = ['New', 'Old', 'North', 'South', 'East', 'West', 'Great', 'Little', 'Green', 'Blue', 'Red', 'White']
-    const roots = ['York', 'Haven', 'London', 'Paris', 'Boston', 'Chicago', 'Seattle', 'Denver', 'Phoenix', 'Portland']
+    const placeTypes = [
+      'City',
+      'Town',
+      'Village',
+      'Mount',
+      'River',
+      'Lake',
+      'Falls',
+      'Bridge',
+      'Port',
+      'Hill',
+    ]
+    const prefixes = [
+      'New',
+      'Old',
+      'North',
+      'South',
+      'East',
+      'West',
+      'Great',
+      'Little',
+      'Green',
+      'Blue',
+      'Red',
+      'White',
+    ]
+    const roots = [
+      'York',
+      'Haven',
+      'London',
+      'Paris',
+      'Boston',
+      'Chicago',
+      'Seattle',
+      'Denver',
+      'Phoenix',
+      'Portland',
+    ]
     const prefix = prefixes[this.randomInt(prefixes.length)]
     const root = roots[this.randomInt(roots.length)]
     const type = placeTypes[this.randomInt(placeTypes.length)]

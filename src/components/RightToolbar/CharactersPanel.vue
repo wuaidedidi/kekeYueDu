@@ -42,11 +42,7 @@
           @click="selectCharacter(character)"
         >
           <div class="character-avatar">
-            <el-avatar
-              :size="48"
-              :src="character.avatar"
-              :alt="character.name"
-            >
+            <el-avatar :size="48" :src="character.avatar" :alt="character.name">
               {{ character.name.charAt(0) }}
             </el-avatar>
           </div>
@@ -115,14 +111,13 @@
       </div>
 
       <!-- 空状态 -->
-      <div v-if="toolbarStore.filteredCharacters.length === 0" class="empty-state">
+      <div
+        v-if="toolbarStore.filteredCharacters.length === 0"
+        class="empty-state"
+      >
         <el-icon><User /></el-icon>
-        <p v-if="toolbarStore.characterSearchQuery">
-          未找到匹配的角色
-        </p>
-        <p v-else>
-          暂无角色信息
-        </p>
+        <p v-if="toolbarStore.characterSearchQuery">未找到匹配的角色</p>
+        <p v-else>暂无角色信息</p>
         <el-button
           v-if="!toolbarStore.characterSearchQuery"
           type="primary"
@@ -147,10 +142,7 @@
         label-width="80px"
       >
         <el-form-item label="角色名" prop="name">
-          <el-input
-            v-model="characterForm.name"
-            placeholder="请输入角色名称"
-          />
+          <el-input v-model="characterForm.name" placeholder="请输入角色名称" />
         </el-form-item>
 
         <el-form-item label="别名">
@@ -170,13 +162,13 @@
             size="small"
             @keyup.enter="addAlias"
             @blur="addAlias"
-            style="width: 120px; margin-left: 8px;"
+            style="width: 120px; margin-left: 8px"
           />
           <el-button
             v-else
             size="small"
             @click="showAliasInput"
-            style="margin-left: 8px;"
+            style="margin-left: 8px"
           >
             + 添加别名
           </el-button>
@@ -208,13 +200,13 @@
             size="small"
             @keyup.enter="addTag"
             @blur="addTag"
-            style="width: 120px; margin-left: 8px;"
+            style="width: 120px; margin-left: 8px"
           />
           <el-button
             v-else
             size="small"
             @click="showTagInput"
-            style="margin-left: 8px;"
+            style="margin-left: 8px"
           >
             + 添加标签
           </el-button>
@@ -239,11 +231,7 @@
     </el-dialog>
 
     <!-- 设置对话框 -->
-    <el-dialog
-      v-model="showSettingsDialog"
-      title="角色管理设置"
-      width="500px"
-    >
+    <el-dialog v-model="showSettingsDialog" title="角色管理设置" width="500px">
       <div class="settings-content">
         <el-form label-width="120px">
           <el-form-item label="自动检测角色">
@@ -288,8 +276,26 @@
 <script setup lang="ts">
 import { ref, reactive, nextTick, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ElIcon, ElButton, ElInput, ElTag, ElAvatar, ElDialog, ElForm, ElFormItem, ElSwitch, ElColorPicker } from 'element-plus'
-import { User, Plus, Setting, Search, Edit, Delete } from '@element-plus/icons-vue'
+import {
+  ElIcon,
+  ElButton,
+  ElInput,
+  ElTag,
+  ElAvatar,
+  ElDialog,
+  ElForm,
+  ElFormItem,
+  ElSwitch,
+  ElColorPicker,
+} from 'element-plus'
+import {
+  User,
+  Plus,
+  Setting,
+  Search,
+  Edit,
+  Delete,
+} from '@element-plus/icons-vue'
 import { useToolbarStore } from '@/store/toolbarStore'
 import type { Character } from '@/store/toolbarStore'
 import { editorBridge } from '@/utils/editorBridge'
@@ -309,13 +315,11 @@ const characterForm = reactive({
   aliases: [] as string[],
   description: '',
   tags: [] as string[],
-  avatar: ''
+  avatar: '',
 })
 
 const characterRules = {
-  name: [
-    { required: true, message: '请输入角色名称', trigger: 'blur' }
-  ]
+  name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
 }
 
 // 别名输入
@@ -333,7 +337,7 @@ const characterSettings = reactive({
   autoDetect: true,
   highlightNames: true,
   showMentions: true,
-  highlightColor: '#409eff'
+  highlightColor: '#409eff',
 })
 
 // 选择角色
@@ -367,7 +371,7 @@ const deleteCharacter = async (character: Character) => {
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
 
@@ -486,31 +490,31 @@ const saveSettings = () => {
 const highlightCharacterNames = () => {
   if (!editorBridge.isReady() || !characterSettings.highlightNames) return
 
-  toolbarStore.characters.forEach(character => {
+  toolbarStore.characters.forEach((character) => {
     const positions = editorBridge.findAllText(character.name, true)
-    positions.forEach(position => {
+    positions.forEach((position) => {
       const range = {
         start: position,
         end: {
           line: position.line,
           column: position.column + character.name.length,
-          offset: position.offset + character.name.length
-        }
+          offset: position.offset + character.name.length,
+        },
       }
       editorBridge.highlightRange(range, 'character-highlight')
     })
 
     // 也高亮别名
-    character.aliases.forEach(alias => {
+    character.aliases.forEach((alias) => {
       const aliasPositions = editorBridge.findAllText(alias, true)
-      aliasPositions.forEach(position => {
+      aliasPositions.forEach((position) => {
         const range = {
           start: position,
           end: {
             line: position.line,
             column: position.column + alias.length,
-            offset: position.offset + alias.length
-          }
+            offset: position.offset + alias.length,
+          },
         }
         editorBridge.highlightRange(range, 'character-highlight')
       })
@@ -608,14 +612,14 @@ onMounted(() => {
 
   &:hover {
     border-color: #007bff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
   }
 
   &.active {
     border-color: #007bff;
     background: #f8f9ff;
-    box-shadow: 0 2px 12px rgba(0,123,255,0.15);
+    box-shadow: 0 2px 12px rgba(0, 123, 255, 0.15);
   }
 }
 

@@ -31,7 +31,7 @@ function throttle<T extends (...args: any[]) => any>(
     if (!inThrottle) {
       func(...args)
       inThrottle = true
-      setTimeout(() => inThrottle = false, limit)
+      setTimeout(() => (inThrottle = false), limit)
     }
   }
 }
@@ -160,7 +160,7 @@ export class EditorBridge {
 
     return {
       start: this.getRangePosition(range[0], text),
-      end: this.getRangePosition(range[1], text)
+      end: this.getRangePosition(range[1], text),
     }
   }
 
@@ -296,7 +296,10 @@ export class EditorBridge {
     // 创建高亮标记
     const markerElement = document.createMarkerElement()
     markerElement.className = className
-    markerElement.textContent = this.getTextContent().substring(startOffset, endOffset)
+    markerElement.textContent = this.getTextContent().substring(
+      startOffset,
+      endOffset
+    )
 
     // 插入标记
     this.trixInstance.insertHTML(markerElement.outerHTML)
@@ -309,7 +312,7 @@ export class EditorBridge {
     if (!this.trixEditor) return
 
     const highlights = this.trixEditor.querySelectorAll(`.${className}`)
-    highlights.forEach(highlight => {
+    highlights.forEach((highlight) => {
       highlight.remove()
     })
   }
@@ -401,7 +404,7 @@ export class EditorBridge {
     const wordCount = chineseChars.length + englishWords.length
 
     // 段落数
-    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0)
+    const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 0)
     const paragraphCount = paragraphs.length || 1
 
     // 行数
@@ -412,7 +415,7 @@ export class EditorBridge {
       characterCount,
       wordCount,
       paragraphCount,
-      lineCount
+      lineCount,
     }
   }
 
@@ -423,7 +426,10 @@ export class EditorBridge {
     const currentContent = this.getHTMLContent()
 
     // 如果内容未变化，返回缓存结果
-    if (currentContent === this.cachedContent && this.cachedOutline.length > 0) {
+    if (
+      currentContent === this.cachedContent &&
+      this.cachedOutline.length > 0
+    ) {
       return this.cachedOutline
     }
 
@@ -458,7 +464,7 @@ export class EditorBridge {
         level,
         text,
         line: lineNumber,
-        offset: match.index
+        offset: match.index,
       })
     }
 
@@ -491,8 +497,13 @@ export class EditorBridge {
   /**
    * 查找文本在文档中的位置
    */
-  findText(searchText: string, caseSensitive: boolean = false): TextPosition | null {
-    const text = caseSensitive ? this.getTextContent() : this.getTextContent().toLowerCase()
+  findText(
+    searchText: string,
+    caseSensitive: boolean = false
+  ): TextPosition | null {
+    const text = caseSensitive
+      ? this.getTextContent()
+      : this.getTextContent().toLowerCase()
     const search = caseSensitive ? searchText : searchText.toLowerCase()
     const index = text.indexOf(search)
 
@@ -504,8 +515,13 @@ export class EditorBridge {
   /**
    * 查找所有匹配的文本位置
    */
-  findAllText(searchText: string, caseSensitive: boolean = false): TextPosition[] {
-    const text = caseSensitive ? this.getTextContent() : this.getTextContent().toLowerCase()
+  findAllText(
+    searchText: string,
+    caseSensitive: boolean = false
+  ): TextPosition[] {
+    const text = caseSensitive
+      ? this.getTextContent()
+      : this.getTextContent().toLowerCase()
     const search = caseSensitive ? searchText : searchText.toLowerCase()
     const positions: TextPosition[] = []
     let index = 0

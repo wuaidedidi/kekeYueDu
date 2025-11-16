@@ -106,4 +106,10 @@ export interface VersionFilters {
 }
 
 // 版本操作类型
-export type VersionAction = 'pin' | 'download' | 'delete' | 'view' | 'compare' | 'revert'
+export type VersionAction =
+  | 'pin'
+  | 'download'
+  | 'delete'
+  | 'view'
+  | 'compare'
+  | 'revert'

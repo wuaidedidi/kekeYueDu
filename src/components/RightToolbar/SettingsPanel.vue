@@ -57,10 +57,7 @@
           @click="selectSetting(setting)"
         >
           <div class="setting-category">
-            <el-tag
-              :type="getCategoryType(setting.category)"
-              size="small"
-            >
+            <el-tag :type="getCategoryType(setting.category)" size="small">
               {{ getCategoryLabel(setting.category) }}
             </el-tag>
           </div>
@@ -118,9 +115,7 @@
         <p v-if="searchQuery || toolbarStore.settingFilterCategory !== 'all'">
           未找到匹配的设定
         </p>
-        <p v-else>
-          暂无设定信息
-        </p>
+        <p v-else>暂无设定信息</p>
         <el-button
           v-if="!searchQuery && toolbarStore.settingFilterCategory === 'all'"
           type="primary"
@@ -159,10 +154,7 @@
         </el-form-item>
 
         <el-form-item label="标题" prop="title">
-          <el-input
-            v-model="settingForm.title"
-            placeholder="请输入设定标题"
-          />
+          <el-input v-model="settingForm.title" placeholder="请输入设定标题" />
         </el-form-item>
 
         <el-form-item label="内容" prop="content">
@@ -191,13 +183,13 @@
             size="small"
             @keyup.enter="addTag"
             @blur="addTag"
-            style="width: 120px; margin-left: 8px;"
+            style="width: 120px; margin-left: 8px"
           />
           <el-button
             v-else
             size="small"
             @click="showTagInput"
-            style="margin-left: 8px;"
+            style="margin-left: 8px"
           >
             + 添加标签
           </el-button>
@@ -219,7 +211,7 @@
             v-model="selectedRelationId"
             placeholder="选择关联的设定"
             size="small"
-            style="width: 200px; margin-top: 8px;"
+            style="width: 200px; margin-top: 8px"
             @change="addRelation"
           >
             <el-option
@@ -243,11 +235,7 @@
     </el-dialog>
 
     <!-- 高级筛选对话框 -->
-    <el-dialog
-      v-model="showFilterDialog"
-      title="高级筛选"
-      width="500px"
-    >
+    <el-dialog v-model="showFilterDialog" title="高级筛选" width="500px">
       <div class="filter-content">
         <el-form label-width="100px">
           <el-form-item label="分类筛选">
@@ -302,8 +290,31 @@
 <script setup lang="ts">
 import { ref, reactive, computed, nextTick, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ElIcon, ElButton, ElInput, ElTag, ElDialog, ElForm, ElFormItem, ElSelect, ElOption, ElRadioGroup, ElRadioButton, ElCheckboxGroup, ElCheckbox, ElDatePicker } from 'element-plus'
-import { Setting, Plus, Filter, Search, Edit, Delete, Document } from '@element-plus/icons-vue'
+import {
+  ElIcon,
+  ElButton,
+  ElInput,
+  ElTag,
+  ElDialog,
+  ElForm,
+  ElFormItem,
+  ElSelect,
+  ElOption,
+  ElRadioGroup,
+  ElRadioButton,
+  ElCheckboxGroup,
+  ElCheckbox,
+  ElDatePicker,
+} from 'element-plus'
+import {
+  Setting,
+  Plus,
+  Filter,
+  Search,
+  Edit,
+  Delete,
+  Document,
+} from '@element-plus/icons-vue'
 import { useToolbarStore } from '@/store/toolbarStore'
 import type { Setting as SettingType } from '@/store/toolbarStore'
 
@@ -325,19 +336,13 @@ const settingForm = reactive({
   title: '',
   content: '',
   tags: [] as string[],
-  relations: [] as string[]
+  relations: [] as string[],
 })
 
 const settingRules = {
-  category: [
-    { required: true, message: '请选择分类', trigger: 'change' }
-  ],
-  title: [
-    { required: true, message: '请输入标题', trigger: 'blur' }
-  ],
-  content: [
-    { required: true, message: '请输入内容', trigger: 'blur' }
-  ]
+  category: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
+  content: [{ required: true, message: '请输入内容', trigger: 'blur' }],
 }
 
 // 标签输入
@@ -361,33 +366,38 @@ const filteredSettings = computed(() => {
   // 搜索筛选
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    settings = settings.filter(setting =>
-      setting.title.toLowerCase().includes(query) ||
-      setting.content.toLowerCase().includes(query) ||
-      setting.tags.some(tag => tag.toLowerCase().includes(query))
+    settings = settings.filter(
+      (setting) =>
+        setting.title.toLowerCase().includes(query) ||
+        setting.content.toLowerCase().includes(query) ||
+        setting.tags.some((tag) => tag.toLowerCase().includes(query))
     )
   }
 
   // 高级筛选
   if (filterCategories.value.length > 0) {
-    settings = settings.filter(setting =>
+    settings = settings.filter((setting) =>
       filterCategories.value.includes(setting.category)
     )
   }
 
   if (filterDateRange.value) {
     const [start, end] = filterDateRange.value
-    settings = settings.filter(setting => {
+    settings = settings.filter((setting) => {
       const settingDate = new Date(setting.createdAt)
       return settingDate >= start && settingDate <= end
     })
   }
 
   if (filterTags.value) {
-    const tags = filterTags.value.split(',').map(tag => tag.trim().toLowerCase())
-    settings = settings.filter(setting =>
-      tags.every(tag =>
-        setting.tags.some(settingTag => settingTag.toLowerCase().includes(tag))
+    const tags = filterTags.value
+      .split(',')
+      .map((tag) => tag.trim().toLowerCase())
+    settings = settings.filter((setting) =>
+      tags.every((tag) =>
+        setting.tags.some((settingTag) =>
+          settingTag.toLowerCase().includes(tag)
+        )
       )
     )
   }
@@ -412,9 +422,10 @@ const filteredSettings = computed(() => {
 })
 
 const availableRelations = computed(() => {
-  return toolbarStore.settings.filter(setting =>
-    setting.id !== editingSetting.value?.id &&
-    !settingForm.relations.includes(setting.id)
+  return toolbarStore.settings.filter(
+    (setting) =>
+      setting.id !== editingSetting.value?.id &&
+      !settingForm.relations.includes(setting.id)
   )
 })
 
@@ -442,7 +453,7 @@ const deleteSetting = async (setting: SettingType) => {
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
 
@@ -514,7 +525,10 @@ const showTagInput = () => {
 }
 
 const addRelation = () => {
-  if (selectedRelationId.value && !settingForm.relations.includes(selectedRelationId.value)) {
+  if (
+    selectedRelationId.value &&
+    !settingForm.relations.includes(selectedRelationId.value)
+  ) {
     settingForm.relations.push(selectedRelationId.value)
   }
   selectedRelationId.value = ''
@@ -528,7 +542,7 @@ const removeRelation = (relationId: string) => {
 }
 
 const getRelationTitle = (relationId: string) => {
-  const setting = toolbarStore.settings.find(s => s.id === relationId)
+  const setting = toolbarStore.settings.find((s) => s.id === relationId)
   return setting?.title || relationId
 }
 
@@ -556,7 +570,7 @@ const getCategoryLabel = (category: SettingType['category']) => {
     organization: '组织',
     location: '地点',
     item: '物品',
-    other: '其他'
+    other: '其他',
   }
   return labels[category] || category
 }
@@ -567,7 +581,7 @@ const getCategoryType = (category: SettingType['category']) => {
     organization: 'success',
     location: 'warning',
     item: 'info',
-    other: ''
+    other: '',
   }
   return types[category] || ''
 }
@@ -576,7 +590,7 @@ const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit'
+    day: '2-digit',
   })
 }
 </script>
@@ -675,7 +689,7 @@ const formatDate = (date: Date) => {
 
   &:hover {
     border-color: #007bff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   &.active {

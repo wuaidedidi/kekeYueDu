@@ -12,14 +12,27 @@
             <h4 class="title">我的邀请码</h4>
             <p class="desc">分享给好友，TA注册后你可获奖励</p>
             <div class="actions">
-              <el-button type="primary" size="small" :disabled="claiming" @click="claim(20)">复制并领取 +20</el-button>
+              <el-button
+                type="primary"
+                size="small"
+                :disabled="claiming"
+                @click="claim(20)"
+                >复制并领取 +20</el-button
+              >
             </div>
           </div>
           <div class="card-block">
             <h4 class="title">成为 VIP</h4>
             <p class="desc">订阅后立享全部功能，额外获墨水</p>
             <div class="actions">
-              <el-button type="primary" plain size="small" :disabled="claiming" @click="claim(50)">订阅奖励 +50</el-button>
+              <el-button
+                type="primary"
+                plain
+                size="small"
+                :disabled="claiming"
+                @click="claim(50)"
+                >订阅奖励 +50</el-button
+              >
             </div>
           </div>
         </div>
@@ -69,23 +82,92 @@ async function claim(amount: number) {
 </script>
 
 <style scoped>
-.invite-card { max-width: 1200px; margin: 0 auto; padding: 24px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
-.panel { background: #fff; border: 1px solid #eaeaea; border-radius: 8px; }
-.panel-header { display: flex; align-items: baseline; justify-content: space-between; padding: 20px; border-bottom: 1px solid #f0f0f0; }
-.panel-header h3 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1a1a; }
-.panel-sub { font-size: 12px; color: #999; }
-.card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px; }
-.card-block { border: 1px dashed #eaeaea; border-radius: 8px; padding: 24px; background: #fcfcfc; min-height: 140px; display: flex; flex-direction: column; }
-.title { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: #1a1a1a; }
-.desc { margin: 0 0 20px; font-size: 13px; color: #666; line-height: 1.4; flex-grow: 1; }
-.actions { margin-top: auto; display: flex; gap: 16px; flex-wrap: wrap; }
-.empty { text-align: center; padding: 40px; }
-.empty-icon { font-size: 36px; opacity: .6; margin-bottom: 8px; }
-.empty-text { font-size: 14px; color: #999; }
+.invite-card {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+}
+.panel {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+}
+.panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.panel-sub {
+  font-size: 12px;
+  color: #999;
+}
+.card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+.card-block {
+  border: 1px dashed #eaeaea;
+  border-radius: 8px;
+  padding: 24px;
+  background: #fcfcfc;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+}
+.title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.desc {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+  flex-grow: 1;
+}
+.actions {
+  margin-top: auto;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.empty {
+  text-align: center;
+  padding: 40px;
+}
+.empty-icon {
+  font-size: 36px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+.empty-text {
+  font-size: 14px;
+  color: #999;
+}
 
 @media (max-width: 768px) {
-  .grid { grid-template-columns: 1fr; }
-  .card-body { grid-template-columns: 1fr; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .card-body {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

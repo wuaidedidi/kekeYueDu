@@ -1,5 +1,5 @@
 // src/models/User.ts
-import connectDB from '../config/db'
+import connectDB from '../config/db.js'
 import bcrypt from 'bcryptjs'
 
 // 用户接口定义
@@ -30,7 +30,11 @@ const createUserTable = async () => {
 }
 
 // 用户注册
-const registerUser = async (username: string, password: string, email?: string): Promise<number> => {
+const registerUser = async (
+  username: string,
+  password: string,
+  email?: string
+): Promise<number> => {
   const db = await connectDB()
   // 哈希密码
   const hashedPassword = await bcrypt.hash(password, 12)
@@ -44,7 +48,9 @@ const registerUser = async (username: string, password: string, email?: string):
 // 根据用户名查找用户
 const findUserByUsername = async (username: string): Promise<User | null> => {
   const db = await connectDB()
-  const user = await db.get('SELECT * FROM users WHERE username = ?', [username])
+  const user = await db.get('SELECT * FROM users WHERE username = ?', [
+    username,
+  ])
   return user || null
 }
 
@@ -56,9 +62,14 @@ const findUserById = async (id: number): Promise<User | null> => {
 }
 
 // 更新用户信息
-const updateUser = async (id: number, updates: Partial<Omit<User, 'id' | 'created_at'>>): Promise<boolean> => {
+const updateUser = async (
+  id: number,
+  updates: Partial<Omit<User, 'id' | 'created_at'>>
+): Promise<boolean> => {
   const db = await connectDB()
-  const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ')
+  const fields = Object.keys(updates)
+    .map((key) => `${key} = ?`)
+    .join(', ')
   const values = Object.values(updates)
 
   const result = await db.run(
@@ -76,7 +87,10 @@ const deleteUser = async (id: number): Promise<boolean> => {
 }
 
 // 验证用户密码
-const validatePassword = async (username: string, password: string): Promise<User | null> => {
+const validatePassword = async (
+  username: string,
+  password: string
+): Promise<User | null> => {
   const user = await findUserByUsername(username)
   if (!user) return null
 
@@ -92,5 +106,5 @@ export {
   findUserById,
   updateUser,
   deleteUser,
-  validatePassword
+  validatePassword,
 }

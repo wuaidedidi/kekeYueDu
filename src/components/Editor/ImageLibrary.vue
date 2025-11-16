@@ -27,7 +27,11 @@
 
       <!-- 图片分类 -->
       <div class="category-section">
-        <el-radio-group v-model="selectedCategory" size="small" @change="filterImages">
+        <el-radio-group
+          v-model="selectedCategory"
+          size="small"
+          @change="filterImages"
+        >
           <el-radio-button label="all">全部</el-radio-button>
           <el-radio-button label="recent">最近</el-radio-button>
           <el-radio-button label="favorite">收藏</el-radio-button>
@@ -92,7 +96,11 @@
       </div>
       <div class="footer-actions">
         <el-button @click="cancelSelection">取消</el-button>
-        <el-button type="primary" @click="insertSelectedImage" :disabled="!selectedImage">
+        <el-button
+          type="primary"
+          @click="insertSelectedImage"
+          :disabled="!selectedImage"
+        >
           插入图片
         </el-button>
       </div>
@@ -106,12 +114,20 @@
       :before-close="closePreview"
     >
       <div class="preview-dialog">
-        <img :src="previewImage?.url" :alt="previewImage?.name" class="preview-image" />
+        <img
+          :src="previewImage?.url"
+          :alt="previewImage?.name"
+          class="preview-image"
+        />
         <div class="preview-details">
           <h3>{{ previewImage?.name }}</h3>
           <p><strong>尺寸:</strong> {{ previewImage?.dimensions || '未知' }}</p>
-          <p><strong>大小:</strong> {{ formatFileSize(previewImage?.size || 0) }}</p>
-          <p><strong>上传时间:</strong> {{ formatDate(previewImage?.createdAt) }}</p>
+          <p>
+            <strong>大小:</strong> {{ formatFileSize(previewImage?.size || 0) }}
+          </p>
+          <p>
+            <strong>上传时间:</strong> {{ formatDate(previewImage?.createdAt) }}
+          </p>
         </div>
       </div>
     </el-dialog>
@@ -120,7 +136,16 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElButton, ElIcon, ElInput, ElRadioGroup, ElRadioButton, ElDialog, ElSkeleton } from 'element-plus'
+import {
+  ElMessage,
+  ElButton,
+  ElIcon,
+  ElInput,
+  ElRadioGroup,
+  ElRadioButton,
+  ElDialog,
+  ElSkeleton,
+} from 'element-plus'
 import { Search, Refresh, View, Delete, Picture } from '@element-plus/icons-vue'
 
 interface ImageItem {
@@ -150,18 +175,19 @@ const filteredImages = computed(() => {
   if (selectedCategory.value === 'recent') {
     const threeDaysAgo = new Date()
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
-    filtered = filtered.filter(img => new Date(img.createdAt) >= threeDaysAgo)
+    filtered = filtered.filter((img) => new Date(img.createdAt) >= threeDaysAgo)
   } else if (selectedCategory.value === 'favorite') {
     // 这里可以根据实际情况实现收藏逻辑
-    filtered = filtered.filter(img => img.category === 'favorite')
+    filtered = filtered.filter((img) => img.category === 'favorite')
   }
 
   // 按搜索关键词过滤
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(img =>
-      img.name.toLowerCase().includes(query) ||
-      img.category.toLowerCase().includes(query)
+    filtered = filtered.filter(
+      (img) =>
+        img.name.toLowerCase().includes(query) ||
+        img.category.toLowerCase().includes(query)
     )
   }
 
@@ -174,7 +200,7 @@ const loadImages = async () => {
   try {
     // 模拟从API加载图片列表
     // 实际项目中这里应该调用真实的API
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // 模拟数据
     images.value = [
@@ -185,7 +211,7 @@ const loadImages = async () => {
         size: 102400,
         dimensions: '300 × 200',
         createdAt: new Date('2024-01-15'),
-        category: 'general'
+        category: 'general',
       },
       {
         id: '2',
@@ -194,7 +220,7 @@ const loadImages = async () => {
         size: 204800,
         dimensions: '400 × 300',
         createdAt: new Date('2024-01-14'),
-        category: 'favorite'
+        category: 'favorite',
       },
       {
         id: '3',
@@ -203,8 +229,8 @@ const loadImages = async () => {
         size: 307200,
         dimensions: '600 × 400',
         createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2天前
-        category: 'general'
-      }
+        category: 'general',
+      },
     ]
   } catch (error) {
     console.error('Failed to load images:', error)
@@ -234,12 +260,12 @@ const insertSelectedImage = () => {
     alt: selectedImage.value.name,
     title: selectedImage.value.name,
     align: 'center',
-    size: 'medium'
+    size: 'medium',
   })
 
   // 发送自定义事件到父组件
   const event = new CustomEvent('insertImage', {
-    detail: { html: imageHtml }
+    detail: { html: imageHtml },
   })
   document.dispatchEvent(event)
 
@@ -261,12 +287,12 @@ const closePreview = () => {
 const deleteImage = async (image: ImageItem) => {
   try {
     await ElMessage.confirm('确定要删除这张图片吗？', '确认删除', {
-      type: 'warning'
+      type: 'warning',
     })
 
     // 调用删除API
     // 实际项目中这里应该调用真实的删除接口
-    images.value = images.value.filter(img => img.id !== image.id)
+    images.value = images.value.filter((img) => img.id !== image.id)
 
     if (selectedImage.value?.id === image.id) {
       selectedImage.value = null
@@ -325,7 +351,7 @@ const formatDate = (date: Date | string) => {
   return d.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 

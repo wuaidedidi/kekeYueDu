@@ -1,9 +1,9 @@
 // src/models/User.ts
-import connectDB from '../config/db'
-import sqlite3 from 'sqlite3'
+import connectDB from '../config/db.js'
+import type { Database } from 'sqlite'
 
 // 初始化草稿表
-const initChapterTable = async (db: sqlite3.Database) => {
+const initChapterTable = async (db: Database) => {
   // 创建 Chapters 表
   await db.exec(`
     CREATE TABLE IF NOT EXISTS Chapters (
@@ -52,14 +52,19 @@ const createChapterTable = async () => {
   await db.close()
 }
 
-const getTreeData = async () => {
+const getTreeData = async (bookId?: number) => {
   const db = await connectDB()
 
-  // 查询所有卷
-  const volumes = await db.all('SELECT * FROM Volumes')
+  // 查询卷 - 如果有bookId则过滤
+  let volumes
+  if (bookId) {
+    volumes = await db.all('SELECT * FROM Volumes WHERE book_id = ? ORDER BY order_index', [bookId])
+  } else {
+    volumes = await db.all('SELECT * FROM Volumes ORDER BY order_index')
+  }
 
   // 查询所有章节
-  const chapters = await db.all('SELECT * FROM Chapters')
+  const chapters = await db.all('SELECT * FROM Chapters ORDER BY `order`')
 
   // 创建一个卷的映射
   const volumeMap: { [key: number]: any } = {}
@@ -67,35 +72,38 @@ const getTreeData = async () => {
   let onlyOne = 1
   // 填充卷的结构
   for (const volume of volumes) {
-    // 使用卷的标题作为键来确保唯一性
-    if (!volumeMap[volume.title]) {
-      volumeMap[volume.title] = {
-        label: volume.title,
-        children: [],
-        $treeNodeId: volume.id, // 假设有一个 ID 属性
-        key: onlyOne++,
-        id: volume.id,
-      }
+    // 使用卷的ID作为键来确保唯一性
+    volumeMap[volume.id] = {
+      label: volume.title,
+      title: volume.title,
+      id: volume.id,
+      key: onlyOne++,
+      vid: volume.id,
+      type: 'volume',
+      order: volume.order_index || 0,
+      isVolumn: true,
+      children: [],
     }
   }
 
   // 填充章节到对应的卷中
   for (const chapter of chapters) {
-    const volumeKey = volumes.find((v) => v.id === chapter.volume_id)?.title
-    if (volumeKey && volumeMap[volumeKey]) {
-      volumeMap[volumeKey].children.push({
+    if (volumeMap[chapter.volume_id]) {
+      volumeMap[chapter.volume_id].children.push({
         label: chapter.title,
-        id: chapter.id,
-        vid: chapter.volume_id,
         title: chapter.title,
-        order: chapter.order,
+        id: chapter.id,
         key: onlyOne++,
+        vid: chapter.volume_id,
+        type: 'chapter',
+        order: chapter.order,
+        isVolumn: false,
       })
     }
   }
 
-  // 返回树形结构数据
-  return Object.values(volumeMap)
+  // 返回树形结构数据，按order排序
+  return Object.values(volumeMap).sort((a, b) => a.order - b.order)
 }
 
 // 保存章节内容的函数

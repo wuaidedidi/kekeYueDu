@@ -12,7 +12,7 @@ const connectDB = async () => {
 
 // 数据库配置
 export const config = {
-  database: './database.sqlite'
+  database: './database.sqlite',
 }
 
 export default connectDB

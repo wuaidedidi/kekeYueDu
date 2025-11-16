@@ -122,18 +122,24 @@ export class ShopModel {
       `)
 
       // 为users表添加墨水余额字段（如果不存在）
-      this.db.run(`
+      this.db.run(
+        `
         ALTER TABLE users ADD COLUMN ink_points INTEGER DEFAULT 100
-      `, (err) => {
-        if (err && !err.message.includes('duplicate column name')) {
-          console.log('Error adding ink_points column:', err.message)
+      `,
+        (err) => {
+          if (err && !err.message.includes('duplicate column name')) {
+            console.log('Error adding ink_points column:', err.message)
+          }
         }
-      })
+      )
     })
   }
 
   private async initDefaultProducts() {
-    const defaultProducts: Omit<ShopProduct, 'id' | 'created_at' | 'updated_at'>[] = [
+    const defaultProducts: Omit<
+      ShopProduct,
+      'id' | 'created_at' | 'updated_at'
+    >[] = [
       {
         title: '7天会员体验',
         subtitle: '全部功能免费使用',
@@ -145,7 +151,7 @@ export class ShopModel {
         activation_required: false,
         icon_url: '/api/placeholder/64/64',
         status: 'active',
-        stock: 100
+        stock: 100,
       },
       {
         title: '月度会员',
@@ -158,7 +164,7 @@ export class ShopModel {
         activation_required: false,
         icon_url: '/api/placeholder/64/64',
         status: 'active',
-        stock: -1
+        stock: -1,
       },
       {
         title: '高级编辑功能券',
@@ -171,7 +177,7 @@ export class ShopModel {
         activation_required: false,
         icon_url: '/api/placeholder/64/64',
         status: 'active',
-        stock: -1
+        stock: -1,
       },
       {
         title: '精美皮肤套装',
@@ -183,7 +189,7 @@ export class ShopModel {
         activation_required: false,
         icon_url: '/api/placeholder/64/64',
         status: 'active',
-        stock: -1
+        stock: -1,
       },
       {
         title: 'AI写作助手',
@@ -196,7 +202,7 @@ export class ShopModel {
         activation_required: false,
         icon_url: '/api/placeholder/64/64',
         status: 'active',
-        stock: -1
+        stock: -1,
       },
       {
         title: '数据导出功能',
@@ -208,8 +214,8 @@ export class ShopModel {
         activation_required: false,
         icon_url: '/api/placeholder/64/64',
         status: 'active',
-        stock: -1
-      }
+        stock: -1,
+      },
     ]
 
     const stmt = this.db.prepare(`
@@ -218,7 +224,7 @@ export class ShopModel {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
-    defaultProducts.forEach(product => {
+    defaultProducts.forEach((product) => {
       stmt.run([
         product.title,
         product.subtitle || null,
@@ -231,7 +237,7 @@ export class ShopModel {
         product.activation_required ? 1 : 0,
         product.icon_url,
         product.status,
-        product.stock
+        product.stock,
       ])
     })
 
@@ -248,7 +254,7 @@ export class ShopModel {
           if (err) {
             reject(err)
           } else {
-            resolve(row as UserBalance || null)
+            resolve((row as UserBalance) || null)
           }
         }
       )
@@ -256,25 +262,32 @@ export class ShopModel {
   }
 
   // 创建或更新用户余额
-  async upsertUserBalance(userId: number, inkPoints: number): Promise<UserBalance> {
+  async upsertUserBalance(
+    userId: number,
+    inkPoints: number
+  ): Promise<UserBalance> {
     return new Promise((resolve, reject) => {
-      this.db.run(`
+      this.db.run(
+        `
         INSERT INTO user_balance (user_id, ink_points)
         VALUES (?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
           ink_points = excluded.ink_points,
           updated_at = CURRENT_TIMESTAMP
-      `, [userId, inkPoints], function(err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve({
-            id: this.lastID,
-            user_id: userId,
-            ink_points: inkPoints
-          } as UserBalance)
+      `,
+        [userId, inkPoints],
+        function (err) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve({
+              id: this.lastID,
+              user_id: userId,
+              ink_points: inkPoints,
+            } as UserBalance)
+          }
         }
-      })
+      )
     })
   }
 
@@ -284,7 +297,7 @@ export class ShopModel {
     status?: string
     page?: number
     pageSize?: number
-  }): Promise<{ products: ShopProduct[], total: number }> {
+  }): Promise<{ products: ShopProduct[]; total: number }> {
     return new Promise((resolve, reject) => {
       let query = 'SELECT * FROM shop_products'
       const params: any[] = []
@@ -339,7 +352,7 @@ export class ShopModel {
 
           resolve({
             products: rows as ShopProduct[],
-            total: countRow.total
+            total: countRow.total,
           })
         })
       })
@@ -356,7 +369,7 @@ export class ShopModel {
           if (err) {
             reject(err)
           } else {
-            resolve(row as ShopProduct || null)
+            resolve((row as ShopProduct) || null)
           }
         }
       )
@@ -364,7 +377,11 @@ export class ShopModel {
   }
 
   // 兑换商品
-  async redeemProduct(userId: number, productId: number, quantity: number = 1): Promise<{
+  async redeemProduct(
+    userId: number,
+    productId: number,
+    quantity: number = 1
+  ): Promise<{
     success: boolean
     message: string
     data?: any
@@ -418,14 +435,14 @@ export class ShopModel {
           product_id: productId,
           quantity,
           points_cost: totalCost,
-          status: 'success'
+          status: 'success',
         })
 
         // 创建用户权益
         const rightData: Omit<UserRight, 'id' | 'created_at'> = {
           user_id: userId,
           product_id: productId,
-          status: 'active'
+          status: 'active',
         }
 
         if (product.duration_days) {
@@ -448,8 +465,8 @@ export class ShopModel {
           data: {
             newBalance,
             product,
-            remainingTimes: product.times
-          }
+            remainingTimes: product.times,
+          },
         })
       } catch (error) {
         console.error('Redeem product error:', error)
@@ -459,7 +476,10 @@ export class ShopModel {
   }
 
   // 更新商品库存
-  private async updateProductStock(productId: number, newStock: number): Promise<void> {
+  private async updateProductStock(
+    productId: number,
+    newStock: number
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       this.db.run(
         'UPDATE shop_products SET stock = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
@@ -476,40 +496,65 @@ export class ShopModel {
   }
 
   // 创建订单记录
-  private async createOrder(order: Omit<ShopOrder, 'id' | 'created_at'>): Promise<ShopOrder> {
+  private async createOrder(
+    order: Omit<ShopOrder, 'id' | 'created_at'>
+  ): Promise<ShopOrder> {
     return new Promise((resolve, reject) => {
-      this.db.run(`
+      this.db.run(
+        `
         INSERT INTO shop_orders (user_id, product_id, quantity, points_cost, status)
         VALUES (?, ?, ?, ?, ?)
-      `, [order.user_id, order.product_id, order.quantity, order.points_cost, order.status], function(err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve({
-            id: this.lastID,
-            ...order
-          } as ShopOrder)
+      `,
+        [
+          order.user_id,
+          order.product_id,
+          order.quantity,
+          order.points_cost,
+          order.status,
+        ],
+        function (err) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve({
+              id: this.lastID,
+              ...order,
+            } as ShopOrder)
+          }
         }
-      })
+      )
     })
   }
 
   // 创建用户权益
-  private async createUserRight(right: Omit<UserRight, 'id' | 'created_at'>): Promise<UserRight> {
+  private async createUserRight(
+    right: Omit<UserRight, 'id' | 'created_at'>
+  ): Promise<UserRight> {
     return new Promise((resolve, reject) => {
-      this.db.run(`
+      this.db.run(
+        `
         INSERT INTO user_rights (user_id, product_id, start_at, end_at, remaining_times, status)
         VALUES (?, ?, ?, ?, ?, ?)
-      `, [right.user_id, right.product_id, right.start_at, right.end_at, right.remaining_times, right.status], function(err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve({
-            id: this.lastID,
-            ...right
-          } as UserRight)
+      `,
+        [
+          right.user_id,
+          right.product_id,
+          right.start_at,
+          right.end_at,
+          right.remaining_times,
+          right.status,
+        ],
+        function (err) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve({
+              id: this.lastID,
+              ...right,
+            } as UserRight)
+          }
         }
-      })
+      )
     })
   }
 
@@ -531,7 +576,11 @@ export class ShopModel {
   }
 
   // 获取用户订单记录
-  async getUserOrders(userId: number, page: number = 1, pageSize: number = 20): Promise<{
+  async getUserOrders(
+    userId: number,
+    page: number = 1,
+    pageSize: number = 20
+  ): Promise<{
     orders: ShopOrder[]
     total: number
   }> {
@@ -547,7 +596,8 @@ export class ShopModel {
         LIMIT ? OFFSET ?
       `
 
-      const countQuery = 'SELECT COUNT(*) as total FROM shop_orders WHERE user_id = ?'
+      const countQuery =
+        'SELECT COUNT(*) as total FROM shop_orders WHERE user_id = ?'
 
       this.db.all(query, [userId, pageSize, offset], (err, rows) => {
         if (err) {
@@ -563,7 +613,7 @@ export class ShopModel {
 
           resolve({
             orders: rows as ShopOrder[],
-            total: countRow.total
+            total: countRow.total,
           })
         })
       })

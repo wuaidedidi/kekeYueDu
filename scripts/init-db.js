@@ -14,7 +14,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // 创建表
 db.serialize(() => {
   // 创建用户表
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -24,16 +25,19 @@ db.serialize(() => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) {
-      console.error('创建用户表失败:', err.message)
-    } else {
-      console.log('用户表创建成功或已存在')
+  `,
+    (err) => {
+      if (err) {
+        console.error('创建用户表失败:', err.message)
+      } else {
+        console.log('用户表创建成功或已存在')
+      }
     }
-  })
+  )
 
   // 创建卷表
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS volumes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -43,16 +47,19 @@ db.serialize(() => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     )
-  `, (err) => {
-    if (err) {
-      console.error('创建卷表失败:', err.message)
-    } else {
-      console.log('卷表创建成功或已存在')
+  `,
+    (err) => {
+      if (err) {
+        console.error('创建卷表失败:', err.message)
+      } else {
+        console.log('卷表创建成功或已存在')
+      }
     }
-  })
+  )
 
   // 创建草稿表
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS drafts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -65,16 +72,19 @@ db.serialize(() => {
       FOREIGN KEY (volume_id) REFERENCES volumes (id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     )
-  `, (err) => {
-    if (err) {
-      console.error('创建草稿表失败:', err.message)
-    } else {
-      console.log('草稿表创建成功或已存在')
+  `,
+    (err) => {
+      if (err) {
+        console.error('创建草稿表失败:', err.message)
+      } else {
+        console.log('草稿表创建成功或已存在')
+      }
     }
-  })
+  )
 
   // 创建角色表
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS characters (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -91,16 +101,19 @@ db.serialize(() => {
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
       FOREIGN KEY (draft_id) REFERENCES drafts (id) ON DELETE SET NULL
     )
-  `, (err) => {
-    if (err) {
-      console.error('创建角色表失败:', err.message)
-    } else {
-      console.log('角色表创建成功或已存在')
+  `,
+    (err) => {
+      if (err) {
+        console.error('创建角色表失败:', err.message)
+      } else {
+        console.log('角色表创建成功或已存在')
+      }
     }
-  })
+  )
 
   // 创建设定表
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -114,13 +127,15 @@ db.serialize(() => {
       FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
       FOREIGN KEY (draft_id) REFERENCES drafts (id) ON DELETE SET NULL
     )
-  `, (err) => {
-    if (err) {
-      console.error('创建设定表失败:', err.message)
-    } else {
-      console.log('设定表创建成功或已存在')
+  `,
+    (err) => {
+      if (err) {
+        console.error('创建设定表失败:', err.message)
+      } else {
+        console.log('设定表创建成功或已存在')
+      }
     }
-  })
+  )
 })
 
 // 关闭数据库连接
